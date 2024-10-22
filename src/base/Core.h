@@ -22,9 +22,9 @@ private:
     char version[8] = {0};
     char title[64] = {0};
     char summary[255] = {0};
-  } LastFirmwareInfo;
+  } LastFirmwareInfos;
 
-  LastFirmwareInfo _lastFirmwareInfo;
+  LastFirmwareInfos _lastFirmwareInfos;
   Ticker _checkForUpdateTicker;
   bool _needCheckForUpdateTick = false;
 

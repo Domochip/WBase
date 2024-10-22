@@ -322,15 +322,15 @@ void Core::checkForUpdate()
     {
       JsonVariant jv;
       if ((jv = doc["tag_name"]).is<const char *>())
-        strlcpy(_lastFirmwareInfo.version, jv, sizeof(_lastFirmwareInfo.version));
+        strlcpy(_lastFirmwareInfos.version, jv, sizeof(_lastFirmwareInfos.version));
       if ((jv = doc["name"]).is<const char *>())
       {
         // find the first space and copy the rest to title
         char *space = strchr(jv, ' ');
         if (space)
-          strlcpy(_lastFirmwareInfo.title, space + 1, sizeof(_lastFirmwareInfo.title));
+          strlcpy(_lastFirmwareInfos.title, space + 1, sizeof(_lastFirmwareInfos.title));
         else
-          _lastFirmwareInfo.title[0] = 0;
+          _lastFirmwareInfos.title[0] = 0;
       }
 
       if ((jv = doc["body"]).is<const char *>())
@@ -341,22 +341,22 @@ void Core::checkForUpdate()
         if (end)
         {
           byte len = (byte)(end - body);
-          if (len >= sizeof(_lastFirmwareInfo.summary))
-            len = sizeof(_lastFirmwareInfo.summary) - 1;
+          if (len >= sizeof(_lastFirmwareInfos.summary))
+            len = sizeof(_lastFirmwareInfos.summary) - 1;
 
-          strlcpy(_lastFirmwareInfo.summary, body, len);
+          strlcpy(_lastFirmwareInfos.summary, body, len);
         }
-        else if (strlen(body) < sizeof(_lastFirmwareInfo.summary))
-          strlcpy(_lastFirmwareInfo.summary, body, sizeof(_lastFirmwareInfo.summary));
+        else if (strlen(body) < sizeof(_lastFirmwareInfos.summary))
+          strlcpy(_lastFirmwareInfos.summary, body, sizeof(_lastFirmwareInfos.summary));
         else
-          _lastFirmwareInfo.summary[0] = 0;
+          _lastFirmwareInfos.summary[0] = 0;
       }
     }
     else
-      _lastFirmwareInfo.version[0] = 0;
+      _lastFirmwareInfos.version[0] = 0;
   }
   else
-    _lastFirmwareInfo.version[0] = 0;
+    _lastFirmwareInfos.version[0] = 0;
 
   http.end();
 }
