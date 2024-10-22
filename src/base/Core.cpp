@@ -296,11 +296,67 @@ void Core::appRun()
   {
     _needCheckForUpdateTick = false;
     // check for update
-    // TODO : Implement your own check for update
+    checkForUpdate();
   }
 }
 
 Core::Core(char appId, String appName) : Application(appId, appName)
 {
   _applicationList[Application::Applications::Core] = this;
+}
+
+void Core::checkForUpdate()
+{
+  String githubURL = "https://api.github.com/repos/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/latest";
+
+  WiFiClient client;
+  HTTPClient http;
+  http.begin(client, githubURL);
+  int httpCode = http.GET();
+  if (httpCode == 200)
+  {
+    WiFiClient *stream = http.getStreamPtr();
+    JsonDocument doc;
+    DeserializationError error = deserializeJson(doc, *stream);
+    if (!error)
+    {
+      JsonVariant jv;
+      if ((jv = doc["tag_name"]).is<const char *>())
+        strlcpy(_lastFirmwareInfo.version, jv, sizeof(_lastFirmwareInfo.version));
+      if ((jv = doc["name"]).is<const char *>())
+      {
+        // find the first space and copy the rest to title
+        char *space = strchr(jv, ' ');
+        if (space)
+          strlcpy(_lastFirmwareInfo.title, space + 1, sizeof(_lastFirmwareInfo.title));
+        else
+          _lastFirmwareInfo.title[0] = 0;
+      }
+
+      if ((jv = doc["body"]).is<const char *>())
+      {
+        // copy body to summary until "\r\n\r\n##"
+        const char *body = jv.as<const char *>();
+        const char *end = strstr(body, "\r\n\r\n##");
+        if (end)
+        {
+          byte len = (byte)(end - body);
+          if (len >= sizeof(_lastFirmwareInfo.summary))
+            len = sizeof(_lastFirmwareInfo.summary) - 1;
+
+          strlcpy(_lastFirmwareInfo.summary, body, len);
+        }
+        else if (strlen(body) < sizeof(_lastFirmwareInfo.summary))
+          strlcpy(_lastFirmwareInfo.summary, body, sizeof(_lastFirmwareInfo.summary));
+        else
+          _lastFirmwareInfo.summary[0] = 0;
+      }
+    }
+    else
+      _lastFirmwareInfo.version[0] = 0;
+  }
+  else
+    _lastFirmwareInfo.version[0] = 0;
+
+  http.end();
 }

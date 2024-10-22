@@ -3,7 +3,10 @@
 
 #include "../Main.h"
 #include "Application.h"
-#ifdef ESP32
+#ifdef ESP8266
+#include <ESP8266HTTPClient.h>
+#else
+#include <HTTPClient.h>
 #include <Update.h>
 #endif
 
@@ -37,6 +40,8 @@ private:
 
 public:
   Core(char appId, String appName);
+
+  void checkForUpdate();
 };
 
 #endif
