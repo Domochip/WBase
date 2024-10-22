@@ -457,3 +457,43 @@ bool Core::updateFirmware(const char *version)
 
   return true;
 }
+
+int8_t Core::versionCompare(const char *version1, const char *version2)
+{
+  int8_t result = 0;
+
+  // Create copies of the version strings
+  char *v1 = strdup(version1);
+  char *v2 = strdup(version2);
+
+  // Tokenize the version strings
+  char *token1 = strtok(v1, ".");
+  char *token2 = strtok(v2, ".");
+
+  while (token1 && token2)
+  {
+    int v1 = atoi(token1);
+    int v2 = atoi(token2);
+
+    if (v1 > v2)
+    {
+      result = 1;
+      break;
+    }
+    else if (v1 < v2)
+    {
+      result = -1;
+      break;
+    }
+
+    // Move to the next token
+    token1 = strtok(NULL, ".");
+    token2 = strtok(NULL, ".");
+  }
+
+  // Clean up
+  free(v1);
+  free(v2);
+
+  return result;
+}
