@@ -409,14 +409,14 @@ bool Core::updateFirmware(const char *version)
     return false;
   }
 
-  // starting here we have a valid httpCode
+  // starting here we have a valid httpCode (200)
 
   // get the stream
   WiFiClient *stream = https.getStreamPtr();
   int contentLength = https.getSize();
 
 #ifdef LOG_SERIAL
-  LOG_SERIAL.println(F("URL file found, Update Start"));
+  LOG_SERIAL.println(F("Firmware file found, Update Start"));
 #endif
 
 #ifdef ESP8266
