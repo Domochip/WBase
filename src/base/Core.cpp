@@ -369,9 +369,8 @@ String Core::getUpdateInfos(bool refresh)
 bool Core::updateFirmware(const char *version)
 {
   char versionToFlash[8];
-  if (version && version[0])
-    strlcpy(versionToFlash, version, sizeof(versionToFlash));
-  else
+
+  if (version && !strcmp(version, "latest"))
   {
     checkForUpdate();
     if (_lastFirmwareInfos.version[0])
@@ -379,6 +378,10 @@ bool Core::updateFirmware(const char *version)
     else
       return false;
   }
+  else if (version && version[0])
+    strlcpy(versionToFlash, version, sizeof(versionToFlash));
+  else
+    return false;
 
   WiFiClientSecure clientSecure;
   clientSecure.setInsecure();
