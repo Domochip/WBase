@@ -40,7 +40,20 @@ String Core::generateStatusJSON()
 
   return gs;
 }
-bool Core::appInit(bool reInit = false) { return true; };
+bool Core::appInit(bool reInit = false)
+{
+
+// init ticker to check for update every 24h
+#ifdef ESP8266
+  _checkForUpdateTicker.attach(86400, [this]()
+                               { this->_needCheckForUpdateTick = true; });
+#else
+  _checkForUpdateTicker.attach<typeof this>(86400, [](typeof this core)
+                                            { core->_needCheckForUpdateTick = true; }, this);
+#endif
+
+  return true;
+};
 const PROGMEM char *Core::getHTMLContent(WebPageForPlaceHolder wp)
 {
   switch (wp)
@@ -275,4 +288,19 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
                     {
     SERVER_KEEPALIVE_FALSE()
     server.send(404); });
+}
+
+void Core::appRun()
+{
+  if (_needCheckForUpdateTick)
+  {
+    _needCheckForUpdateTick = false;
+    // check for update
+    // TODO : Implement your own check for update
+  }
+}
+
+Core::Core(char appId, String appName) : Application(appId, appName)
+{
+  _applicationList[Application::Applications::Core] = this;
 }

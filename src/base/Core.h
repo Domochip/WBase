@@ -14,14 +14,16 @@
 class Core : public Application
 {
 private:
-
-  typedef struct{
-    char version[8];
-    char title[64];
-    char summary[255];
+  typedef struct
+  {
+    char version[8] = {0};
+    char title[64] = {0};
+    char summary[255] = {0};
   } LastFirmwareInfo;
 
   LastFirmwareInfo _lastFirmwareInfo;
+  Ticker _checkForUpdateTicker;
+  bool _needCheckForUpdateTick = false;
 
   void setConfigDefaultValues();
   bool parseConfigJSON(JsonDocument &doc, bool fromWebPage);
@@ -31,10 +33,10 @@ private:
   const PROGMEM char *getHTMLContent(WebPageForPlaceHolder wp);
   size_t getHTMLContentSize(WebPageForPlaceHolder wp);
   void appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseApplication);
-  void appRun() {};
+  void appRun();
 
 public:
-  Core(char appId, String appName) : Application(appId, appName) { _applicationList[Application::Applications::Core] = this; }
+  Core(char appId, String appName);
 };
 
 #endif
