@@ -373,7 +373,7 @@ bool Core::updateFirmware(const char *version)
   if (version && !strcmp(version, "latest"))
   {
     checkForUpdate();
-    if (_lastFirmwareInfos.version[0])
+    if (_lastFirmwareInfos.version[0] and versionCompare(_lastFirmwareInfos.version, VERSION) > 0)
       strlcpy(versionToFlash, _lastFirmwareInfos.version, sizeof(versionToFlash));
     else
       return false;
