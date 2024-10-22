@@ -366,10 +366,13 @@ String Core::getUpdateInfos()
   JsonDocument doc;
 
   doc["installed_version"] = VERSION;
-  doc["latest_version"] = _lastFirmwareInfos.version;
-  doc["title"] = _lastFirmwareInfos.title;
-  doc["release_summary"] = _lastFirmwareInfos.summary;
-  doc["release_url"] = String(F("https://github.com/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/tag/")) + _lastFirmwareInfos.version;
+  if (_lastFirmwareInfos.version[0])
+  {
+    doc["latest_version"] = _lastFirmwareInfos.version;
+    doc["title"] = _lastFirmwareInfos.title;
+    doc["release_summary"] = _lastFirmwareInfos.summary;
+    doc["release_url"] = String(F("https://github.com/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/tag/")) + _lastFirmwareInfos.version;
+  }
 
   String infos;
   serializeJson(doc, infos);
