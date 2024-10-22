@@ -196,11 +196,10 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
 
 #ifdef ESP8266
           if (!Update.begin((ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000))
-          {
 #else
           if (!Update.begin())
-          {
 #endif
+          {
 #ifdef LOG_SERIAL
             Update.printError(LOG_SERIAL);
 #endif
