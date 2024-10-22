@@ -13,7 +13,20 @@
     }
 </script>
 
-<h3>Upload a new Firmware : </h3>
+<h2>Current Firmware<span id="l1">
+        <h6 style="display:inline"><b> Loading...</b></h6>
+    </span></h2>
+Version: <span id='installed_version'></span>
+
+<h2>Online Upgrade<span id="l2">
+        <h6 style="display:inline"><b> Loading...</b></h6>
+    </span></h2>
+Latest Version: <span id='latest_version'></span><br>
+Title: <span id='title'></span><br>
+Summary: <span id='release_summary'></span><br>
+URL: <span id='release_url'></span>
+
+<h2>Manual Upgrade</h2>
 <form class="pure-form pure-form-aligned" id="f" method='POST' action='/fw' enctype='multipart/form-data'
     onsubmit='return firmwareValidation()'>
     <fieldset>
@@ -33,6 +46,17 @@
 <script>
     //QuerySelector Prefix is added by load function to know into what element queySelector need to look for
     //var qsp = '#content0 ';
+
+    getJSON("/gui", function (GUI) {
+        for (k in GUI) {
+            if ((e = $(qsp + '#' + k)) != undefined) e.innerHTML = GUI[k];
+        }
+        fadeOut($(qsp + "#l1"));
+        fadeOut($(qsp + "#l2"));
+    }, function () {
+        $(qsp + "#l1").innerHTML = '<h4 style="display:inline;color:red;"><b> Failed</b></h4>';
+        $(qsp + "#l2").innerHTML = '<h4 style="display:inline;color:red;"><b> Failed</b></h4>';
+    });
 
     $(qsp + "#f").addEventListener('submit', function (evt) {
         evt.preventDefault();
