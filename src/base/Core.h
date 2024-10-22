@@ -43,6 +43,7 @@ public:
 
   void checkForUpdate();
   String getUpdateInfos(bool refresh = false);
+  bool updateFirmware(const char *version = nullptr);
 };
 
 #endif

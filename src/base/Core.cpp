@@ -353,3 +353,92 @@ String Core::getUpdateInfos(bool refresh)
 
   return infos;
 }
+
+bool Core::updateFirmware(const char *version)
+{
+  char versionToFlash[8];
+  if (version && version[0])
+    strlcpy(versionToFlash, version, sizeof(versionToFlash));
+  else
+  {
+    checkForUpdate();
+    if (_lastFirmwareInfos.version[0])
+      strlcpy(versionToFlash, _lastFirmwareInfos.version, sizeof(versionToFlash));
+    else
+      return false;
+  }
+
+  WiFiClientSecure clientSecure;
+  clientSecure.setInsecure();
+
+  String fwUrl(F("https://github.com/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/download/"));
+  fwUrl = fwUrl + versionToFlash + F("/WirelessPalaSensor.") + versionToFlash + F(".bin");
+
+#ifdef LOG_SERIAL
+  LOG_SERIAL.print(F("Trying to Update from URL: "));
+  LOG_SERIAL.println(fwUrl);
+#endif
+
+  HTTPClient https;
+  https.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+  https.begin(clientSecure, fwUrl);
+  int httpCode = https.GET();
+
+  if (httpCode != 200)
+  {
+#ifdef LOG_SERIAL
+    LOG_SERIAL.print(F("Failed to download file, httpCode: "));
+    LOG_SERIAL.println(httpCode);
+#endif
+    https.end();
+    return false;
+  }
+
+  // starting here we have a valid httpCode
+
+  // get the stream
+  WiFiClient *stream = https.getStreamPtr();
+  int contentLength = https.getSize();
+
+#ifdef LOG_SERIAL
+  LOG_SERIAL.println(F("URL file found, Update Start"));
+#endif
+
+#ifdef ESP8266
+  if (!Update.begin(contentLength))
+#else
+  if (!Update.begin())
+#endif
+  {
+#ifdef LOG_SERIAL
+    Update.printError(LOG_SERIAL);
+#endif
+    return false;
+  }
+
+  if (!Update.writeStream(*stream))
+  {
+#ifdef LOG_SERIAL
+    Update.printError(LOG_SERIAL);
+#endif
+    return false;
+  }
+
+  if (!Update.end())
+  {
+#ifdef LOG_SERIAL
+    Update.printError(LOG_SERIAL);
+#endif
+    return false;
+  }
+  else
+  {
+#ifdef LOG_SERIAL
+    LOG_SERIAL.printf("Update Success: %uB\n", contentLength);
+#endif
+  }
+
+  https.end();
+
+  return true;
+}
