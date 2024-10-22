@@ -42,7 +42,7 @@ public:
   Core(char appId, String appName);
 
   void checkForUpdate();
-  String getUpdateInfos();
+  String getUpdateInfos(bool refresh = false);
 };
 
 #endif

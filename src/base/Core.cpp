@@ -117,6 +117,11 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
     server.sendHeader(F("Content-Encoding"), F("gzip"));
     server.send_P(200, PSTR("text/html"), fwhtmlgz, sizeof(fwhtmlgz)); });
 
+  server.on("/gui", HTTP_GET, [this, &server]()
+            {
+    SERVER_KEEPALIVE_FALSE()
+    server.send(200, F("application/json"), getUpdateInfos(true)); });
+
   // Firmware POST URL allows to push new firmware ----------------------------
   server.on(
       "/fw", HTTP_POST, [&shouldReboot, &pauseApplication, &server]()
@@ -274,9 +279,11 @@ void Core::checkForUpdate()
 {
   String githubURL = "https://api.github.com/repos/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/latest";
 
-  WiFiClient client;
+  WiFiClientSecure clientSecure;
   HTTPClient http;
-  http.begin(client, githubURL);
+
+  clientSecure.setInsecure();
+  http.begin(clientSecure, githubURL);
   int httpCode = http.GET();
   if (httpCode == 200)
   {
@@ -326,8 +333,11 @@ void Core::checkForUpdate()
   http.end();
 }
 
-String Core::getUpdateInfos()
+String Core::getUpdateInfos(bool refresh)
 {
+  if (refresh)
+    checkForUpdate();
+
   JsonDocument doc;
 
   doc["installed_version"] = VERSION;
