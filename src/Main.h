@@ -8,8 +8,8 @@
 #define TOSTRING(x) STRINGIFY(x)
 
 // ----- Should be modified for your application -----
-#define APPLICATION1_MANUFACTURER "Domochip"
-#define APPLICATION1_MODEL "WBase"
+#define APPLICATION1_MANUFACTURER "Domochip" // also used as Github user for OTA
+#define APPLICATION1_MODEL "WBase"           // also used as Github repository for OTA
 #define APPLICATION1_CLASS WBase
 #define VERSION_NUMBER "3.0.0"
 
