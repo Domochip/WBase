@@ -104,42 +104,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
     server.sendHeader(F("Content-Encoding"), F("gzip"));
     server.send_P(200, PSTR("text/html"), fwhtmlgz, sizeof(fwhtmlgz)); });
 
-  // sn url is a way to find module on network --------------------------------
-  char discoURL[10];
-#ifdef ESP8266
-  sprintf_P(discoURL, PSTR("/%08x"), ESP.getChipId());
-#else
-  sprintf_P(discoURL, PSTR("/%08x"), (uint32_t)(ESP.getEfuseMac() << 40 >> 40));
-#endif
-  server.on(discoURL, HTTP_GET, [&server]()
-            {
-    char chipID[9];
-#ifdef ESP8266
-    sprintf_P(chipID, PSTR("%08x"), ESP.getChipId());
-#else
-    sprintf_P(chipID, PSTR("%08x"), (uint32_t)(ESP.getEfuseMac() << 40 >> 40));
-#endif
-    SERVER_KEEPALIVE_FALSE()
-    server.enableCORS(true); //allow this URL to be requested from everywhere
-    server.sendHeader(F("Cache-Control"), F("no-cache"));
-    server.send(200, "text/html", chipID); });
-
-  // ffffffff url is a way to find all modules on the network -----------------
-  server.on("/ffffffff", HTTP_GET, [&server]()
-            {
-    //answer with a JSON string containing sn, model and version numbers
-    char discoJSON[128];
-#ifdef ESP8266
-    sprintf_P(discoJSON, PSTR("{\"sn\":\"%08x\",\"m\":\"%s\",\"v\":\"%s\"}"), ESP.getChipId(), APPLICATION1_NAME, VERSION);
-#else
-    sprintf_P(discoJSON, PSTR("{\"sn\":\"%08x\",\"m\":\"%s\",\"v\":\"%s\"}"), (uint32_t)(ESP.getEfuseMac() << 40 >> 40), APPLICATION1_NAME, VERSION);
-#endif
-    SERVER_KEEPALIVE_FALSE()
-    server.enableCORS(true); //allow this URL to be requested from everywhere
-    server.sendHeader(F("Cache-Control"), F("no-cache"));
-    server.send(200, "text/json", discoJSON); });
-
-  // FirmWare POST URL allows to push new firmware ----------------------------
+  // Firmware POST URL allows to push new firmware ----------------------------
   server.on(
       "/fw", HTTP_POST, [&shouldReboot, &pauseApplication, &server]()
       {
