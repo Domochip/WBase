@@ -14,6 +14,15 @@
 class Core : public Application
 {
 private:
+
+  typedef struct{
+    char version[8];
+    char title[64];
+    char summary[255];
+  } LastFirmwareInfo;
+
+  LastFirmwareInfo _lastFirmwareInfo;
+
   void setConfigDefaultValues();
   bool parseConfigJSON(JsonDocument &doc, bool fromWebPage);
   String generateConfigJSON(bool clearPassword);
