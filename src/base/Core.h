@@ -10,7 +10,6 @@
 #include "data/status0.html.gz.h"
 #include "data/config0.html.gz.h"
 #include "data/fw.html.gz.h"
-#include "data/discover.html.gz.h"
 
 class Core : public Application
 {

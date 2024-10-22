@@ -104,12 +104,6 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
     server.sendHeader(F("Content-Encoding"), F("gzip"));
     server.send_P(200, PSTR("text/html"), fwhtmlgz, sizeof(fwhtmlgz)); });
 
-  server.on("/discover.html", HTTP_GET, [this, &server]()
-            {
-    SERVER_KEEPALIVE_FALSE()
-    server.sendHeader(F("Content-Encoding"), F("gzip"));
-    server.send_P(200, PSTR("text/html"), discoverhtmlgz, sizeof(discoverhtmlgz)); });
-
   // sn url is a way to find module on network --------------------------------
   char discoURL[10];
 #ifdef ESP8266

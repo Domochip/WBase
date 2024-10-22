@@ -48,7 +48,6 @@
                             class="pure-menu-link">Status</a></li>
                     <li class="pure-menu-item" id="menuConfig"><a href="" class="pure-menu-link">Config</a></li>
                     <li class="pure-menu-item" id="menuFirmware"><a href="" class="pure-menu-link">Firmware</a></li>
-                    <li class="pure-menu-item" id="menuDiscover"><a href="" class="pure-menu-link">Discover</a></li>
                 </ul>
             </div>
         </div>
@@ -176,7 +175,6 @@
             $("#menuStatus").classList.remove("pure-menu-selected");
             $("#menuConfig").classList.remove("pure-menu-selected");
             $("#menuFirmware").classList.remove("pure-menu-selected");
-            $("#menuDiscover").classList.remove("pure-menu-selected");
 
             $("#content0").innerHTML = '';
             $("#contentw").innerHTML = '';
@@ -221,14 +219,6 @@
             $("#menuFirmware").classList.add("pure-menu-selected");
             $("#mainHeader").textContent = "Firmware";
             load($("#content0"), "/fw.html");
-        });
-
-        $("#menuDiscover").addEventListener("click", function (evt) {
-            evt.preventDefault();
-            emptyContents();
-            $("#menuDiscover").classList.add("pure-menu-selected");
-            $("#mainHeader").textContent = "Discover";
-            load($("#content0"), "/discover.html");
         });
     </script>
 </body>
