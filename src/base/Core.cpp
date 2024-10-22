@@ -117,10 +117,22 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
     server.sendHeader(F("Content-Encoding"), F("gzip"));
     server.send_P(200, PSTR("text/html"), fwhtmlgz, sizeof(fwhtmlgz)); });
 
+  // Get Update Infos ---------------------------------------------------------
   server.on("/gui", HTTP_GET, [this, &server]()
             {
     SERVER_KEEPALIVE_FALSE()
     server.send(200, F("application/json"), getUpdateInfos(true)); });
+
+  // Update Firmware from Github ----------------------------------------------
+  server.on("/update", HTTP_POST, [this, &shouldReboot, &pauseApplication, &server]()
+            {
+              shouldReboot = updateFirmware(server.arg("plain").c_str());
+
+              SERVER_KEEPALIVE_FALSE()
+              if (shouldReboot)
+                server.send(200, F("text/html"), F("Firmware Successfully Flashed <script>setTimeout(function(){if('referrer' in document)window.location=document.referrer;},10000);</script>"));
+              else
+                server.send(200, F("text/html"), F("Firmware Update Failed")); });
 
   // Firmware POST URL allows to push new firmware ----------------------------
   server.on(
