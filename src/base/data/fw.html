@@ -16,15 +16,40 @@
 <h2>Current Firmware<span id="l1">
         <h6 style="display:inline"><b> Loading...</b></h6>
     </span></h2>
-Version: <span id='installed_version'></span>
+<div class="pure-form pure-form-aligned">
+    <div class="pure-control-group">
+        <label for="installed_version">Version</label>
+        <span id='installed_version'></span>
+    </div>
+</div>
 
 <h2>Online Upgrade<span id="l2">
         <h6 style="display:inline"><b> Loading...</b></h6>
     </span></h2>
-Latest Version: <span id='latest_version'></span><br>
-Title: <span id='title'></span><br>
-Summary: <span id='release_summary'></span><br>
-URL: <span id='release_url'></span>
+<div class="pure-form pure-form-aligned">
+    <div class="pure-control-group">
+        <label for="latest_version">Latest Version</label>
+        <span id='latest_version'></span>
+    </div>
+    <div class="pure-control-group">
+        <label for="title">Title</label>
+        <span id='title'></span>
+    </div>
+    <div class="pure-control-group">
+        <label for="release_summary">Summary</label>
+        <span id='release_summary'></span>
+    </div>
+
+    <div class="pure-control-group">
+        <label for="release_url">URL</label>
+        <span id='release_url'></span>
+    </div>
+    <div class="pure-controls">
+        <button class="pure-button pure-button-primary" id="refreshButton" style="background: #1cb841;">Refresh</button>
+        <button class="pure-button pure-button-primary pure-button-disabled" id="upgradeButton"
+            style="background: #df7514;">Upgrade</button>
+    </div>
+</div>
 
 <h2>Manual Upgrade</h2>
 <form class="pure-form pure-form-aligned" id="f" method='POST' action='/fw' enctype='multipart/form-data'
