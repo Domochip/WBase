@@ -185,6 +185,25 @@
             requestAnimationFrame(tick);
         }
 
+        function startCountdown(elementSelector, initialCount, onComplete) {
+            let count = initialCount;
+            const cdi = setInterval(() => {
+                const cdElement = document.querySelector(elementSelector);
+                if (cdElement) {
+                    cdElement.innerText = count;
+                    if (count === 0) {
+                        clearInterval(cdi);
+                        if (typeof onComplete === 'function') {
+                            onComplete();
+                        }
+                    }
+                    count--;
+                } else {
+                    clearInterval(cdi);
+                }
+            }, 1000);
+        }
+
         function triggerEvent(el, evtName) {
             var evt = new Event(evtName, {
                 bubbles: true,
