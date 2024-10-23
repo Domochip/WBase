@@ -1,3 +1,25 @@
+<style>
+    .spinner {
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-left-color: #fff;
+        border-radius: 50%;
+        width: 12px;
+        height: 12px;
+        display: inline-block;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
 <h2>Current Firmware<span id="l1">
         <h6 style="display:inline"><b> Loading...</b></h6>
     </span></h2>
@@ -87,6 +109,13 @@
 
     function getUpdateInfos(refresh = false) {
 
+        const refreshButton = $(qsp + "#refreshButton");
+        const originalButtonText = refreshButton.innerHTML;
+
+        // Show loading animation
+        refreshButton.innerHTML = '<span class="spinner"></span> Refreshing...';
+        refreshButton.disabled = true;
+
         // add param to /gui for force refresh
         let url = "/gui";
         if (refresh) {
@@ -98,9 +127,15 @@
             }
             fadeOut($(qsp + "#l1"));
             fadeOut($(qsp + "#l2"));
+            // Restore button text and state
+            refreshButton.innerHTML = originalButtonText;
+            refreshButton.disabled = false;
         }, function () {
             $(qsp + "#l1").innerHTML = '<h4 style="display:inline;color:red;"><b> Failed</b></h4>';
             $(qsp + "#l2").innerHTML = '<h4 style="display:inline;color:red;"><b> Failed</b></h4>';
+            // Restore button text and state
+            refreshButton.innerHTML = originalButtonText;
+            refreshButton.disabled = false;
         });
     }
     getUpdateInfos();
