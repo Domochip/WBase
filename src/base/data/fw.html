@@ -68,8 +68,7 @@
 </div>
 
 <h2>Manual Upgrade</h2>
-<form class="pure-form pure-form-aligned" id="f" method='POST' action='/fw' enctype='multipart/form-data'
-    onsubmit='return firmwareValidation()'>
+<form class="pure-form pure-form-aligned" id="f" method='POST' action='/fw' enctype='multipart/form-data'>
     <fieldset>
         <div class="pure-control-group">
             <label for="name">Firmware File</label>
@@ -126,6 +125,4 @@
             }
         );
     });
-
-    $(qsp + "#f").onsubmit = null; //remove default submit after new Event listener
 </script>
