@@ -77,11 +77,26 @@
     </script>
     <script src="side-menu.js"></script>
     <script>
-        function runScript(code) {
-            var scr = document.createElement('script');
-            scr.text = code;
-            var elemForDebug = document.head.appendChild(scr);
-            elemForDebug.parentNode.removeChild(scr);
+        const loadedScripts = new Set();
+
+        function loadScript(code) {
+            const script = document.createElement('script');
+            const blob = new Blob([code], { type: 'application/javascript' });
+            const url = URL.createObjectURL(blob);
+            script.src = url;
+            script.onload = () => URL.revokeObjectURL(url);
+            document.head.appendChild(script);
+            loadedScripts.add(script);
+        }
+
+        function unloadScripts() {
+            loadedScripts.forEach(script => {
+                if (script.src) {
+                    URL.revokeObjectURL(script.src);
+                }
+                document.head.removeChild(script);
+            });
+            loadedScripts.clear();
         }
 
         function request(method, url, data, success, fail, timeout, uploadProgress) {
@@ -111,7 +126,7 @@
                 for (var i = 0; i < scriptList.length; i++) {
                     //Replace "QuerySelectorPrefix" aka "qsp" : allow script to search into the parent element
                     scriptList[i].innerHTML = scriptList[i].innerHTML.replace(/qsp/g, '\'#' + element.id + ' \'');
-                    runScript(scriptList[i].innerHTML);
+                    loadScript(scriptList[i].innerHTML);
                 }
                 if (callback) callback();
             });
@@ -174,6 +189,7 @@
 
 
         function emptyContents() {
+            unloadScripts();
             $("#menuStatus").classList.remove("pure-menu-selected");
             $("#menuConfig").classList.remove("pure-menu-selected");
             $("#menuFirmware").classList.remove("pure-menu-selected");

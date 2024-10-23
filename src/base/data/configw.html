@@ -99,7 +99,7 @@
                 reloadCode += '}count--;}else{clearInterval(cdi);}},1000);';
 
                 $(qsp + '#r').innerHTML = '<h3><b>Configuration saved <span style="color: green;">successfully</span>. System is restarting now.</b></h3>This page will be reloaded in <span id="cd">20</span>sec.';
-                runScript(reloadCode);
+                loadScript(reloadCode);
             },
             function () {
                 $(qsp + '#r').innerHTML = '<h3><b>Configuration <span style="color: red;">error</span>.</b></h3>';
