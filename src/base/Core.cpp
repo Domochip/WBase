@@ -121,7 +121,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
   server.on("/gui", HTTP_GET, [this, &server]()
             {
     SERVER_KEEPALIVE_FALSE()
-    server.send(200, F("application/json"), getUpdateInfos(true)); });
+    server.send(200, F("application/json"), getUpdateInfos(server.hasArg("refresh"))); });
 
   // Update Firmware from Github ----------------------------------------------
   server.on("/update", HTTP_POST, [this, &shouldReboot, &pauseApplication, &server]()

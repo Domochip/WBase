@@ -1,34 +1,3 @@
-<script type="text/javascript">
-    function firmwareValidation() {
-        const fileInput = $(qsp + '#fi');
-        const productName = sessionStorage.getItem("ProductName");
-        if (!fileInput || !productName) {
-            return false;
-        }
-
-        let fn = fileInput.value;
-        fn = fn.split(/(\\|\/)/g).pop();
-
-        // Define the patterns for the filename
-        const versionPattern = '\\d+\\.\\d+\\.\\d+';
-        const filenamePattern1 = new RegExp(`^${productName}\\.${versionPattern}\\.bin$`, 'i');
-        let filenamePattern2 = null;
-
-        // If product name starts with 'W', define an additional pattern
-        if (productName.startsWith('W')) {
-            const productNameWithoutFirstChar = productName.substring(1);
-            filenamePattern2 = new RegExp(`^Wireless${productNameWithoutFirstChar}\\.${versionPattern}\\.bin$`, 'i');
-        }
-
-        // Check if the filename matches either pattern
-        if (!filenamePattern1.test(fn) && (!filenamePattern2 || !filenamePattern2.test(fn))) {
-            alert(`You didn't select a valid Firmware file for ${productName}`);
-            return false;
-        }
-        return confirm("Please do not power off the device during the upgrade process.");
-    }
-</script>
-
 <h2>Current Firmware<span id="l1">
         <h6 style="display:inline"><b> Loading...</b></h6>
     </span></h2>
@@ -87,16 +56,57 @@
     //QuerySelector Prefix is added by load function to know into what element queySelector need to look for
     //var qsp = '#content0 ';
 
-    getJSON("/gui", function (GUI) {
-        for (k in GUI) {
-            if ((e = $(qsp + '#' + k)) != undefined) e.innerHTML = GUI[k];
+    function firmwareValidation() {
+        const fileInput = $(qsp + '#fi');
+        const productName = sessionStorage.getItem("ProductName");
+        if (!fileInput || !productName) {
+            return false;
         }
-        fadeOut($(qsp + "#l1"));
-        fadeOut($(qsp + "#l2"));
-    }, function () {
-        $(qsp + "#l1").innerHTML = '<h4 style="display:inline;color:red;"><b> Failed</b></h4>';
-        $(qsp + "#l2").innerHTML = '<h4 style="display:inline;color:red;"><b> Failed</b></h4>';
-    });
+
+        let fn = fileInput.value;
+        fn = fn.split(/(\\|\/)/g).pop();
+
+        // Define the patterns for the filename
+        const versionPattern = '\\d+\\.\\d+\\.\\d+';
+        const filenamePattern1 = new RegExp(`^${productName}\\.${versionPattern}\\.bin$`, 'i');
+        let filenamePattern2 = null;
+
+        // If product name starts with 'W', define an additional pattern
+        if (productName.startsWith('W')) {
+            const productNameWithoutFirstChar = productName.substring(1);
+            filenamePattern2 = new RegExp(`^Wireless${productNameWithoutFirstChar}\\.${versionPattern}\\.bin$`, 'i');
+        }
+
+        // Check if the filename matches either pattern
+        if (!filenamePattern1.test(fn) && (!filenamePattern2 || !filenamePattern2.test(fn))) {
+            alert(`You didn't select a valid Firmware file for ${productName}`);
+            return false;
+        }
+        return confirm("Please do not power off the device during the upgrade process.");
+    }
+
+    function getUpdateInfos(refresh = false) {
+
+        // add param to /gui for force refresh
+        let url = "/gui";
+        if (refresh) {
+            url += "?refresh=true";
+        }
+        getJSON(url, function (GUI) {
+            for (k in GUI) {
+                if ((e = $(qsp + '#' + k)) != undefined) e.innerHTML = GUI[k];
+            }
+            fadeOut($(qsp + "#l1"));
+            fadeOut($(qsp + "#l2"));
+        }, function () {
+            $(qsp + "#l1").innerHTML = '<h4 style="display:inline;color:red;"><b> Failed</b></h4>';
+            $(qsp + "#l2").innerHTML = '<h4 style="display:inline;color:red;"><b> Failed</b></h4>';
+        });
+    }
+    getUpdateInfos();
+
+    $(qsp + "#refreshButton").addEventListener('click', () => { getUpdateInfos(true); });
+
 
     $(qsp + "#f").addEventListener('submit', function (evt) {
         evt.preventDefault();
