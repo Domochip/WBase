@@ -41,7 +41,7 @@
         <div id="menu">
             <div class="pure-menu">
                 <div class="pure-menu-heading">Domochip</div>
-                <div class="pure-menu-heading" id="menuAppName"></div>
+                <div class="pure-menu-heading" id="menuProductName"></div>
 
                 <ul class="pure-menu-list" id="menuList">
                     <li class="pure-menu-item pure-menu-selected" id="menuStatus"><a href=""
@@ -191,11 +191,12 @@
             load($("#contentw"), "/statusw.html");
 
             load($("#content1"), "/status1.html", function () {
-                if ($("#applicationName") != null && $("#applicationName").innerText.length != 0) {
-                    document.title = "Domochip " + $("#applicationName").innerText;
-                    sessionStorage.setItem("ProductName", $("#applicationName").innerText);
-                    $("meta[name='description']").content = $("#applicationName").innerText;
-                    $("#menuAppName").innerText = $("#applicationName").innerText;
+                if ($("#productName") != null && $("#productName").innerText.length != 0) {
+                    const productNameText = $("#productName").innerText;
+                    document.title = "Domochip " + productNameText;
+                    sessionStorage.setItem("ProductName", productNameText);
+                    $("meta[name='description']").content = productNameText;
+                    $("#menuProductName").innerText = productNameText;
                 }
             });
         });
