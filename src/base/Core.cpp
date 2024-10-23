@@ -323,16 +323,25 @@ void Core::checkForUpdate()
         const char *end = strstr(body, "\r\n\r\n##");
         if (end)
         {
-          byte len = (byte)(end - body);
+          size_t len = end - body;
           if (len >= sizeof(_lastFirmwareInfos.summary))
             len = sizeof(_lastFirmwareInfos.summary) - 1;
 
-          strlcpy(_lastFirmwareInfos.summary, body, len);
+          // Copy the string considering multi-byte characters
+          strncpy(_lastFirmwareInfos.summary, body, len);
+          _lastFirmwareInfos.summary[len] = 0;
         }
-        else if (strlen(body) < sizeof(_lastFirmwareInfos.summary))
-          strlcpy(_lastFirmwareInfos.summary, body, sizeof(_lastFirmwareInfos.summary));
         else
-          _lastFirmwareInfos.summary[0] = 0;
+        {
+          size_t bodyLen = strlen(body);
+          if (bodyLen < sizeof(_lastFirmwareInfos.summary))
+          {
+            strncpy(_lastFirmwareInfos.summary, body, bodyLen);
+            _lastFirmwareInfos.summary[bodyLen] = 0;
+          }
+          else
+            _lastFirmwareInfos.summary[0] = 0;
+        }
       }
     }
     else
