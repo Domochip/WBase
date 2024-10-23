@@ -111,6 +111,18 @@
         return confirm("Please do not power off the device during the upgrade process.");
     }
 
+    function autoUpdateReleaseURL() {
+        const releaseUrlSpan = $('#release_url');
+        const observer = new MutationObserver(() => {
+            const url = releaseUrlSpan.innerHTML;
+            if (url && !url.startsWith('<a')) {
+                releaseUrlSpan.innerHTML = `<a href="${url}" target="_blank">${url}</a>`;
+            }
+        });
+        observer.observe(releaseUrlSpan, { childList: true, subtree: true });
+    }
+    autoUpdateReleaseURL();
+
     function getUpdateInfos(refresh = false) {
 
         const refreshButton = $(qsp + "#refreshButton");
