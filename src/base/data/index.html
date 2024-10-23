@@ -165,8 +165,10 @@
         }
 
         function triggerEvent(el, evtName) {
-            var evt = document.createEvent('Event');
-            evt.initEvent(evtName, true, true);
+            var evt = new Event(evtName, {
+                bubbles: true,
+                cancelable: true
+            });
             el.dispatchEvent(evt);
         }
 
