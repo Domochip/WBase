@@ -1,15 +1,31 @@
 <script type="text/javascript">
     function firmwareValidation() {
-        var fn = document.getElementById("fi").value;
-        if (fn.lastIndexOf("/") != -1) fn = fn.substring(fn.lastIndexOf("/") + 1);
-        if (fn.lastIndexOf("\\") != -1) fn = fn.substring(fn.lastIndexOf("\\") + 1);
-        if (fn.toLowerCase().indexOf(sessionStorage.getItem("ProductName").toLowerCase()) != 0) {
-            alert("You didn't select a valid Firmware file for " + sessionStorage.getItem("ProductName"));
+        const fileInput = $(qsp + '#fi');
+        const productName = sessionStorage.getItem("ProductName");
+        if (!fileInput || !productName) {
             return false;
-        };
-        var ret = confirm("Are you sure to flash firmware?");
-        if (ret) document.getElementById('r').innerHTML = 'In Progress...';
-        return ret;
+        }
+
+        let fn = fileInput.value;
+        fn = fn.split(/(\\|\/)/g).pop();
+
+        // Define the patterns for the filename
+        const versionPattern = '\\d+\\.\\d+\\.\\d+';
+        const filenamePattern1 = new RegExp(`^${productName}\\.${versionPattern}\\.bin$`, 'i');
+        let filenamePattern2 = null;
+
+        // If product name starts with 'W', define an additional pattern
+        if (productName.startsWith('W')) {
+            const productNameWithoutFirstChar = productName.substring(1);
+            filenamePattern2 = new RegExp(`^Wireless${productNameWithoutFirstChar}\\.${versionPattern}\\.bin$`, 'i');
+        }
+
+        // Check if the filename matches either pattern
+        if (!filenamePattern1.test(fn) && (!filenamePattern2 || !filenamePattern2.test(fn))) {
+            alert(`You didn't select a valid Firmware file for ${productName}`);
+            return false;
+        }
+        return confirm("Please do not power off the device during the upgrade process.");
     }
 </script>
 
@@ -86,6 +102,7 @@
     $(qsp + "#f").addEventListener('submit', function (evt) {
         evt.preventDefault();
         if (!firmwareValidation()) return;
+        $(qsp + '#r').innerHTML = 'In Progress';
         $(qsp + '#fi').readOnly = true;
         $(qsp + '#sub').disabled = true;
         post('/fw',
