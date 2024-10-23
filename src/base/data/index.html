@@ -188,7 +188,7 @@
         function startCountdown(elementSelector, initialCount, onComplete) {
             let count = initialCount;
             const cdi = setInterval(() => {
-                const cdElement = document.querySelector(elementSelector);
+                const cdElement = $(elementSelector);
                 if (cdElement) {
                     cdElement.innerText = count;
                     if (count === 0) {
