@@ -194,10 +194,8 @@
                 if ($("#applicationName") != null && $("#applicationName").innerText.length != 0) {
                     document.title = "Domochip " + $("#applicationName").innerText;
                     sessionStorage.setItem("ProductName", $("#applicationName").innerText);
-                }
-                if ($("#shortApplicationName") != null && $("#shortApplicationName").innerText.length != 0) {
-                    $("meta[name='description']").content = $("#shortApplicationName").innerText;
-                    $("#menuAppName").innerText = $("#shortApplicationName").innerText;
+                    $("meta[name='description']").content = $("#applicationName").innerText;
+                    $("#menuAppName").innerText = $("#applicationName").innerText;
                 }
             });
         });
