@@ -163,7 +163,7 @@
         }
 
         function fadeOut(el) {
-            if (!el) return; // Check if el is null or undefined
+            if (!el || el.style.display === 'none') return; // Check if el is null or undefined
 
             el.style.opacity = 1;
             const duration = 400; // Duration of the fade-out effect in milliseconds
