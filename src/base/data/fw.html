@@ -114,30 +114,6 @@
         return confirm("Please do not power off the device during the update process.");
     }
 
-    function autoUpdateReleaseURL() {
-        const releaseUrlSpan = $('#release_url');
-        const observer = new MutationObserver(() => {
-            const url = releaseUrlSpan.innerHTML;
-            if (url && !url.startsWith('<a')) {
-                releaseUrlSpan.innerHTML = `<a href="${url}" target="_blank">${url}</a>`;
-            }
-        });
-        observer.observe(releaseUrlSpan, { childList: true, subtree: true });
-    }
-    autoUpdateReleaseURL();
-
-    function autoUpdateSummary() {
-        const releaseSummarySpan = $('#release_summary');
-        const observer = new MutationObserver(() => {
-            const summary = releaseSummarySpan.innerHTML;
-            if (summary && summary.includes('\n')) {
-                releaseSummarySpan.innerHTML = summary.replace(/\r\n/g, '<br>').replace(/\n/g, '<br>');
-            }
-        });
-        observer.observe(releaseSummarySpan, { childList: true, subtree: true });
-    }
-    autoUpdateSummary();
-
     function getUpdateInfos(refresh = false) {
 
         const refreshButton = $(qsp + "#refreshButton");
@@ -156,17 +132,33 @@
             for (k in GUI) {
                 if ((e = $(qsp + '#' + k)) != undefined) e.innerHTML = GUI[k];
             }
+            // Restore button text and state
+            refreshButton.innerHTML = originalButtonText;
+            refreshButton.disabled = false;
+
+            // Update the release URL
+            const releaseUrlSpan = $('#release_url');
+            const url = releaseUrlSpan.innerHTML;
+            if (url) {
+                releaseUrlSpan.innerHTML = `<a href="${url}" target="_blank">${url}</a>`;
+            }
+
+            // Update the Summary
+            const releaseSummarySpan = $('#release_summary');
+            const summary = releaseSummarySpan.innerHTML;
+            if (summary) {
+                releaseSummarySpan.innerHTML = summary.replace(/\r\n/g, '<br>').replace(/\n/g, '<br>');
+            }
+
             fadeOut($(qsp + "#l1"));
             fadeOut($(qsp + "#l2"));
+
+        }, function () {
             // Restore button text and state
             refreshButton.innerHTML = originalButtonText;
             refreshButton.disabled = false;
-        }, function () {
             $(qsp + "#l1").innerHTML = '<h4 style="display:inline;color:red;"><b> Failed</b></h4>';
             $(qsp + "#l2").innerHTML = '<h4 style="display:inline;color:red;"><b> Failed</b></h4>';
-            // Restore button text and state
-            refreshButton.innerHTML = originalButtonText;
-            refreshButton.disabled = false;
         });
     }
     getUpdateInfos();
