@@ -197,8 +197,10 @@
 
     $(qsp + "#refreshButton").addEventListener('click', () => { getUpdateInfos(true); });
     $(qsp + "#updateButton").addEventListener('click', () => {
+        $(qsp + '#refreshButton').disabled = true;
         $(qsp + '#updateButton').disabled = true;
         $(qsp + '#updateButton').innerHTML = '<span class="spinner"></span> Updating...';
+
         post('/update', $(qsp + '#latest_version').textContent, () => {
             $(qsp + '#updateButton').innerHTML = '<span class="spinner"></span> Rebooting...';
             $(qsp + '#r').innerHTML = '<h3><span style="color: green;"><b>Done</b></span> System is rebooting. This page will be reloaded in <span id="cd">20</span>sec.</h3>';
@@ -206,6 +208,7 @@
         }, () => {
             $(qsp + '#updateButton').innerHTML = 'Update';
             $(qsp + '#updateButton').disabled = false;
+            $(qsp + '#refreshButton').disabled = false;
         });
     });
 
