@@ -162,8 +162,9 @@
             // Restore button text and state
             refreshButton.innerHTML = originalButtonText;
             refreshButton.disabled = false;
-            $(qsp + "#l1").innerHTML = '<h4 style="display:inline;color:red;"><b> Failed</b></h4>';
-            $(qsp + "#l2").innerHTML = '<h4 style="display:inline;color:red;"><b> Failed</b></h4>';
+            ['#l1', '#l2'].forEach(id => {
+                $(qsp + id).innerHTML = '<h4 style="display:inline;color:red;"><b> Failed</b></h4>';
+            });
         });
     }
     getUpdateInfos();
