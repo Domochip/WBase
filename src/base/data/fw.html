@@ -126,6 +126,18 @@
     }
     autoUpdateReleaseURL();
 
+    function autoUpdateSummary() {
+        const releaseSummarySpan = $('#release_summary');
+        const observer = new MutationObserver(() => {
+            const summary = releaseSummarySpan.innerHTML;
+            if (summary && summary.includes('\n')) {
+                releaseSummarySpan.innerHTML = summary.replace(/\r\n/g, '<br>').replace(/\n/g, '<br>');
+            }
+        });
+        observer.observe(releaseSummarySpan, { childList: true, subtree: true });
+    }
+    autoUpdateSummary();
+
     function getUpdateInfos(refresh = false) {
 
         const refreshButton = $(qsp + "#refreshButton");
