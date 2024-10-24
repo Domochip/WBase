@@ -212,55 +212,52 @@
         }
 
 
-        function emptyContents() {
+        function clearMenuAndContent() {
             unloadScripts();
-            $("#menuStatus").classList.remove("pure-menu-selected");
-            $("#menuConfig").classList.remove("pure-menu-selected");
-            $("#menuFirmware").classList.remove("pure-menu-selected");
+            ["#menuStatus", "#menuConfig", "#menuFirmware"].forEach(item => { $(item).classList.remove("pure-menu-selected"); });
 
-            $("#content0").innerHTML = '';
-            $("#contentw").innerHTML = '';
-            $("#content1").innerHTML = '';
+            ["#content0", "#contentw", "#content1"].forEach(item => { $(item).innerHTML = ''; });
         };
 
-        $("#menuStatus").addEventListener("click", function (evt) {
-            evt.preventDefault();
-            emptyContents();
-            $("#menuStatus").classList.add("pure-menu-selected");
-            $("#mainHeader").textContent = "Status";
+        function handleMenuClick(menuId, headerText, contentMappings, callback) {
+            $(menuId).addEventListener("click", (evt) => {
+                evt.preventDefault();
+                clearMenuAndContent();
+                $(menuId).classList.add("pure-menu-selected");
+                $("#mainHeader").textContent = headerText;
 
-            load($("#content0"), "/status0.html");
-            load($("#contentw"), "/statusw.html");
-
-            load($("#content1"), "/status1.html", function () {
-                if ($("#productName") != null && $("#productName").innerText.length != 0) {
-                    const productNameText = $("#productName").innerText;
-                    document.title = "Domochip " + productNameText;
-                    sessionStorage.setItem("ProductName", productNameText);
-                    $("meta[name='description']").content = productNameText;
-                    $("#menuProductName").innerText = productNameText;
+                for (const [contentId, url] of Object.entries(contentMappings)) {
+                    load($(contentId), url, callback);
                 }
             });
+        }
+
+        handleMenuClick("#menuStatus", "Status", {
+            "#content0": "/status0.html",
+            "#contentw": "/statusw.html",
+            "#content1": "/status1.html"
+        }, () => {
+            const productNameElement = $("#productName");
+            if (productNameElement && productNameElement.innerText.length !== 0) {
+                const productNameText = productNameElement.innerText;
+                document.title = `Domochip ${productNameText}`;
+                sessionStorage.setItem("ProductName", productNameText);
+                $("meta[name='description']").content = productNameText;
+                $("#menuProductName").innerText = productNameText;
+            }
         });
+
+        handleMenuClick("#menuConfig", "Config", {
+            "#content0": "/config0.html",
+            "#contentw": "/configw.html",
+            "#content1": "/config1.html"
+        });
+
+        handleMenuClick("#menuFirmware", "Firmware", {
+            "#content0": "/fw.html"
+        });
+
         triggerEvent($("#menuStatus"), 'click');
-
-        $("#menuConfig").addEventListener("click", function (evt) {
-            evt.preventDefault();
-            emptyContents();
-            $("#menuConfig").classList.add("pure-menu-selected");
-            $("#mainHeader").textContent = "Config";
-            load($("#content0"), "/config0.html");
-            load($("#contentw"), "/configw.html");
-            load($("#content1"), "/config1.html");
-        });
-
-        $("#menuFirmware").addEventListener("click", function (evt) {
-            evt.preventDefault();
-            emptyContents();
-            $("#menuFirmware").classList.add("pure-menu-selected");
-            $("#mainHeader").textContent = "Firmware";
-            load($("#content0"), "/fw.html");
-        });
     </script>
 </body>
 
