@@ -114,6 +114,14 @@
         return confirm("Please do not power off the device during the update process.");
     }
 
+    function compareVersions(installed, latest) {
+        const installedParts = installed.split('.').map(Number);
+        const latestParts = latest.split('.').map(Number);
+
+        return latestParts.some((part, i) => part > (installedParts[i] || 0)) &&
+            !latestParts.some((part, i) => part < (installedParts[i] || 0));
+    }
+
     function getUpdateInfos(refresh = false) {
 
         const refreshButton = $(qsp + "#refreshButton");
@@ -122,6 +130,9 @@
         // Show loading animation
         refreshButton.innerHTML = '<span class="spinner"></span> Refreshing...';
         refreshButton.disabled = true;
+
+        // Disable the updateButton during refresh
+        $('#updateButton').classList.add('pure-button-disabled');
 
         // clear previous values
         ['#latest_version', '#title', '#release_date', '#release_summary', '#release_url'].forEach(id => {
@@ -155,6 +166,14 @@
                 releaseSummarySpan.innerHTML = summary.replace(/\r\n/g, '<br>').replace(/\n/g, '<br>');
             }
 
+            // Update the updateButton state
+            const latestVersion = $('#latest_version').textContent;
+            if (latestVersion && compareVersions($('#installed_version').textContent, latestVersion)) {
+                $('#updateButton').classList.remove('pure-button-disabled');
+            } else {
+                $('#updateButton').classList.add('pure-button-disabled');
+            }
+
             fadeOut($(qsp + "#l1"));
             fadeOut($(qsp + "#l2"));
 
@@ -170,7 +189,16 @@
     getUpdateInfos();
 
     $(qsp + "#refreshButton").addEventListener('click', () => { getUpdateInfos(true); });
-
+    $(qsp + "#updateButton").addEventListener('click', () => {
+        $('#updateButton').classList.add('pure-button-disabled');
+        $('#updateButton').innerHTML = '<span class="spinner"></span> Updating...';
+        post('/update', $('#latest_version').textContent, () => {
+            $('#updateButton').innerHTML = '<span class="spinner"></span> Restarting...';
+        }, () => {
+            $('#updateButton').innerHTML = 'Update';
+            $('#updateButton').classList.remove('pure-button-disabled');
+        });
+    });
 
     $(qsp + "#f").addEventListener('submit', function (evt) {
         evt.preventDefault();
