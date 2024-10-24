@@ -100,8 +100,8 @@
         }
 
         function request(method, url, data, success, fail, timeout, uploadProgress) {
-            var xhr = new XMLHttpRequest();
-            xhr.onreadystatechange = function () {
+            const xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = () => {
                 if (xhr.readyState === XMLHttpRequest.DONE) {
                     if (xhr.status >= 200 && xhr.status < 300) {
                         if (typeof success === 'function') success(xhr.response);
@@ -110,7 +110,7 @@
                     }
                 }
             };
-            if (uploadProgress) xhr.upload.addEventListener('progress', uploadProgress);
+            if (uploadProgress && xhr.upload) { xhr.upload.onprogress = uploadProgress; }
             xhr.open(method, url);
             if (timeout) xhr.timeout = timeout;
             if (typeof data == "string") xhr.setRequestHeader('Content-type', 'application/json');
