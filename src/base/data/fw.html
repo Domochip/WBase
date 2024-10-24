@@ -96,14 +96,14 @@
         fn = fn.split(/(\\|\/)/g).pop();
 
         // Define the patterns for the filename
-        const versionPattern = '\\d+\\.\\d+\\.\\d+';
-        const filenamePattern1 = new RegExp(`^${productName}\\.${versionPattern}\\.bin$`, 'i');
+        const versionPattern = '\\.\\d+\\.\\d+\\.\\d+';
+        const filenamePattern1 = new RegExp(`^${productName}${versionPattern}\\.bin$`, 'i');
         let filenamePattern2 = null;
 
         // If product name starts with 'W', define an additional pattern
         if (productName.startsWith('W')) {
             const productNameWithoutFirstChar = productName.substring(1);
-            filenamePattern2 = new RegExp(`^Wireless${productNameWithoutFirstChar}\\.${versionPattern}\\.bin$`, 'i');
+            filenamePattern2 = new RegExp(`^Wireless${productNameWithoutFirstChar}${versionPattern}\\.bin$`, 'i');
         }
 
         // Check if the filename matches either pattern
