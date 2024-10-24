@@ -70,8 +70,7 @@
 
     <script>
         //from https://developer.mozilla.org/en-US/docs/Archive/Add-ons/Code_snippets/QuerySelector
-        function $(selector, el) {
-            if (!el) el = document;
+        function $(selector, el = document) {
             return el.querySelector(selector);
         }
     </script>
