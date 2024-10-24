@@ -61,8 +61,8 @@
     </div>
     <div class="pure-controls">
         <button class="pure-button pure-button-primary" id="refreshButton" style="background: #1cb841;">Refresh</button>
-        <button class="pure-button pure-button-primary pure-button-disabled" id="updateButton"
-            style="background: #df7514;">Update</button>
+        <button class="pure-button pure-button-primary" id="updateButton" style="background: #df7514;"
+            disabled>Update</button>
     </div>
 </div>
 
@@ -125,14 +125,13 @@
     function getUpdateInfos(refresh = false) {
 
         const refreshButton = $(qsp + "#refreshButton");
-        const originalButtonText = refreshButton.innerHTML;
 
         // Show loading animation
         refreshButton.innerHTML = '<span class="spinner"></span> Refreshing...';
         refreshButton.disabled = true;
 
         // Disable the updateButton during refresh
-        $('#updateButton').classList.add('pure-button-disabled');
+        $(qsp + '#updateButton').disabled = true;
 
         // clear previous values
         ['#latest_version', '#title', '#release_date', '#release_summary', '#release_url'].forEach(id => {
@@ -148,30 +147,30 @@
             for (k in GUI) {
                 if ((e = $(qsp + '#' + k)) != undefined) e.innerHTML = GUI[k];
             }
-            // Restore button text and state
-            refreshButton.innerHTML = originalButtonText;
-            refreshButton.disabled = false;
-
             // Update the release URL
-            const releaseUrlSpan = $('#release_url');
+            const releaseUrlSpan = $(qsp + '#release_url');
             const url = releaseUrlSpan.innerHTML;
             if (url) {
                 releaseUrlSpan.innerHTML = `<a href="${url}" target="_blank">${url}</a>`;
             }
 
             // Update the Summary
-            const releaseSummarySpan = $('#release_summary');
+            const releaseSummarySpan = $(qsp + '#release_summary');
             const summary = releaseSummarySpan.innerHTML;
             if (summary) {
                 releaseSummarySpan.innerHTML = summary.replace(/\r\n/g, '<br>').replace(/\n/g, '<br>');
             }
 
+            // Restore refreshButton text and state
+            refreshButton.innerHTML = 'Refresh';
+            refreshButton.disabled = false;
+
             // Update the updateButton state
-            const latestVersion = $('#latest_version').textContent;
-            if (latestVersion && compareVersions($('#installed_version').textContent, latestVersion)) {
-                $('#updateButton').classList.remove('pure-button-disabled');
+            const latestVersion = $(qsp + '#latest_version').textContent;
+            if (latestVersion && compareVersions($(qsp + '#installed_version').textContent, latestVersion)) {
+                $(qsp + '#updateButton').disabled = false;
             } else {
-                $('#updateButton').classList.add('pure-button-disabled');
+                $(qsp + '#updateButton').disabled = true;
             }
 
             fadeOut($(qsp + "#l1"));
@@ -179,7 +178,7 @@
 
         }, function () {
             // Restore button text and state
-            refreshButton.innerHTML = originalButtonText;
+            refreshButton.innerHTML = 'Refresh';
             refreshButton.disabled = false;
             ['#l1', '#l2'].forEach(id => {
                 $(qsp + id).innerHTML = '<h4 style="display:inline;color:red;"><b> Failed</b></h4>';
@@ -190,15 +189,15 @@
 
     $(qsp + "#refreshButton").addEventListener('click', () => { getUpdateInfos(true); });
     $(qsp + "#updateButton").addEventListener('click', () => {
-        $('#updateButton').classList.add('pure-button-disabled');
-        $('#updateButton').innerHTML = '<span class="spinner"></span> Updating...';
-        post('/update', $('#latest_version').textContent, () => {
-            $('#updateButton').innerHTML = '<span class="spinner"></span> Rebooting...';
+        $(qsp + '#updateButton').disabled = true;
+        $(qsp + '#updateButton').innerHTML = '<span class="spinner"></span> Updating...';
+        post('/update', $(qsp + '#latest_version').textContent, () => {
+            $(qsp + '#updateButton').innerHTML = '<span class="spinner"></span> Rebooting...';
             $(qsp + '#r').innerHTML = '<h3><span style="color: green;"><b>Done</b></span> System is rebooting. This page will be reloaded in <span id="cd">20</span>sec.</h3>';
             loadScript('startCountdown("#cd", 19, () => {location.reload();});');
         }, () => {
-            $('#updateButton').innerHTML = 'Update';
-            $('#updateButton').classList.remove('pure-button-disabled');
+            $(qsp + '#updateButton').innerHTML = 'Update';
+            $(qsp + '#updateButton').disabled = false;
         });
     });
 
