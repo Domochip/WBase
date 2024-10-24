@@ -147,47 +147,9 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
       //Upload failed so restart to Run Application in loop
       pauseApplication = false;
       //Prepare response
-      String errorMsg(Update.getError());
-      errorMsg+=' ';
+      String errorMsg;
 #ifdef ESP8266
-      switch(Update.getError()){
-        case UPDATE_ERROR_WRITE:
-          errorMsg=F("Flash Write Failed");
-          break;
-        case UPDATE_ERROR_ERASE:
-          errorMsg=F("Flash Erase Failed");
-          break;
-        case UPDATE_ERROR_READ:
-          errorMsg=F("Flash Read Failed");
-          break;
-        case UPDATE_ERROR_SPACE:
-          errorMsg=F("Not Enough Space");
-          break;
-        case UPDATE_ERROR_SIZE:
-          errorMsg=F("Bad Size Given");
-          break;
-        case UPDATE_ERROR_STREAM:
-          errorMsg=F("Stream Read Timeout");
-          break;
-        case UPDATE_ERROR_MD5:
-          errorMsg=F("MD5 Check Failed");
-          break;
-        case UPDATE_ERROR_FLASH_CONFIG:
-          errorMsg=F("Flash config wrong");
-          break;
-        case UPDATE_ERROR_NEW_FLASH_CONFIG:
-          errorMsg=F("New Flash config wrong");
-          break;
-        case UPDATE_ERROR_MAGIC_BYTE:
-          errorMsg=F("Magic byte is wrong, not 0xE9");
-          break;
-        case UPDATE_ERROR_BOOTSTRAP:
-          errorMsg=F("Invalid bootstrapping state, reset ESP8266 before updating");
-          break;
-        default:
-          errorMsg=F("Unknown error");
-          break;
-      }
+      errorMsg=Update.getErrorString();
 #else
       errorMsg=Update.errorString();
 #endif
@@ -197,6 +159,8 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
       [&pauseApplication, &server]()
       {
         HTTPUpload &upload = server.upload();
+        bool shouldPrintError = false;
+
         if (upload.status == UPLOAD_FILE_START)
         {
           // stop to Run Application in loop
@@ -211,34 +175,30 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
 #else
           if (!Update.begin())
 #endif
-          {
-#ifdef LOG_SERIAL
-            Update.printError(LOG_SERIAL);
-#endif
-          }
+            shouldPrintError = true;
         }
         else if (upload.status == UPLOAD_FILE_WRITE)
         {
           if (Update.write(upload.buf, upload.currentSize) != upload.currentSize)
-          {
-#ifdef LOG_SERIAL
-            Update.printError(LOG_SERIAL);
-#endif
-          }
+            shouldPrintError = true;
         }
         else if (upload.status == UPLOAD_FILE_END)
         {
           if (Update.end(true))
-          {
 #ifdef LOG_SERIAL
             LOG_SERIAL.printf("Update Success: %uB\n", upload.totalSize);
-          }
-          else
-          {
-            Update.printError(LOG_SERIAL);
 #endif
-          }
+          else
+            shouldPrintError = true;
         }
+
+        if (shouldPrintError)
+        {
+#ifdef LOG_SERIAL
+          Update.printError(LOG_SERIAL);
+#endif
+        }
+
 #ifdef ESP8266
         // Feed the dog otherwise big firmware won't pass
         ESP.wdtFeed();
