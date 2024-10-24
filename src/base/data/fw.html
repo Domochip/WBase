@@ -118,20 +118,26 @@
         const installedParts = installed.split('.').map(Number);
         const latestParts = latest.split('.').map(Number);
 
-        return latestParts.some((part, i) => part > (installedParts[i] || 0)) &&
-            !latestParts.some((part, i) => part < (installedParts[i] || 0));
+        for (let i = 0; i < Math.max(installedParts.length, latestParts.length); i++) {
+            const installedPart = installedParts[i] || 0;
+            const latestPart = latestParts[i] || 0;
+            if (installedPart < latestPart) { return -1; }
+            if (installedPart > latestPart) { return 1; }
+        }
+        return 0;
     }
 
     function getUpdateInfos(refresh = false) {
 
         const refreshButton = $(qsp + "#refreshButton");
+        const updateButton = $(qsp + "#updateButton");
 
         // Show loading animation
         refreshButton.innerHTML = '<span class="spinner"></span> Refreshing...';
         refreshButton.disabled = true;
 
         // Disable the updateButton during refresh
-        $(qsp + '#updateButton').disabled = true;
+        updateButton.disabled = true;
 
         // clear previous values
         ['#latest_version', '#title', '#release_date', '#release_summary', '#release_url'].forEach(id => {
@@ -166,11 +172,13 @@
             refreshButton.disabled = false;
 
             // Update the updateButton state
-            const latestVersion = $(qsp + '#latest_version').textContent;
-            if (latestVersion && compareVersions($(qsp + '#installed_version').textContent, latestVersion)) {
-                $(qsp + '#updateButton').disabled = false;
+            const latestVersion = $(qsp + '#latest_version').innerHTML;
+            if (latestVersion && compareVersions($(qsp + '#installed_version').innerHTML, latestVersion) < 0) {
+                updateButton.disabled = false;
+                updateButton.innerHTML = 'Update';
             } else {
-                $(qsp + '#updateButton').disabled = true;
+                updateButton.disabled = true;
+                updateButton.innerHTML = latestVersion ? 'Up to date' : 'Update';
             }
 
             fadeOut($(qsp + "#l1"));
