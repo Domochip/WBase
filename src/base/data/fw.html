@@ -96,7 +96,7 @@
         fn = fn.split(/(\\|\/)/g).pop();
 
         // Define the patterns for the filename
-        const versionPattern = '\\.\\d+\\.\\d+\\.\\d+';
+        const versionPattern = '(\\.\\d+\\.\\d+\\.\\d+)?';
         const filenamePattern1 = new RegExp(`^${productName}${versionPattern}\\.bin$`, 'i');
         let filenamePattern2 = null;
 
