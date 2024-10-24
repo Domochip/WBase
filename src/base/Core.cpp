@@ -316,6 +316,11 @@ void Core::checkForUpdate()
           _lastFirmwareInfos.title[0] = 0;
       }
 
+      if ((jv = doc["published_at"]).is<const char *>())
+        strlcpy(_lastFirmwareInfos.releaseDate, jv, sizeof(_lastFirmwareInfos.releaseDate));
+      else
+        _lastFirmwareInfos.releaseDate[0] = 0;
+
       if ((jv = doc["body"]).is<const char *>())
       {
         // copy body to summary until "\r\n\r\n##"
@@ -365,6 +370,7 @@ String Core::getUpdateInfos(bool refresh)
   {
     doc["latest_version"] = _lastFirmwareInfos.version;
     doc["title"] = _lastFirmwareInfos.title;
+    doc["release_date"] = _lastFirmwareInfos.releaseDate;
     doc["release_summary"] = _lastFirmwareInfos.summary;
     doc["release_url"] = String(F("https://github.com/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/tag/")) + _lastFirmwareInfos.version;
   }
