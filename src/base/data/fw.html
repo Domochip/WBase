@@ -123,6 +123,11 @@
         refreshButton.innerHTML = '<span class="spinner"></span> Refreshing...';
         refreshButton.disabled = true;
 
+        // clear previous values
+        ['#latest_version', '#title', '#release_date', '#release_summary', '#release_url'].forEach(id => {
+            $(qsp + id).innerHTML = '';
+        });
+
         // add param to /gui for force refresh
         let url = "/gui";
         if (refresh) {
