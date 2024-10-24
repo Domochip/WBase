@@ -139,19 +139,21 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
       "/fw", HTTP_POST, [&shouldReboot, &pauseApplication, &server]()
       {
     shouldReboot = !Update.hasError();
-    if (shouldReboot) {
+    if (shouldReboot)
+    {
       SERVER_KEEPALIVE_FALSE()
       server.send(200, F("text/html"), F("Firmware Successfully Updated"));
     }
-    else {
-      //Upload failed so restart to Run Application in loop
+    else
+    {
+      // Upload failed so restart to Run Application in loop
       pauseApplication = false;
-      //Prepare response
+      // Prepare response
       String errorMsg;
 #ifdef ESP8266
-      errorMsg=Update.getErrorString();
+      errorMsg = Update.getErrorString();
 #else
-      errorMsg=Update.errorString();
+      errorMsg = Update.errorString();
 #endif
       SERVER_KEEPALIVE_FALSE()
       server.send(500, F("text/html"), errorMsg);
@@ -159,7 +161,6 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
       [&pauseApplication, &server]()
       {
         HTTPUpload &upload = server.upload();
-        bool shouldPrintError = false;
 
         if (upload.status == UPLOAD_FILE_START)
         {
@@ -167,35 +168,28 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
           pauseApplication = true;
 
 #ifdef LOG_SERIAL
+          // Set Update onError callback
+          Update.onError([](uint8_t err)
+                         { Update.printError(LOG_SERIAL); });
+
           LOG_SERIAL.printf("Update Start: %s\n", upload.filename.c_str());
 #endif
 
 #ifdef ESP8266
-          if (!Update.begin((ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000))
+          Update.begin((ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000);
 #else
-          if (!Update.begin())
+          Update.begin();
 #endif
-            shouldPrintError = true;
         }
         else if (upload.status == UPLOAD_FILE_WRITE)
         {
-          if (Update.write(upload.buf, upload.currentSize) != upload.currentSize)
-            shouldPrintError = true;
+          Update.write(upload.buf, upload.currentSize);
         }
         else if (upload.status == UPLOAD_FILE_END)
         {
           if (Update.end(true))
 #ifdef LOG_SERIAL
             LOG_SERIAL.printf("Update Success: %uB\n", upload.totalSize);
-#endif
-          else
-            shouldPrintError = true;
-        }
-
-        if (shouldPrintError)
-        {
-#ifdef LOG_SERIAL
-          Update.printError(LOG_SERIAL);
 #endif
         }
 
@@ -391,37 +385,22 @@ bool Core::updateFirmware(const char *version)
   int contentLength = https.getSize();
 
 #ifdef LOG_SERIAL
+  // Set Update onError callback
+  Update.onError([](uint8_t err)
+                 { Update.printError(LOG_SERIAL); });
+
   LOG_SERIAL.println(F("Firmware file found, Update Start"));
 #endif
 
 #ifdef ESP8266
-  if (!Update.begin(contentLength))
+  Update.begin(contentLength);
 #else
-  if (!Update.begin())
+  Update.begin();
 #endif
-  {
-#ifdef LOG_SERIAL
-    Update.printError(LOG_SERIAL);
-#endif
-    return false;
-  }
 
-  if (!Update.writeStream(*stream))
-  {
-#ifdef LOG_SERIAL
-    Update.printError(LOG_SERIAL);
-#endif
-    return false;
-  }
+  Update.writeStream(*stream);
 
-  if (!Update.end())
-  {
-#ifdef LOG_SERIAL
-    Update.printError(LOG_SERIAL);
-#endif
-    return false;
-  }
-  else
+  if (Update.end())
   {
 #ifdef LOG_SERIAL
     LOG_SERIAL.printf("Update Success: %uB\n", contentLength);
