@@ -101,16 +101,15 @@
 
         function request(method, url, data, success, fail, timeout, uploadProgress) {
             var xhr = new XMLHttpRequest();
-            xhr.addEventListener('readystatechange', function () {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        if (success) success(xhr.response);
-                    }
-                    else {
-                        if (fail) fail(xhr.response);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        if (typeof success === 'function') success(xhr.response);
+                    } else {
+                        if (typeof fail === 'function') fail(xhr.response);
                     }
                 }
-            });
+            };
             if (uploadProgress) xhr.upload.addEventListener('progress', uploadProgress);
             xhr.open(method, url);
             if (timeout) xhr.timeout = timeout;
