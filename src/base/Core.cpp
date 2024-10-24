@@ -210,14 +210,14 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
   server.on("/rbt", HTTP_POST, [&shouldReboot, &server]()
             {
     SERVER_KEEPALIVE_FALSE()
-    server.send_P(200,PSTR("text/html"),PSTR("Reboot command received<script>setTimeout(function(){if('referrer' in document)window.location=document.referrer;},30000);</script>"));
+    server.send_P(200,PSTR("text/html"),PSTR("Reboot command received"));
     shouldReboot = true; });
 
   // reboot RescueMode POST ---------------------------------------------------
   server.on("/rbtrsc", HTTP_POST, [&shouldReboot, &server]()
             {
     SERVER_KEEPALIVE_FALSE()
-    server.send_P(200,PSTR("text/html"),PSTR("Reboot in rescue command received<script>setTimeout(function(){if('referrer' in document)window.location=document.referrer;},30000);</script>"));
+    server.send_P(200,PSTR("text/html"),PSTR("Reboot in rescue command received"));
     //Set EEPROM for Rescue mode flag
     EEPROM.begin(4);
     EEPROM.write(0, 1);
