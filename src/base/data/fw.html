@@ -173,7 +173,7 @@
 
             // Update the updateButton state
             const latestVersion = $(qsp + '#latest_version').innerHTML;
-            if (latestVersion && compareVersions($(qsp + '#installed_version').innerHTML, latestVersion) < 0) {
+            if (latestVersion && compareVersions(latestVersion, $(qsp + '#installed_version').innerHTML) > 0) {
                 updateButton.disabled = false;
                 updateButton.innerHTML = 'Update';
             } else {

@@ -130,7 +130,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
 
               SERVER_KEEPALIVE_FALSE()
               if (shouldReboot)
-                server.send(200, F("text/html"), F("Firmware Successfully Flashed"));
+                server.send(200, F("text/html"), F("Firmware Successfully Updated"));
               else
                 server.send(500, F("text/html"), F("Firmware Update Failed")); });
 
@@ -141,7 +141,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
     shouldReboot = !Update.hasError();
     if (shouldReboot) {
       SERVER_KEEPALIVE_FALSE()
-      server.send(200, F("text/html"), F("Firmware Successfully Uploaded<script>setTimeout(function(){if('referrer' in document)window.location=document.referrer;},10000);</script>"));
+      server.send(200, F("text/html"), F("Firmware Successfully Updated"));
     }
     else {
       //Upload failed so restart to Run Application in loop
