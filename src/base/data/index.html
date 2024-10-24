@@ -118,16 +118,17 @@
         }
 
         function load(element, url, callback) {
-            request("GET", url, null, function (response) {
-                element.innerHTML = '';
+            request("GET", url, null, (response) => {
                 element.innerHTML = response;
-                var scriptList = element.getElementsByTagName('script');
-                for (var i = 0; i < scriptList.length; i++) {
+                const scriptList = element.getElementsByTagName('script');
+                for (const script of scriptList) {
                     //Replace "QuerySelectorPrefix" aka "qsp" : allow script to search into the parent element
-                    scriptList[i].innerHTML = scriptList[i].innerHTML.replace(/qsp/g, '\'#' + element.id + ' \'');
-                    loadScript(scriptList[i].innerHTML);
+                    script.innerHTML = script.innerHTML.replace(/qsp/g, `'#${element.id} '`);
+                    loadScript(script.innerHTML);
                 }
-                if (callback) callback();
+                if (typeof callback === 'function') callback();
+            }, (error) => {
+                console.error(`Failed to load content from ${url}: ${error}`);
             });
         };
 
