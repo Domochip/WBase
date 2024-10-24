@@ -34,7 +34,7 @@
     </div>
 </div>
 
-<h2>Online Upgrade<span id="l2">
+<h2>Online Update<span id="l2">
         <h6 style="display:inline"><b> Loading...</b></h6>
     </span></h2>
 <div class="pure-form pure-form-aligned">
@@ -57,12 +57,12 @@
     </div>
     <div class="pure-controls">
         <button class="pure-button pure-button-primary" id="refreshButton" style="background: #1cb841;">Refresh</button>
-        <button class="pure-button pure-button-primary pure-button-disabled" id="upgradeButton"
-            style="background: #df7514;">Upgrade</button>
+        <button class="pure-button pure-button-primary pure-button-disabled" id="updateButton"
+            style="background: #df7514;">Update</button>
     </div>
 </div>
 
-<h2>Manual Upgrade</h2>
+<h2>Manual Update</h2>
 <form class="pure-form pure-form-aligned" id="f" method='POST' action='/fw' enctype='multipart/form-data'>
     <fieldset>
         <div class="pure-control-group">
@@ -70,8 +70,7 @@
             <input type='file' name='fi' id='fi' accept='.bin' required>
         </div>
         <div class="pure-controls">
-            <input type='submit' name='sub' id='sub' value='/!\ Upload Firmware /!\'
-                class="pure-button pure-button-primary">
+            <input type='submit' name='sub' id='sub' value='Upload Firmware' class="pure-button pure-button-primary">
         </div>
 
     </fieldset>
@@ -108,7 +107,7 @@
             alert(`You didn't select a valid Firmware file for ${productName}`);
             return false;
         }
-        return confirm("Please do not power off the device during the upgrade process.");
+        return confirm("Please do not power off the device during the update process.");
     }
 
     function autoUpdateReleaseURL() {
