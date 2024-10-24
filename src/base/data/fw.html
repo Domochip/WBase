@@ -193,7 +193,9 @@
         $('#updateButton').classList.add('pure-button-disabled');
         $('#updateButton').innerHTML = '<span class="spinner"></span> Updating...';
         post('/update', $('#latest_version').textContent, () => {
-            $('#updateButton').innerHTML = '<span class="spinner"></span> Restarting...';
+            $('#updateButton').innerHTML = '<span class="spinner"></span> Rebooting...';
+            $(qsp + '#r').innerHTML = '<h3><span style="color: green;"><b>Done</b></span> System is rebooting. This page will be reloaded in <span id="cd">20</span>sec.</h3>';
+            loadScript('startCountdown("#cd", 19, () => {location.reload();});');
         }, () => {
             $('#updateButton').innerHTML = 'Update';
             $('#updateButton').classList.remove('pure-button-disabled');
