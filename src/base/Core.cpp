@@ -130,9 +130,9 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
 
               SERVER_KEEPALIVE_FALSE()
               if (shouldReboot)
-                server.send(200, F("text/html"), F("Firmware Successfully Flashed <script>setTimeout(function(){if('referrer' in document)window.location=document.referrer;},10000);</script>"));
+                server.send(200, F("text/html"), F("Firmware Successfully Flashed"));
               else
-                server.send(200, F("text/html"), F("Firmware Update Failed")); });
+                server.send(500, F("text/html"), F("Firmware Update Failed")); });
 
   // Firmware POST URL allows to push new firmware ----------------------------
   server.on(
@@ -402,7 +402,7 @@ bool Core::updateFirmware(const char *version)
   clientSecure.setInsecure();
 
   String fwUrl(F("https://github.com/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/download/"));
-  fwUrl = fwUrl + versionToFlash + F("/WirelessPalaSensor.") + versionToFlash + F(".bin");
+  fwUrl = fwUrl + versionToFlash + '/' + APPLICATION1_MODEL + '.' + versionToFlash + F(".bin");
 
 #ifdef LOG_SERIAL
   LOG_SERIAL.print(F("Trying to Update from URL: "));
