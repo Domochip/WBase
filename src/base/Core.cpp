@@ -409,7 +409,7 @@ bool Core::updateFirmware(const char *version)
 
   https.end();
 
-  return true;
+  return !Update.hasError();
 }
 
 int8_t Core::versionCompare(const char *version1, const char *version2)
