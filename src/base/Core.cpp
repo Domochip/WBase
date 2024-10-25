@@ -131,17 +131,26 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
               SERVER_KEEPALIVE_FALSE()
               if (shouldReboot)
                 server.send_P(200, PSTR("text/html"), PSTR("Firmware Successfully Updated"));
-              else
-                server.send_P(500, PSTR("text/html"), PSTR("Firmware Update Failed")); });
+              else{
+                // Prepare response
+                String errorMsg;
+#ifdef ESP8266
+                errorMsg = Update.getErrorString();
+#else
+                errorMsg = Update.errorString();
+#endif
+                server.send(500, F("text/html"), errorMsg);
+                } });
 
   // Firmware POST URL allows to push new firmware ----------------------------
   server.on(
       F("/fw"), HTTP_POST, [&shouldReboot, &pauseApplication, &server]()
       {
     shouldReboot = !Update.hasError();
+
+          SERVER_KEEPALIVE_FALSE()
     if (shouldReboot)
     {
-      SERVER_KEEPALIVE_FALSE()
       server.send_P(200, PSTR("text/html"), PSTR("Firmware Successfully Updated"));
     }
     else
@@ -155,7 +164,6 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
 #else
       errorMsg = Update.errorString();
 #endif
-      SERVER_KEEPALIVE_FALSE()
       server.send(500, F("text/html"), errorMsg);
     } },
       [&pauseApplication, &server]()
@@ -166,12 +174,6 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
         {
           // stop to Run Application in loop
           pauseApplication = true;
-
-#ifdef LOG_SERIAL
-          // Set Update onError callback
-          Update.onError([](uint8_t err)
-                         { Update.printError(LOG_SERIAL); });
-#endif
 
           LOG_SERIAL_PRINTF_P(PSTR("Update Start: %s\n"), upload.filename.c_str());
 
@@ -188,7 +190,16 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
         else if (upload.status == UPLOAD_FILE_END)
         {
           if (Update.end(true))
-            LOG_SERIAL_PRINTF_P(PSTR("Update Success: %uB\n"), upload.totalSize);
+            LOG_SERIAL_PRINTF_P(PSTR("Update successful: %uB\n"), upload.totalSize);
+          else
+          {
+            LOG_SERIAL_PRINT(F("Update Failed: "));
+#ifdef ESP8266
+            LOG_SERIAL_PRINTLN(Update.getErrorString());
+#else
+            LOG_SERIAL_PRINTLN(Update.errorString());
+#endif
+          }
         }
 
 #ifdef ESP8266
@@ -350,7 +361,7 @@ bool Core::updateFirmware(const char *version)
   clientSecure.setInsecure();
 
   String fwUrl(F("https://github.com/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/download/"));
-  fwUrl = fwUrl + versionToFlash + '/' + APPLICATION1_MODEL + '.' + versionToFlash + F(".bin");
+  fwUrl = fwUrl + versionToFlash + '/' + F(APPLICATION1_MODEL) + '.' + versionToFlash + F(".bin");
 
   LOG_SERIAL_PRINT(F("Trying to Update from URL: "));
   LOG_SERIAL_PRINTLN(fwUrl);
@@ -375,13 +386,7 @@ bool Core::updateFirmware(const char *version)
   WiFiClient *stream = https.getStreamPtr();
   int contentLength = https.getSize();
 
-#ifdef LOG_SERIAL
-  // Set Update onError callback
-  Update.onError([](uint8_t err)
-                 { Update.printError(LOG_SERIAL); });
-
-  LOG_SERIAL_PRINTLN(F("Firmware file found, Update Start"));
-#endif
+  LOG_SERIAL_PRINTF_P(PSTR("Update Start: %s (Online Update)\n"), (String(F(APPLICATION1_MODEL)) + '.' + versionToFlash + F(".bin")).c_str());
 
 #ifdef ESP8266
   Update.begin(contentLength);
@@ -392,7 +397,16 @@ bool Core::updateFirmware(const char *version)
   Update.writeStream(*stream);
 
   if (Update.end())
-    LOG_SERIAL_PRINTF_P(PSTR("Update Success: %uB\n"), contentLength);
+    LOG_SERIAL_PRINTF_P(PSTR("Update successful: %uB\n"), contentLength);
+  else
+  {
+    LOG_SERIAL_PRINT(F("Update Failed: "));
+#ifdef ESP8266
+    LOG_SERIAL_PRINTLN(Update.getErrorString());
+#else
+    LOG_SERIAL_PRINTLN(Update.errorString());
+#endif
+  }
 
   https.end();
 
