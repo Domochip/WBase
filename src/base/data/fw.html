@@ -63,6 +63,7 @@
         <button class="pure-button pure-button-primary" id="refreshButton" style="background: #1cb841;">Refresh</button>
         <button class="pure-button pure-button-primary" id="updateButton" style="background: #df7514;"
             disabled>Update</button>
+        &nbsp;&nbsp;<span id='rUpdate'></span>
     </div>
 </div>
 
@@ -75,14 +76,14 @@
         </div>
         <div class="pure-controls">
             <button type='submit' id='uploadButton' class="pure-button pure-button-primary">Upload Firmware</button>
+            &nbsp;&nbsp;<span id='rUpload'></span>
         </div>
     </fieldset>
 </form>
-<span id='r'></span>
 
 <script>
-    //QuerySelector Prefix is added by load function to know into what element queySelector need to look for
-    //var qsp = '#content0 ';
+    // QuerySelector Prefix is added by load function to know into what element querySelector needs to look for
+    // var qsp = '#content0 ';
 
     function firmwareValidation() {
         const fileInput = $(qsp + '#fi');
@@ -91,8 +92,7 @@
             return false;
         }
 
-        let fn = fileInput.value;
-        fn = fn.split(/(\\|\/)/g).pop();
+        let fn = fileInput.value.split(/(\\|\/)/g).pop();
 
         // Define the patterns for the filename
         const versionPattern = '(\\.\\d+\\.\\d+\\.\\d+)?';
@@ -214,7 +214,7 @@
 
         post('/update', $(qsp + '#latest_version').textContent, () => {
             $(qsp + '#updateButton').innerHTML = '<span class="spinner"></span> Rebooting...';
-            $(qsp + '#r').innerHTML = '<h3><span style="color: green;"><b>Done</b></span> System is rebooting. This page will be reloaded in <span id="cd">20</span>sec.</h3>';
+            $(qsp + '#rUpdate').innerHTML = '<h3>Page refresh in <span id="cd">20</span>sec.</h3>';
             loadScript('startCountdown("#cd", 19, () => {location.reload();});');
         }, () => {
             calculateAllButtonStates();
@@ -227,18 +227,17 @@
         disableAllButtons();
 
         // Add loading animation to the submit button
-        $(qsp + '#uploadButton').innerHTML = '<span class="spinner"></span> <span id="percent">0%</span>';
+        $(qsp + '#uploadButton').innerHTML = '<span class="spinner"></span> <span id="progress">0%</span>';
 
         post('/fw',
             new FormData($(qsp + '#f')),
             function () {
-                var reload15sec = document.createElement('script');
-                $(qsp + '#r').innerHTML = '<h3><span style="color: green;"><b>Done</b></span> System is rebooting. This page will be reloaded in <span id="cd">20</span>sec.</h3>';
+                $(qsp + '#progress').innerHTML = 'Rebooting...';
+                $(qsp + '#rUpload').innerHTML = '<h3>Page refresh in <span id="cd">20</span>sec.</h3>';
                 loadScript('startCountdown("#cd", 19, () => {location.reload();});');
-                $(qsp + '#uploadButton').innerHTML = 'Upload Done';
             },
             function (responseText) {
-                $(qsp + '#r').innerHTML = '<span style="color: red;"><b>Failed</b></span> (' + responseText + ')';
+                $(qsp + '#rUpload').innerHTML = '<span style="color: red;"><b>Failed</b></span> (' + responseText + ')';
                 $(qsp + '#f').reset();
                 calculateAllButtonStates();
             },
@@ -246,7 +245,7 @@
             function (evt) {
                 if (evt.lengthComputable) {
                     const percentComplete = Math.round((evt.loaded / evt.total) * 100);
-                    $(qsp + '#percent').innerHTML = `${percentComplete}%`;
+                    $(qsp + '#progress').innerHTML = `${percentComplete}%`;
                 }
             }
         );
