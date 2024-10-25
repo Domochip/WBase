@@ -74,7 +74,7 @@
             <input type='file' name='fi' id='fi' accept='.bin' required>
         </div>
         <div class="pure-controls">
-            <button type='submit' id='sub' class="pure-button pure-button-primary">Upload Firmware</button>
+            <button type='submit' id='uploadButton' class="pure-button pure-button-primary">Upload Firmware</button>
         </div>
     </fieldset>
 </form>
@@ -129,7 +129,7 @@
     function disableAllButtons() {
         $(qsp + '#refreshButton').disabled = true;
         $(qsp + '#updateButton').disabled = true;
-        $(qsp + '#sub').disabled = true;
+        $(qsp + '#uploadButton').disabled = true;
     }
 
     function calculateAllButtonStates() {
@@ -145,7 +145,7 @@
             updateButton.disabled = true;
             updateButton.innerHTML = latestVersion ? 'Up to date' : 'Update';
         }
-        $(qsp + '#sub').disabled = false;
+        $(qsp + '#uploadButton').disabled = false;
     }
 
     function getUpdateInfos(refresh = false) {
@@ -153,7 +153,6 @@
         disableAllButtons();
 
         const refreshButton = $(qsp + "#refreshButton");
-        const updateButton = $(qsp + "#updateButton");
 
         // Show loading animation
         refreshButton.innerHTML = '<span class="spinner"></span> Refreshing...';
@@ -164,22 +163,20 @@
         });
 
         // add param to /gui for force refresh
-        let url = "/gui";
-        if (refresh) {
-            url += "?refresh=true";
-        }
+        let url = refresh ? "/gui?refresh=true" : "/gui";
+
         getJSON(url, function (GUI) {
             for (k in GUI) {
                 if ((e = $(qsp + '#' + k)) != undefined) e.innerHTML = GUI[k];
             }
-            // Update the release URL
+            // transform the release url into a clickable link
             const releaseUrlSpan = $(qsp + '#release_url');
             const url = releaseUrlSpan.innerHTML;
             if (url) {
                 releaseUrlSpan.innerHTML = `<a href="${url}" target="_blank">${url}</a>`;
             }
 
-            // Update the Summary
+            // transform line breaks into <br> tags in the release summary
             const releaseSummarySpan = $(qsp + '#release_summary');
             const summary = releaseSummarySpan.innerHTML;
             if (summary) {
@@ -205,8 +202,8 @@
         });
     }
     getUpdateInfos();
-
     $(qsp + "#refreshButton").addEventListener('click', () => { getUpdateInfos(true); });
+
     $(qsp + "#updateButton").addEventListener('click', () => {
 
         disableAllButtons();
@@ -229,7 +226,7 @@
         $(qsp + '#fi').readOnly = true;
 
         // Add loading animation to the submit button
-        $(qsp + '#sub').innerHTML = '<span class="spinner"></span> <span id="percent">0%</span>';
+        $(qsp + '#uploadButton').innerHTML = '<span class="spinner"></span> <span id="percent">0%</span>';
 
         post('/fw',
             new FormData($(qsp + '#f')),
@@ -237,12 +234,12 @@
                 var reload15sec = document.createElement('script');
                 $(qsp + '#r').innerHTML = '<h3><span style="color: green;"><b>Done</b></span> System is rebooting. This page will be reloaded in <span id="cd">20</span>sec.</h3>';
                 loadScript('startCountdown("#cd", 19, () => {location.reload();});');
-                $(qsp + '#sub').innerHTML = 'Upload Done';
+                $(qsp + '#uploadButton').innerHTML = 'Upload Done';
             },
             function (responseText) {
                 $(qsp + '#r').innerHTML = '<span style="color: red;"><b>Failed</b></span> (' + responseText + ')';
                 $(qsp + '#f').reset();
-                $(qsp + '#sub').innerHTML = 'Upload Firmware';
+                $(qsp + '#uploadButton').innerHTML = 'Upload Firmware';
                 $(qsp + '#fi').readOnly = false;
                 calculateAllButtonStates();
             },
