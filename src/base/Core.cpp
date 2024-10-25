@@ -90,41 +90,41 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
     server.send_P(200, PSTR("text/html"), indexhtmlgz, sizeof(indexhtmlgz)); });
 
   // Ressources URLs
-  server.on("/pure-min.css", HTTP_GET, [&server]()
+  server.on(F("/pure-min.css"), HTTP_GET, [&server]()
             {
     SERVER_KEEPALIVE_FALSE()
     server.sendHeader(F("Content-Encoding"), F("gzip"));
     server.sendHeader(F("Cache-Control"), F("max-age=604800, public"));
     server.send_P(200, PSTR("text/css"), puremincssgz, sizeof(puremincssgz)); });
 
-  server.on("/side-menu.css", HTTP_GET, [&server]()
+  server.on(F("/side-menu.css"), HTTP_GET, [&server]()
             {
     SERVER_KEEPALIVE_FALSE()
     server.sendHeader(F("Content-Encoding"), F("gzip"));
     server.sendHeader(F("Cache-Control"), F("max-age=604800, public"));
     server.send_P(200, PSTR("text/css"), sidemenucssgz, sizeof(sidemenucssgz)); });
 
-  server.on("/side-menu.js", HTTP_GET, [&server]()
+  server.on(F("/side-menu.js"), HTTP_GET, [&server]()
             {
     SERVER_KEEPALIVE_FALSE()
     server.sendHeader(F("Content-Encoding"), F("gzip"));
     server.sendHeader(F("Cache-Control"), F("max-age=604800, public"));
     server.send_P(200, PSTR("text/javascript"), sidemenujsgz, sizeof(sidemenujsgz)); });
 
-  server.on("/fw.html", HTTP_GET, [this, &server]()
+  server.on(F("/fw.html"), HTTP_GET, [this, &server]()
             {
     SERVER_KEEPALIVE_FALSE()
     server.sendHeader(F("Content-Encoding"), F("gzip"));
     server.send_P(200, PSTR("text/html"), fwhtmlgz, sizeof(fwhtmlgz)); });
 
   // Get Update Infos ---------------------------------------------------------
-  server.on("/gui", HTTP_GET, [this, &server]()
+  server.on(F("/gui"), HTTP_GET, [this, &server]()
             {
     SERVER_KEEPALIVE_FALSE()
     server.send(200, F("application/json"), getUpdateInfos(server.hasArg("refresh"))); });
 
   // Update Firmware from Github ----------------------------------------------
-  server.on("/update", HTTP_POST, [this, &shouldReboot, &pauseApplication, &server]()
+  server.on(F("/update"), HTTP_POST, [this, &shouldReboot, &pauseApplication, &server]()
             {
               shouldReboot = updateFirmware(server.arg("plain").c_str());
 
@@ -136,7 +136,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
 
   // Firmware POST URL allows to push new firmware ----------------------------
   server.on(
-      "/fw", HTTP_POST, [&shouldReboot, &pauseApplication, &server]()
+      F("/fw"), HTTP_POST, [&shouldReboot, &pauseApplication, &server]()
       {
     shouldReboot = !Update.hasError();
     if (shouldReboot)
@@ -199,14 +199,14 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
       });
 
   // reboot POST --------------------------------------------------------------
-  server.on("/rbt", HTTP_POST, [&shouldReboot, &server]()
+  server.on(F("/rbt"), HTTP_POST, [&shouldReboot, &server]()
             {
     SERVER_KEEPALIVE_FALSE()
     server.send_P(200,PSTR("text/html"),PSTR("Reboot command received"));
     shouldReboot = true; });
 
   // reboot RescueMode POST ---------------------------------------------------
-  server.on("/rbtrsc", HTTP_POST, [&shouldReboot, &server]()
+  server.on(F("/rbtrsc"), HTTP_POST, [&shouldReboot, &server]()
             {
     SERVER_KEEPALIVE_FALSE()
     server.send_P(200,PSTR("text/html"),PSTR("Reboot in rescue command received"));

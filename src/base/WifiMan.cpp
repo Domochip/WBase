@@ -372,7 +372,7 @@ size_t WifiMan::getHTMLContentSize(WebPageForPlaceHolder wp)
 void WifiMan::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseApplication)
 {
 
-  server.on("/wnl", HTTP_GET, [this, &server]()
+  server.on(F("/wnl"), HTTP_GET, [this, &server]()
             {
     // prepare response
     SERVER_KEEPALIVE_FALSE()
