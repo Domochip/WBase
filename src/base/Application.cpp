@@ -7,9 +7,7 @@ bool Application::saveConfig()
   File configFile = LittleFS.open(String('/') + _appName + F(".json"), "w");
   if (!configFile)
   {
-#ifdef LOG_SERIAL
-    LOG_SERIAL.println(F("Failed to open config file for writing"));
-#endif
+    LOG_SERIAL_PRINTLN(F("Failed to open config file for writing"));
     return false;
   }
 
@@ -37,10 +35,8 @@ bool Application::loadConfig()
     if (deserializeJsonError)
     {
 
-#ifdef LOG_SERIAL
-      LOG_SERIAL.print(F("deserializeJson() failed : "));
-      LOG_SERIAL.println(deserializeJsonError.c_str());
-#endif
+      LOG_SERIAL_PRINT(F("deserializeJson() failed : "));
+      LOG_SERIAL_PRINTLN(deserializeJsonError.c_str());
 
       saveConfig();
     }
@@ -63,11 +59,9 @@ void Application::init(bool skipExistingConfig)
 {
   bool result = true;
 
-#ifdef LOG_SERIAL
-  LOG_SERIAL.print(F("Start "));
-  LOG_SERIAL.print(_appName);
-  LOG_SERIAL.print(F(" : "));
-#endif
+  LOG_SERIAL_PRINT(F("Start "));
+  LOG_SERIAL_PRINT(_appName);
+  LOG_SERIAL_PRINT(F(" : "));
 
   setConfigDefaultValues();
 
@@ -77,12 +71,10 @@ void Application::init(bool skipExistingConfig)
   // Execute specific Application Init Code
   result = appInit() && result;
 
-#ifdef LOG_SERIAL
   if (result)
-    LOG_SERIAL.println(F("OK"));
+    LOG_SERIAL_PRINTLN(F("OK"));
   else
-    LOG_SERIAL.println(F("FAILED"));
-#endif
+    LOG_SERIAL_PRINTLN(F("FAILED"));
 }
 
 void Application::initWebServer(WebServer &server, bool &shouldReboot, bool &pauseApplication)
@@ -131,7 +123,7 @@ void Application::initWebServer(WebServer &server, bool &shouldReboot, bool &pau
 
     // Deserialize it
     JsonDocument doc;
-    DeserializationError error = deserializeJson(doc, server.arg("plain"));
+    DeserializationError error = deserializeJson(doc, server.arg(F("plain")));
     if (error)
     {
       server.send(400, F("text/html"), F("Malformed JSON"));
@@ -162,22 +154,14 @@ void Application::run()
 {
   if (_reInit)
   {
-#ifdef LOG_SERIAL
-    LOG_SERIAL.print(F("ReStart "));
-    LOG_SERIAL.print(_appName);
-    LOG_SERIAL.print(F(" : "));
-#endif
+    LOG_SERIAL_PRINT(F("ReStart "));
+    LOG_SERIAL_PRINT(_appName);
+    LOG_SERIAL_PRINT(F(" : "));
 
     if (appInit(true))
-    {
-#ifdef LOG_SERIAL
-      LOG_SERIAL.println(F("OK"));
-    }
+      LOG_SERIAL_PRINTLN(F("OK"));
     else
-    {
-      LOG_SERIAL.println(F("FAILED"));
-#endif
-    }
+      LOG_SERIAL_PRINTLN(F("FAILED"));
 
     _reInit = false;
   }

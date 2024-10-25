@@ -90,59 +90,59 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
     server.send_P(200, PSTR("text/html"), indexhtmlgz, sizeof(indexhtmlgz)); });
 
   // Ressources URLs
-  server.on("/pure-min.css", HTTP_GET, [&server]()
+  server.on(F("/pure-min.css"), HTTP_GET, [&server]()
             {
     SERVER_KEEPALIVE_FALSE()
     server.sendHeader(F("Content-Encoding"), F("gzip"));
     server.sendHeader(F("Cache-Control"), F("max-age=604800, public"));
     server.send_P(200, PSTR("text/css"), puremincssgz, sizeof(puremincssgz)); });
 
-  server.on("/side-menu.css", HTTP_GET, [&server]()
+  server.on(F("/side-menu.css"), HTTP_GET, [&server]()
             {
     SERVER_KEEPALIVE_FALSE()
     server.sendHeader(F("Content-Encoding"), F("gzip"));
     server.sendHeader(F("Cache-Control"), F("max-age=604800, public"));
     server.send_P(200, PSTR("text/css"), sidemenucssgz, sizeof(sidemenucssgz)); });
 
-  server.on("/side-menu.js", HTTP_GET, [&server]()
+  server.on(F("/side-menu.js"), HTTP_GET, [&server]()
             {
     SERVER_KEEPALIVE_FALSE()
     server.sendHeader(F("Content-Encoding"), F("gzip"));
     server.sendHeader(F("Cache-Control"), F("max-age=604800, public"));
     server.send_P(200, PSTR("text/javascript"), sidemenujsgz, sizeof(sidemenujsgz)); });
 
-  server.on("/fw.html", HTTP_GET, [this, &server]()
+  server.on(F("/fw.html"), HTTP_GET, [this, &server]()
             {
     SERVER_KEEPALIVE_FALSE()
     server.sendHeader(F("Content-Encoding"), F("gzip"));
     server.send_P(200, PSTR("text/html"), fwhtmlgz, sizeof(fwhtmlgz)); });
 
   // Get Update Infos ---------------------------------------------------------
-  server.on("/gui", HTTP_GET, [this, &server]()
+  server.on(F("/gui"), HTTP_GET, [this, &server]()
             {
     SERVER_KEEPALIVE_FALSE()
     server.send(200, F("application/json"), getUpdateInfos(server.hasArg("refresh"))); });
 
   // Update Firmware from Github ----------------------------------------------
-  server.on("/update", HTTP_POST, [this, &shouldReboot, &pauseApplication, &server]()
+  server.on(F("/update"), HTTP_POST, [this, &shouldReboot, &pauseApplication, &server]()
             {
-              shouldReboot = updateFirmware(server.arg("plain").c_str());
+              shouldReboot = updateFirmware(server.arg(F("plain")).c_str());
 
               SERVER_KEEPALIVE_FALSE()
               if (shouldReboot)
-                server.send(200, F("text/html"), F("Firmware Successfully Updated"));
+                server.send_P(200, PSTR("text/html"), PSTR("Firmware Successfully Updated"));
               else
-                server.send(500, F("text/html"), F("Firmware Update Failed")); });
+                server.send_P(500, PSTR("text/html"), PSTR("Firmware Update Failed")); });
 
   // Firmware POST URL allows to push new firmware ----------------------------
   server.on(
-      "/fw", HTTP_POST, [&shouldReboot, &pauseApplication, &server]()
+      F("/fw"), HTTP_POST, [&shouldReboot, &pauseApplication, &server]()
       {
     shouldReboot = !Update.hasError();
     if (shouldReboot)
     {
       SERVER_KEEPALIVE_FALSE()
-      server.send(200, F("text/html"), F("Firmware Successfully Updated"));
+      server.send_P(200, PSTR("text/html"), PSTR("Firmware Successfully Updated"));
     }
     else
     {
@@ -171,9 +171,9 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
           // Set Update onError callback
           Update.onError([](uint8_t err)
                          { Update.printError(LOG_SERIAL); });
-
-          LOG_SERIAL.printf("Update Start: %s\n", upload.filename.c_str());
 #endif
+
+          LOG_SERIAL_PRINTF_P(PSTR("Update Start: %s\n"), upload.filename.c_str());
 
 #ifdef ESP8266
           Update.begin((ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000);
@@ -188,9 +188,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
         else if (upload.status == UPLOAD_FILE_END)
         {
           if (Update.end(true))
-#ifdef LOG_SERIAL
-            LOG_SERIAL.printf("Update Success: %uB\n", upload.totalSize);
-#endif
+            LOG_SERIAL_PRINTF_P(PSTR("Update Success: %uB\n"), upload.totalSize);
         }
 
 #ifdef ESP8266
@@ -201,14 +199,14 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
       });
 
   // reboot POST --------------------------------------------------------------
-  server.on("/rbt", HTTP_POST, [&shouldReboot, &server]()
+  server.on(F("/rbt"), HTTP_POST, [&shouldReboot, &server]()
             {
     SERVER_KEEPALIVE_FALSE()
     server.send_P(200,PSTR("text/html"),PSTR("Reboot command received"));
     shouldReboot = true; });
 
   // reboot RescueMode POST ---------------------------------------------------
-  server.on("/rbtrsc", HTTP_POST, [&shouldReboot, &server]()
+  server.on(F("/rbtrsc"), HTTP_POST, [&shouldReboot, &server]()
             {
     SERVER_KEEPALIVE_FALSE()
     server.send_P(200,PSTR("text/html"),PSTR("Reboot in rescue command received"));
@@ -242,7 +240,7 @@ Core::Core(char appId, String appName) : Application(appId, appName)
 
 void Core::checkForUpdate()
 {
-  String githubURL = "https://api.github.com/repos/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/latest";
+  String githubURL = F("https://api.github.com/repos/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/latest");
 
   WiFiClientSecure clientSecure;
   HTTPClient http;
@@ -358,10 +356,8 @@ bool Core::updateFirmware(const char *version)
   String fwUrl(F("https://github.com/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/download/"));
   fwUrl = fwUrl + versionToFlash + '/' + APPLICATION1_MODEL + '.' + versionToFlash + F(".bin");
 
-#ifdef LOG_SERIAL
-  LOG_SERIAL.print(F("Trying to Update from URL: "));
-  LOG_SERIAL.println(fwUrl);
-#endif
+  LOG_SERIAL_PRINT(F("Trying to Update from URL: "));
+  LOG_SERIAL_PRINTLN(fwUrl);
 
   HTTPClient https;
   https.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
@@ -370,10 +366,9 @@ bool Core::updateFirmware(const char *version)
 
   if (httpCode != 200)
   {
-#ifdef LOG_SERIAL
-    LOG_SERIAL.print(F("Failed to download file, httpCode: "));
-    LOG_SERIAL.println(httpCode);
-#endif
+    LOG_SERIAL_PRINT(F("Failed to download file, httpCode: "));
+    LOG_SERIAL_PRINTLN(httpCode);
+
     https.end();
     return false;
   }
@@ -389,7 +384,7 @@ bool Core::updateFirmware(const char *version)
   Update.onError([](uint8_t err)
                  { Update.printError(LOG_SERIAL); });
 
-  LOG_SERIAL.println(F("Firmware file found, Update Start"));
+  LOG_SERIAL_PRINTLN(F("Firmware file found, Update Start"));
 #endif
 
 #ifdef ESP8266
@@ -401,11 +396,7 @@ bool Core::updateFirmware(const char *version)
   Update.writeStream(*stream);
 
   if (Update.end())
-  {
-#ifdef LOG_SERIAL
-    LOG_SERIAL.printf("Update Success: %uB\n", contentLength);
-#endif
-  }
+    LOG_SERIAL_PRINTF_P(PSTR("Update Success: %uB\n"), contentLength);
 
   https.end();
 
