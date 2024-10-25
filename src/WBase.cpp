@@ -21,11 +21,11 @@ bool WBase::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
   // JsonVariant jv;
 
   // example for numeric value
-  // if ((jv = doc["prop1"]).is<JsonVariant>()) // check if property is present
+  // if ((jv = doc[F("prop1")]).is<JsonVariant>()) // check if property is present
   //   property1 = jv; // if the property is a string, it will be automatically converted to a number (be carefull default value if conversion fail is 0)
 
   // example for string value
-  // if ((jv = doc["prop2"]).is<const char *>()) // do a more precise check about the type otherwise strlcpy will crash
+  // if ((jv = doc[F("prop2")]).is<const char *>()) // do a more precise check about the type otherwise strlcpy will crash
   //   strlcpy(property2, jv, sizeof(property2));
 
   // example for boolean value

@@ -10,7 +10,7 @@
 
 void Core::setConfigDefaultValues() {};
 bool Core::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false) { return true; };
-String Core::generateConfigJSON(bool clearPassword = false) { return String(); };
+String Core::generateConfigJSON(bool forSaveFile = false) { return String(); };
 String Core::generateStatusJSON()
 {
   JsonDocument doc;
@@ -24,15 +24,15 @@ String Core::generateStatusJSON()
   unsigned long minutes = millis() / 60000;
 
   doc["sn"] = sn;
-  doc["baseversion"] = BASE_VERSION;
-  doc["version"] = VERSION;
-  doc["uptime"] = String((byte)(minutes / 1440)) + 'd' + (byte)(minutes / 60 % 24) + 'h' + (byte)(minutes % 60) + 'm';
-  doc["freeheap"] = ESP.getFreeHeap();
+  doc[F("baseversion")] = BASE_VERSION;
+  doc[F("version")] = VERSION;
+  doc[F("uptime")] = String((byte)(minutes / 1440)) + 'd' + (byte)(minutes / 60 % 24) + 'h' + (byte)(minutes % 60) + 'm';
+  doc[F("freeheap")] = ESP.getFreeHeap();
 #ifdef ESP8266
-  doc["freestack"] = ESP.getFreeContStack();
-  doc["flashsize"] = ESP.getFlashChipRealSize();
+  doc[F("freestack")] = ESP.getFreeContStack();
+  doc[F("flashsize")] = ESP.getFlashChipRealSize();
 #else
-  doc["freestack"] = uxTaskGetStackHighWaterMark(nullptr);
+  doc[F("freestack")] = uxTaskGetStackHighWaterMark(nullptr);
 #endif
 
   String gs;
@@ -252,9 +252,9 @@ void Core::checkForUpdate()
     if (!error)
     {
       JsonVariant jv;
-      if ((jv = doc["tag_name"]).is<const char *>())
+      if ((jv = doc[F("tag_name")]).is<const char *>())
         strlcpy(_lastFirmwareInfos.version, jv, sizeof(_lastFirmwareInfos.version));
-      if ((jv = doc["name"]).is<const char *>())
+      if ((jv = doc[F("name")]).is<const char *>())
       {
         // find the first space and copy the rest to title
         char *space = strchr(jv, ' ');
@@ -264,12 +264,12 @@ void Core::checkForUpdate()
           _lastFirmwareInfos.title[0] = 0;
       }
 
-      if ((jv = doc["published_at"]).is<const char *>())
+      if ((jv = doc[F("published_at")]).is<const char *>())
         strlcpy(_lastFirmwareInfos.releaseDate, jv, sizeof(_lastFirmwareInfos.releaseDate));
       else
         _lastFirmwareInfos.releaseDate[0] = 0;
 
-      if ((jv = doc["body"]).is<const char *>())
+      if ((jv = doc[F("body")]).is<const char *>())
       {
         // copy body to summary until "\r\n\r\n##"
         const char *body = jv.as<const char *>();
@@ -313,14 +313,14 @@ String Core::getUpdateInfos(bool refresh)
 
   JsonDocument doc;
 
-  doc["installed_version"] = VERSION;
+  doc[F("installed_version")] = VERSION;
   if (_lastFirmwareInfos.version[0])
   {
-    doc["latest_version"] = _lastFirmwareInfos.version;
-    doc["title"] = _lastFirmwareInfos.title;
-    doc["release_date"] = _lastFirmwareInfos.releaseDate;
-    doc["release_summary"] = _lastFirmwareInfos.summary;
-    doc["release_url"] = String(F("https://github.com/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/tag/")) + _lastFirmwareInfos.version;
+    doc[F("latest_version")] = _lastFirmwareInfos.version;
+    doc[F("title")] = _lastFirmwareInfos.title;
+    doc[F("release_date")] = _lastFirmwareInfos.releaseDate;
+    doc[F("release_summary")] = _lastFirmwareInfos.summary;
+    doc[F("release_url")] = String(F("https://github.com/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/tag/")) + _lastFirmwareInfos.version;
   }
 
   String infos;

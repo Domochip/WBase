@@ -122,7 +122,7 @@ bool WifiMan::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
       gw = 0;
   }
 
-  if ((jv = doc["mask"]).is<const char *>())
+  if ((jv = doc[F("mask")]).is<const char *>())
   {
     if (ipParser.fromString(jv.as<const char *>()))
       mask = static_cast<uint32_t>(ipParser);
@@ -130,7 +130,7 @@ bool WifiMan::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
       mask = 0;
   }
 
-  if ((jv = doc["dns1"]).is<const char *>())
+  if ((jv = doc[F("dns1")]).is<const char *>())
   {
     if (ipParser.fromString(jv.as<const char *>()))
       dns1 = static_cast<uint32_t>(ipParser);
@@ -138,7 +138,7 @@ bool WifiMan::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
       dns1 = 0;
   }
 
-  if ((jv = doc["dns2"]).is<const char *>())
+  if ((jv = doc[F("dns2")]).is<const char *>())
   {
     if (ipParser.fromString(jv.as<const char *>()))
       dns2 = static_cast<uint32_t>(ipParser);
@@ -163,7 +163,7 @@ String WifiMan::generateConfigJSON(bool forSaveFile = false)
 
   doc["h"] = hostname;
 
-  doc["staticip"] = (ip ? 1 : 0);
+  doc[F("staticip")] = (ip ? 1 : 0);
   if (ip)
     doc["ip"] = IPAddress(ip).toString();
   if (gw)
@@ -171,13 +171,13 @@ String WifiMan::generateConfigJSON(bool forSaveFile = false)
   else
     doc["gw"] = F("0.0.0.0");
   if (mask)
-    doc["mask"] = IPAddress(mask).toString();
+    doc[F("mask")] = IPAddress(mask).toString();
   else
-    doc["mask"] = F("0.0.0.0");
+    doc[F("mask")] = F("0.0.0.0");
   if (dns1)
-    doc["dns1"] = IPAddress(dns1).toString();
+    doc[F("dns1")] = IPAddress(dns1).toString();
   if (dns2)
-    doc["dns2"] = IPAddress(dns2).toString();
+    doc[F("dns2")] = IPAddress(dns2).toString();
 
   String gc;
   serializeJson(doc, gc);
@@ -191,25 +191,25 @@ String WifiMan::generateStatusJSON()
 
   if ((WiFi.getMode() & WIFI_AP))
   {
-    doc["apmode"] = F("on");
-    doc["apip"] = WiFi.softAPIP().toString();
+    doc[F("apmode")] = F("on");
+    doc[F("apip")] = WiFi.softAPIP().toString();
   }
   else
-    doc["apmode"] = F("off");
+    doc[F("apmode")] = F("off");
 
   if (ssid[0])
   {
-    doc["stationmode"] = F("on");
+    doc[F("stationmode")] = F("on");
     if (WiFi.isConnected())
     {
-      doc["stationip"] = WiFi.localIP().toString();
-      doc["stationipsource"] = ip ? F("Static IP") : F("DHCP");
+      doc[F("stationip")] = WiFi.localIP().toString();
+      doc[F("stationipsource")] = ip ? F("Static IP") : F("DHCP");
     }
   }
   else
-    doc["stationmode"] = F("off");
+    doc[F("stationmode")] = F("off");
 
-  doc["mac"] = WiFi.macAddress();
+  doc[F("mac")] = WiFi.macAddress();
 
   String gs;
   serializeJson(doc, gs);
@@ -392,7 +392,7 @@ void WifiMan::appInitWebServer(WebServer &server, bool &shouldReboot, bool &paus
     {
       JsonDocument doc;
       doc["r"] = n;
-      JsonArray wnl = doc["wnl"].to<JsonArray>();
+      JsonArray wnl = doc[F("wnl")].to<JsonArray>();
       for (byte i = 0; i < n; i++)
       {
         JsonObject wnl0 = wnl.add<JsonObject>();
