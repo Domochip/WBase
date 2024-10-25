@@ -171,9 +171,9 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
           // Set Update onError callback
           Update.onError([](uint8_t err)
                          { Update.printError(LOG_SERIAL); });
-
-          LOG_SERIAL.printf("Update Start: %s\n", upload.filename.c_str());
 #endif
+
+          LOG_SERIAL_PRINTF_P(PSTR("Update Start: %s\n"), upload.filename.c_str());
 
 #ifdef ESP8266
           Update.begin((ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000);
@@ -188,9 +188,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
         else if (upload.status == UPLOAD_FILE_END)
         {
           if (Update.end(true))
-#ifdef LOG_SERIAL
-            LOG_SERIAL.printf("Update Success: %uB\n", upload.totalSize);
-#endif
+            LOG_SERIAL_PRINTF_P(PSTR("Update Success: %uB\n"), upload.totalSize);
         }
 
 #ifdef ESP8266
@@ -358,10 +356,8 @@ bool Core::updateFirmware(const char *version)
   String fwUrl(F("https://github.com/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/download/"));
   fwUrl = fwUrl + versionToFlash + '/' + APPLICATION1_MODEL + '.' + versionToFlash + F(".bin");
 
-#ifdef LOG_SERIAL
-  LOG_SERIAL.print(F("Trying to Update from URL: "));
-  LOG_SERIAL.println(fwUrl);
-#endif
+  LOG_SERIAL_PRINT(F("Trying to Update from URL: "));
+  LOG_SERIAL_PRINTLN(fwUrl);
 
   HTTPClient https;
   https.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
@@ -370,10 +366,9 @@ bool Core::updateFirmware(const char *version)
 
   if (httpCode != 200)
   {
-#ifdef LOG_SERIAL
-    LOG_SERIAL.print(F("Failed to download file, httpCode: "));
-    LOG_SERIAL.println(httpCode);
-#endif
+    LOG_SERIAL_PRINT(F("Failed to download file, httpCode: "));
+    LOG_SERIAL_PRINTLN(httpCode);
+
     https.end();
     return false;
   }
@@ -389,7 +384,7 @@ bool Core::updateFirmware(const char *version)
   Update.onError([](uint8_t err)
                  { Update.printError(LOG_SERIAL); });
 
-  LOG_SERIAL.println(F("Firmware file found, Update Start"));
+  LOG_SERIAL_PRINTLN(F("Firmware file found, Update Start"));
 #endif
 
 #ifdef ESP8266
@@ -401,11 +396,7 @@ bool Core::updateFirmware(const char *version)
   Update.writeStream(*stream);
 
   if (Update.end())
-  {
-#ifdef LOG_SERIAL
-    LOG_SERIAL.printf("Update Success: %uB\n", contentLength);
-#endif
-  }
+    LOG_SERIAL_PRINTF("Update Success: %uB\n", contentLength);
 
   https.end();
 

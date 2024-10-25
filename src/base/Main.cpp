@@ -42,8 +42,8 @@ void setup()
 {
 #ifdef LOG_SERIAL
   LOG_SERIAL.begin(LOG_SERIAL_SPEED);
-  LOG_SERIAL.println();
-  LOG_SERIAL.println();
+  LOG_SERIAL_PRINTLN();
+  LOG_SERIAL_PRINTLN();
   LOG_SERIAL.flush();
 #endif
 
@@ -54,11 +54,9 @@ void setup()
   STATUS_LED_ERROR
 #endif
 
-#ifdef LOG_SERIAL
-  LOG_SERIAL.print(F(APPLICATION1_MANUFACTURER " " APPLICATION1_MODEL " "));
-  LOG_SERIAL.println(VERSION);
-  LOG_SERIAL.println(F("---Booting---"));
-#endif
+  LOG_SERIAL_PRINT(F(APPLICATION1_MANUFACTURER " " APPLICATION1_MODEL " "));
+  LOG_SERIAL_PRINTLN(VERSION);
+  LOG_SERIAL_PRINTLN(F("---Booting---"));
 
 #ifndef RESCUE_BUTTON_WAIT
 #define RESCUE_BUTTON_WAIT 3
@@ -77,11 +75,9 @@ void setup()
   // if config already skipped, don't wait for rescue button
   if (!skipExistingConfig)
   {
-#ifdef LOG_SERIAL
-    LOG_SERIAL.print(F("Wait Rescue button for "));
-    LOG_SERIAL.print(RESCUE_BUTTON_WAIT);
-    LOG_SERIAL.println(F(" seconds"));
-#endif
+    LOG_SERIAL_PRINT(F("Wait Rescue button for "));
+    LOG_SERIAL_PRINT(RESCUE_BUTTON_WAIT);
+    LOG_SERIAL_PRINTLN(F(" seconds"));
 
     pinMode(RESCUE_BTN_PIN, (RESCUE_BTN_PIN != 16) ? INPUT_PULLUP : INPUT);
     for (int i = 0; i < 100 && skipExistingConfig == false; i++)
@@ -93,22 +89,18 @@ void setup()
   }
 #endif
 
-#ifdef LOG_SERIAL
   if (skipExistingConfig)
   {
-    LOG_SERIAL.println(F("-> RESCUE MODE : Stored configuration won't be loaded."));
+    LOG_SERIAL_PRINTLN(F("-> RESCUE MODE : Stored configuration won't be loaded."));
   }
-#endif
 #ifdef ESP8266
   if (!LittleFS.begin())
 #else
   if (!LittleFS.begin(true))
 #endif
   {
-#ifdef LOG_SERIAL
-    LOG_SERIAL.println(F("/!\\   File System Mount Failed   /!\\"));
-    LOG_SERIAL.println(F("/!\\ Configuration can't be saved /!\\"));
-#endif
+    LOG_SERIAL_PRINTLN(F("/!\\   File System Mount Failed   /!\\"));
+    LOG_SERIAL_PRINTLN(F("/!\\ Configuration can't be saved /!\\"));
   }
 
   // Init Core
@@ -120,19 +112,16 @@ void setup()
   // Init Application
   application1.init(skipExistingConfig);
 
-#ifdef LOG_SERIAL
-  LOG_SERIAL.print(F("Start WebServer : "));
-#endif
+  LOG_SERIAL_PRINT(F("Start WebServer : "));
+
   core.initWebServer(server, shouldReboot, pauseApplication);
   wifiMan.initWebServer(server, shouldReboot, pauseApplication);
   application1.initWebServer(server, shouldReboot, pauseApplication);
 
   server.begin();
-#ifdef LOG_SERIAL
-  LOG_SERIAL.println(F("OK"));
 
-  LOG_SERIAL.println(F("---End of setup()---"));
-#endif
+  LOG_SERIAL_PRINTLN(F("OK"));
+  LOG_SERIAL_PRINTLN(F("---End of setup()---"));
 }
 
 //-----------------------------------------------------------------------
@@ -154,7 +143,7 @@ void loop(void)
   if (shouldReboot)
   {
 #ifdef LOG_SERIAL
-    LOG_SERIAL.println("Rebooting...");
+    LOG_SERIAL_PRINTLN(F("Rebooting..."));
     delay(100);
     LOG_SERIAL.end();
 #endif
