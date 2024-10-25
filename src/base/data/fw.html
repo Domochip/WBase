@@ -126,16 +126,37 @@
         return 0;
     }
 
+    function disableAllButtons() {
+        $(qsp + '#refreshButton').disabled = true;
+        $(qsp + '#updateButton').disabled = true;
+        $(qsp + '#sub').disabled = true;
+    }
+
+    function calculateAllButtonStates() {
+        $(qsp + '#refreshButton').disabled = false;
+
+        const installedVersion = $(qsp + '#installed_version').textContent;
+        const latestVersion = $(qsp + '#latest_version').textContent;
+        const updateButton = $(qsp + '#updateButton');
+        if (compareVersions(latestVersion, installedVersion) > 0) {
+            updateButton.disabled = false;
+            updateButton.innerHTML = 'Update';
+        } else {
+            updateButton.disabled = true;
+            updateButton.innerHTML = latestVersion ? 'Up to date' : 'Update';
+        }
+        $(qsp + '#sub').disabled = false;
+    }
+
     function getUpdateInfos(refresh = false) {
+
+        disableAllButtons();
+
         const refreshButton = $(qsp + "#refreshButton");
         const updateButton = $(qsp + "#updateButton");
 
         // Show loading animation
         refreshButton.innerHTML = '<span class="spinner"></span> Refreshing...';
-        refreshButton.disabled = true;
-
-        // Disable the updateButton during refresh
-        updateButton.disabled = true;
 
         // clear previous values
         ['#latest_version', '#title', '#release_date', '#release_summary', '#release_url'].forEach(id => {
@@ -165,27 +186,19 @@
                 releaseSummarySpan.innerHTML = summary.replace(/\r\n/g, '<br>').replace(/\n/g, '<br>');
             }
 
-            // Restore refreshButton text and state
+            // Restore refreshButton text
             refreshButton.innerHTML = 'Refresh';
-            refreshButton.disabled = false;
 
             // Update the updateButton state
-            const latestVersion = $(qsp + '#latest_version').innerHTML;
-            if (latestVersion && compareVersions(latestVersion, $(qsp + '#installed_version').innerHTML) > 0) {
-                updateButton.disabled = false;
-                updateButton.innerHTML = 'Update';
-            } else {
-                updateButton.disabled = true;
-                updateButton.innerHTML = latestVersion ? 'Up to date' : 'Update';
-            }
+            calculateAllButtonStates();
 
             fadeOut($(qsp + "#l1"));
             fadeOut($(qsp + "#l2"));
 
         }, function () {
-            // Restore button text and state
+            // Restore button text
             refreshButton.innerHTML = 'Refresh';
-            refreshButton.disabled = false;
+            calculateAllButtonStates();
             ['#l1', '#l2'].forEach(id => {
                 $(qsp + id).innerHTML = '<h4 style="display:inline;color:red;"><b> Failed</b></h4>';
             });
@@ -195,8 +208,8 @@
 
     $(qsp + "#refreshButton").addEventListener('click', () => { getUpdateInfos(true); });
     $(qsp + "#updateButton").addEventListener('click', () => {
-        $(qsp + '#refreshButton').disabled = true;
-        $(qsp + '#updateButton').disabled = true;
+
+        disableAllButtons();
         $(qsp + '#updateButton').innerHTML = '<span class="spinner"></span> Updating...';
 
         post('/update', $(qsp + '#latest_version').textContent, () => {
@@ -204,21 +217,19 @@
             $(qsp + '#r').innerHTML = '<h3><span style="color: green;"><b>Done</b></span> System is rebooting. This page will be reloaded in <span id="cd">20</span>sec.</h3>';
             loadScript('startCountdown("#cd", 19, () => {location.reload();});');
         }, () => {
-            $(qsp + '#updateButton').innerHTML = 'Update';
-            $(qsp + '#updateButton').disabled = false;
-            $(qsp + '#refreshButton').disabled = false;
+            calculateAllButtonStates();
         });
     });
 
     $(qsp + "#f").addEventListener('submit', function (evt) {
         evt.preventDefault();
         if (!firmwareValidation()) return;
-        $(qsp + '#r').innerHTML = 'In Progress';
+        disableAllButtons();
+
         $(qsp + '#fi').readOnly = true;
-        $(qsp + '#sub').disabled = true;
 
         // Add loading animation to the submit button
-        $(qsp + '#sub').innerHTML = '<span class="spinner"></span> 0%';
+        $(qsp + '#sub').innerHTML = '<span class="spinner"></span> <span id="percent">0%</span>';
 
         post('/fw',
             new FormData($(qsp + '#f')),
@@ -226,7 +237,6 @@
                 var reload15sec = document.createElement('script');
                 $(qsp + '#r').innerHTML = '<h3><span style="color: green;"><b>Done</b></span> System is rebooting. This page will be reloaded in <span id="cd">20</span>sec.</h3>';
                 loadScript('startCountdown("#cd", 19, () => {location.reload();});');
-                $(qsp + '#f').reset();
                 $(qsp + '#sub').innerHTML = 'Upload Done';
             },
             function (responseText) {
@@ -234,14 +244,13 @@
                 $(qsp + '#f').reset();
                 $(qsp + '#sub').innerHTML = 'Upload Firmware';
                 $(qsp + '#fi').readOnly = false;
-                $(qsp + '#sub').disabled = false;
+                calculateAllButtonStates();
             },
             30000,
             function (evt) {
-                $(qsp + '#r').innerHTML = 'In Progress';
                 if (evt.lengthComputable) {
                     const percentComplete = Math.round((evt.loaded / evt.total) * 100);
-                    $(qsp + '#sub').innerHTML = `<span class="spinner"></span> ${percentComplete}%`;
+                    $(qsp + '#percent').innerHTML = `${percentComplete}%`;
                 }
             }
         );
