@@ -123,7 +123,7 @@ void Application::initWebServer(WebServer &server, bool &shouldReboot, bool &pau
 
     // Deserialize it
     JsonDocument doc;
-    DeserializationError error = deserializeJson(doc, server.arg("plain"));
+    DeserializationError error = deserializeJson(doc, server.arg(F("plain")));
     if (error)
     {
       server.send(400, F("text/html"), F("Malformed JSON"));

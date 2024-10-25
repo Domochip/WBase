@@ -126,7 +126,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
   // Update Firmware from Github ----------------------------------------------
   server.on(F("/update"), HTTP_POST, [this, &shouldReboot, &pauseApplication, &server]()
             {
-              shouldReboot = updateFirmware(server.arg("plain").c_str());
+              shouldReboot = updateFirmware(server.arg(F("plain")).c_str());
 
               SERVER_KEEPALIVE_FALSE()
               if (shouldReboot)
@@ -396,7 +396,7 @@ bool Core::updateFirmware(const char *version)
   Update.writeStream(*stream);
 
   if (Update.end())
-    LOG_SERIAL_PRINTF("Update Success: %uB\n", contentLength);
+    LOG_SERIAL_PRINTF_P(PSTR("Update Success: %uB\n"), contentLength);
 
   https.end();
 
