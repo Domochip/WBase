@@ -1,0 +1,51 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+
+      - name: Build PlatformIO Project
+        run: pio run
+
+      - name: Get Versions
+        id: versions
+        run: |
+          APPLICATION1_MODEL=$(grep -oP '(?<=#define APPLICATION1_MODEL ").*(?=")'  ./src/Main.h)
+          echo "APPLICATION1_MODEL=${APPLICATION1_MODEL}" >> $GITHUB_ENV
+          VERSION_NUMBER=$(grep -oP '(?<=#define VERSION_NUMBER ").*(?=")'  ./src/Main.h)
+          echo "VERSION_NUMBER=${VERSION_NUMBER}" >> $GITHUB_ENV
+
+      - name: Rename Firmware
+        run: mv .pio/build/d1_mini/${{ env.APPLICATION1_MODEL }}.bin .pio/build/d1_mini/${{ env.APPLICATION1_MODEL }}.${{ env.VERSION_NUMBER }}.bin
+
+      - name: Create Draft Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          tag_name: "${{ env.VERSION_NUMBER }}"
+          generate_release_notes: true
+          files: .pio/build/d1_mini/${{ env.APPLICATION1_MODEL }}.${{ env.VERSION_NUMBER }}.bin
