@@ -43,8 +43,8 @@ jobs:
 
       - name: Rename Firmware
         run: |
-          mv .pio/build/d1_mini/${{ env.APPLICATION1_MODEL }}.bin .pio/build/d1_mini/${{ env.APPLICATION1_MODEL }}.${{ env.VERSION_NUMBER }}.bin
-          mv .pio/build/d1_mini/${{ env.APPLICATION1_MODEL }}.bin .pio/build/d1_mini/Wireless${{ env.PPLICATION1_MODEL }}.${{ env.VERSION_NUMBER }}.bin
+          cp .pio/build/d1_mini/${{ env.APPLICATION1_MODEL }}.bin .pio/build/d1_mini/${{ env.APPLICATION1_MODEL }}.${{ env.VERSION_NUMBER }}.bin
+          cp .pio/build/d1_mini/${{ env.APPLICATION1_MODEL }}.bin .pio/build/d1_mini/Wireless${{ env.PPLICATION1_MODEL }}.${{ env.VERSION_NUMBER }}.bin
 
       - name: Create Draft Release
         uses: softprops/action-gh-release@v2
