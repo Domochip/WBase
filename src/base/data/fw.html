@@ -74,9 +74,8 @@
             <input type='file' name='fi' id='fi' accept='.bin' required>
         </div>
         <div class="pure-controls">
-            <input type='submit' name='sub' id='sub' value='Upload Firmware' class="pure-button pure-button-primary">
+            <button type='submit' id='sub' class="pure-button pure-button-primary">Upload Firmware</button>
         </div>
-
     </fieldset>
 </form>
 <span id='r'></span>
@@ -128,7 +127,6 @@
     }
 
     function getUpdateInfos(refresh = false) {
-
         const refreshButton = $(qsp + "#refreshButton");
         const updateButton = $(qsp + "#updateButton");
 
@@ -218,6 +216,10 @@
         $(qsp + '#r').innerHTML = 'In Progress';
         $(qsp + '#fi').readOnly = true;
         $(qsp + '#sub').disabled = true;
+
+        // Add loading animation to the submit button
+        $(qsp + '#sub').innerHTML = '<span class="spinner"></span> 0%';
+
         post('/fw',
             new FormData($(qsp + '#f')),
             function () {
@@ -225,17 +227,22 @@
                 $(qsp + '#r').innerHTML = '<h3><span style="color: green;"><b>Done</b></span> System is rebooting. This page will be reloaded in <span id="cd">20</span>sec.</h3>';
                 loadScript('startCountdown("#cd", 19, () => {location.reload();});');
                 $(qsp + '#f').reset();
+                $(qsp + '#sub').innerHTML = 'Upload Done';
             },
             function (responseText) {
                 $(qsp + '#r').innerHTML = '<span style="color: red;"><b>Failed</b></span> (' + responseText + ')';
                 $(qsp + '#f').reset();
+                $(qsp + '#sub').innerHTML = 'Upload Firmware';
                 $(qsp + '#fi').readOnly = false;
                 $(qsp + '#sub').disabled = false;
             },
             30000,
             function (evt) {
                 $(qsp + '#r').innerHTML = 'In Progress';
-                if (evt.lengthComputable) $(qsp + '#r').innerHTML += ' : ' + evt.loaded / evt.total * 100 + '%';
+                if (evt.lengthComputable) {
+                    const percentComplete = Math.round((evt.loaded / evt.total) * 100);
+                    $(qsp + '#sub').innerHTML = `<span class="spinner"></span> ${percentComplete}%`;
+                }
             }
         );
     });
