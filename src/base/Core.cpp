@@ -121,7 +121,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
   server.on(F("/gui"), HTTP_GET, [this, &server]()
             {
     SERVER_KEEPALIVE_FALSE()
-    server.send(200, F("application/json"), getUpdateInfos(server.hasArg("refresh"))); });
+    server.send(200, F("application/json"), getUpdateInfos(server.hasArg(F("refresh")))); });
 
   // Update Firmware from Github ----------------------------------------------
   server.on(F("/update"), HTTP_POST, [this, &shouldReboot, &pauseApplication, &server]()
@@ -201,19 +201,15 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
   // reboot POST --------------------------------------------------------------
   server.on(F("/rbt"), HTTP_POST, [&shouldReboot, &server]()
             {
+    if(server.hasArg(F("rescue")))
+    {
+      //Set EEPROM for Rescue mode flag
+      EEPROM.begin(4);
+      EEPROM.write(0, 1);
+      EEPROM.end();
+    }
     SERVER_KEEPALIVE_FALSE()
     server.send_P(200,PSTR("text/html"),PSTR("Reboot command received"));
-    shouldReboot = true; });
-
-  // reboot RescueMode POST ---------------------------------------------------
-  server.on(F("/rbtrsc"), HTTP_POST, [&shouldReboot, &server]()
-            {
-    SERVER_KEEPALIVE_FALSE()
-    server.send_P(200,PSTR("text/html"),PSTR("Reboot in rescue command received"));
-    //Set EEPROM for Rescue mode flag
-    EEPROM.begin(4);
-    EEPROM.write(0, 1);
-    EEPROM.end();
     shouldReboot = true; });
 
   // 404 on not found ---------------------------------------------------------
