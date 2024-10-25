@@ -129,11 +129,14 @@
     function disableAllButtons() {
         $(qsp + '#refreshButton').disabled = true;
         $(qsp + '#updateButton').disabled = true;
+        $(qsp + '#fi').readOnly = true;
         $(qsp + '#uploadButton').disabled = true;
     }
 
     function calculateAllButtonStates() {
-        $(qsp + '#refreshButton').disabled = false;
+        const refreshButton = $(qsp + '#refreshButton');
+        refreshButton.innerHTML = 'Refresh';
+        refreshButton.disabled = false;
 
         const installedVersion = $(qsp + '#installed_version').textContent;
         const latestVersion = $(qsp + '#latest_version').textContent;
@@ -145,7 +148,11 @@
             updateButton.disabled = true;
             updateButton.innerHTML = latestVersion ? 'Up to date' : 'Update';
         }
-        $(qsp + '#uploadButton').disabled = false;
+
+        const uploadButton = $(qsp + '#uploadButton');
+        uploadButton.innerHTML = 'Upload Firmware';
+        uploadButton.disabled = false;
+        $(qsp + '#fi').readOnly = false;
     }
 
     function getUpdateInfos(refresh = false) {
@@ -183,18 +190,14 @@
                 releaseSummarySpan.innerHTML = summary.replace(/\r\n/g, '<br>').replace(/\n/g, '<br>');
             }
 
-            // Restore refreshButton text
-            refreshButton.innerHTML = 'Refresh';
-
-            // Update the updateButton state
+            // Update buttons
             calculateAllButtonStates();
 
             fadeOut($(qsp + "#l1"));
             fadeOut($(qsp + "#l2"));
 
         }, function () {
-            // Restore button text
-            refreshButton.innerHTML = 'Refresh';
+
             calculateAllButtonStates();
             ['#l1', '#l2'].forEach(id => {
                 $(qsp + id).innerHTML = '<h4 style="display:inline;color:red;"><b> Failed</b></h4>';
@@ -223,8 +226,6 @@
         if (!firmwareValidation()) return;
         disableAllButtons();
 
-        $(qsp + '#fi').readOnly = true;
-
         // Add loading animation to the submit button
         $(qsp + '#uploadButton').innerHTML = '<span class="spinner"></span> <span id="percent">0%</span>';
 
@@ -239,8 +240,6 @@
             function (responseText) {
                 $(qsp + '#r').innerHTML = '<span style="color: red;"><b>Failed</b></span> (' + responseText + ')';
                 $(qsp + '#f').reset();
-                $(qsp + '#uploadButton').innerHTML = 'Upload Firmware';
-                $(qsp + '#fi').readOnly = false;
                 calculateAllButtonStates();
             },
             30000,
