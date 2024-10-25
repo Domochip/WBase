@@ -130,9 +130,9 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
 
               SERVER_KEEPALIVE_FALSE()
               if (shouldReboot)
-                server.send(200, F("text/html"), F("Firmware Successfully Updated"));
+                server.send_P(200, PSTR("text/html"), PSTR("Firmware Successfully Updated"));
               else
-                server.send(500, F("text/html"), F("Firmware Update Failed")); });
+                server.send_P(500, PSTR("text/html"), PSTR("Firmware Update Failed")); });
 
   // Firmware POST URL allows to push new firmware ----------------------------
   server.on(
@@ -142,7 +142,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
     if (shouldReboot)
     {
       SERVER_KEEPALIVE_FALSE()
-      server.send(200, F("text/html"), F("Firmware Successfully Updated"));
+      server.send_P(200, PSTR("text/html"), PSTR("Firmware Successfully Updated"));
     }
     else
     {
@@ -240,7 +240,7 @@ Core::Core(char appId, String appName) : Application(appId, appName)
 
 void Core::checkForUpdate()
 {
-  String githubURL = "https://api.github.com/repos/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/latest";
+  String githubURL = F("https://api.github.com/repos/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/latest");
 
   WiFiClientSecure clientSecure;
   HTTPClient http;
