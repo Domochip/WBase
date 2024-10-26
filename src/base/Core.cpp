@@ -126,21 +126,11 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
   // Update Firmware from Github ----------------------------------------------
   server.on(F("/update"), HTTP_POST, [this, &shouldReboot, &pauseApplication, &server]()
             {
-              shouldReboot = updateFirmware(server.arg(F("plain")).c_str());
+              String Msg;
+              shouldReboot = updateFirmware(server.arg(F("plain")).c_str(),Msg);
 
               SERVER_KEEPALIVE_FALSE()
-              if (shouldReboot)
-                server.send_P(200, PSTR("text/html"), PSTR("Firmware Successfully Updated"));
-              else{
-                // Prepare response
-                String errorMsg;
-#ifdef ESP8266
-                errorMsg = Update.getErrorString();
-#else
-                errorMsg = Update.errorString();
-#endif
-                server.send(500, F("text/html"), errorMsg);
-                } });
+              server.send(shouldReboot ? 200 : 500, F("text/html"), Msg); });
 
   // Firmware POST URL allows to push new firmware ----------------------------
   server.on(
@@ -151,7 +141,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
           SERVER_KEEPALIVE_FALSE()
     if (shouldReboot)
     {
-      server.send_P(200, PSTR("text/html"), PSTR("Firmware Successfully Updated"));
+      server.send_P(200, PSTR("text/html"), PSTR("Update successful"));
     }
     else
     {
@@ -340,7 +330,7 @@ String Core::getUpdateInfos(bool refresh)
   return infos;
 }
 
-bool Core::updateFirmware(const char *version)
+bool Core::updateFirmware(const char *version, String &retMsg)
 {
   char versionToFlash[8];
 
@@ -373,10 +363,13 @@ bool Core::updateFirmware(const char *version)
 
   if (httpCode != 200)
   {
-    LOG_SERIAL_PRINT(F("Failed to download file, httpCode: "));
-    LOG_SERIAL_PRINTLN(httpCode);
-
     https.end();
+
+    retMsg = F("Failed to download file, httpCode: ");
+    retMsg += httpCode;
+
+    LOG_SERIAL_PRINTLN(retMsg);
+
     return false;
   }
 
@@ -410,7 +403,19 @@ bool Core::updateFirmware(const char *version)
 
   https.end();
 
-  return !Update.hasError();
+  bool success = !Update.hasError();
+  if (success)
+    retMsg = F("Update successful");
+  else
+  {
+#ifdef ESP8266
+    retMsg = Update.getErrorString();
+#else
+    retMsg = Update.errorString();
+#endif
+  }
+
+  return success;
 }
 
 int8_t Core::versionCompare(const char *version1, const char *version2)

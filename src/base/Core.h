@@ -44,7 +44,7 @@ public:
 
   void checkForUpdate();
   String getUpdateInfos(bool refresh = false);
-  bool updateFirmware(const char *version = nullptr);
+  bool updateFirmware(const char *version, String &retMsg);
   static int8_t versionCompare(const char *version1, const char *version2);
 };
 
