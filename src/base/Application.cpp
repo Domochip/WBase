@@ -83,68 +83,80 @@ void Application::initWebServer(WebServer &server, bool &shouldReboot, bool &pau
 
   // HTML Status handler
   sprintf_P(url, PSTR("/status%c.html"), _appId);
-  server.on(url, HTTP_GET, [this, &server]()
+  server.on(url, HTTP_GET,
+            [this, &server]()
             {
-    SERVER_KEEPALIVE_FALSE()
-    server.sendHeader(F("Content-Encoding"), F("gzip"));
-    server.send_P(200, PSTR("text/html"), getHTMLContent(status), getHTMLContentSize(status)); });
+              SERVER_KEEPALIVE_FALSE()
+              server.sendHeader(F("Content-Encoding"), F("gzip"));
+              server.send_P(200, PSTR("text/html"), getHTMLContent(status), getHTMLContentSize(status));
+            });
 
   // HTML Config handler
   sprintf_P(url, PSTR("/config%c.html"), _appId);
-  server.on(url, HTTP_GET, [this, &server]()
+  server.on(url, HTTP_GET,
+            [this, &server]()
             {
-    SERVER_KEEPALIVE_FALSE()
-    server.sendHeader(F("Content-Encoding"), F("gzip"));
-    server.send_P(200, PSTR("text/html"), getHTMLContent(config), getHTMLContentSize(config)); });
+              SERVER_KEEPALIVE_FALSE()
+              server.sendHeader(F("Content-Encoding"), F("gzip"));
+              server.send_P(200, PSTR("text/html"), getHTMLContent(config), getHTMLContentSize(config));
+            });
 
   // JSON Status handler
   sprintf_P(url, PSTR("/gs%c"), _appId);
-  server.on(url, HTTP_GET, [this, &server]()
+  server.on(url, HTTP_GET,
+            [this, &server]()
             {
-    SERVER_KEEPALIVE_FALSE()
-    server.sendHeader(F("Cache-Control"), F("no-cache"));
-    server.send(200, F("text/json"), generateStatusJSON()); });
+              SERVER_KEEPALIVE_FALSE()
+              server.sendHeader(F("Cache-Control"), F("no-cache"));
+              server.send(200, F("text/json"), generateStatusJSON());
+            });
 
   // JSON Config handler
   sprintf_P(url, PSTR("/gc%c"), _appId);
-  server.on(url, HTTP_GET, [this, &server]()
+  server.on(url, HTTP_GET,
+            [this, &server]()
             {
-    SERVER_KEEPALIVE_FALSE()
-    server.sendHeader(F("Cache-Control"), F("no-cache"));
-    server.send(200, F("text/json"), generateConfigJSON()); });
+              SERVER_KEEPALIVE_FALSE()
+              server.sendHeader(F("Cache-Control"), F("no-cache"));
+              server.send(200, F("text/json"), generateConfigJSON());
+            });
 
   sprintf_P(url, PSTR("/sc%c"), _appId);
-  server.on(url, HTTP_POST, [this, &server]()
+  server.on(url, HTTP_POST,
+            [this, &server]()
             {
-    // All responses have keep-alive set to false
-    SERVER_KEEPALIVE_FALSE()
+              // All responses have keep-alive set to false
+              SERVER_KEEPALIVE_FALSE()
 
-    // config json are received in POST body (arg("plain"))
+              // config json are received in POST body (arg("plain"))
 
-    // Deserialize it
-    JsonDocument doc;
-    DeserializationError error = deserializeJson(doc, server.arg(F("plain")));
-    if (error)
-    {
-      server.send(400, F("text/html"), F("Malformed JSON"));
-      return;
-    }
+              // Deserialize it
+              JsonDocument doc;
+              DeserializationError error = deserializeJson(doc, server.arg(F("plain")));
+              if (error)
+              {
+                server.send(400, F("text/html"), F("Malformed JSON"));
+                return;
+              }
 
-    // Parse it using the application method
-    if (!parseConfigJSON(doc, true)){
-      server.send(400, F("text/html"), F("Invalid Configuration"));
-      return;
-    }
+              // Parse it using the application method
+              if (!parseConfigJSON(doc, true))
+              {
+                server.send(400, F("text/html"), F("Invalid Configuration"));
+                return;
+              }
 
-    // Save it
-    if (!saveConfig()){
-      server.send(500, F("text/html"), F("Configuration hasn't been saved"));
-      return;
-    }
+              // Save it
+              if (!saveConfig())
+              {
+                server.send(500, F("text/html"), F("Configuration hasn't been saved"));
+                return;
+              }
 
-    //Everything went fine, Send client answer
-    server.send(200);
-    _reInit = true; });
+              // Everything went fine, Send client answer
+              server.send(200);
+              _reInit = true;
+            });
 
   // Execute Specific Application Web Server initialization
   appInitWebServer(server, shouldReboot, pauseApplication);

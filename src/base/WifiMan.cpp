@@ -371,40 +371,41 @@ size_t WifiMan::getHTMLContentSize(WebPageForPlaceHolder wp)
 
 void WifiMan::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseApplication)
 {
-
-  server.on(F("/wnl"), HTTP_GET, [this, &server]()
+  server.on(F("/wnl"), HTTP_GET,
+            [this, &server]()
             {
-    // prepare response
-    SERVER_KEEPALIVE_FALSE()
-    server.sendHeader(F("Cache-Control"), F("no-cache"));
+              // prepare response
+              SERVER_KEEPALIVE_FALSE()
+              server.sendHeader(F("Cache-Control"), F("no-cache"));
 
-    int8_t n = WiFi.scanComplete();
-    if (n == -2)
-    {
-      server.send(200, F("text/json"), F("{\"r\":-2,\"wnl\":[]}"));
-      WiFi.scanNetworks(true);
-    }
-    else if (n == -1)
-    {
-      server.send(200, F("text/json"), F("{\"r\":-1,\"wnl\":[]}"));
-    }
-    else
-    {
-      JsonDocument doc;
-      doc["r"] = n;
-      JsonArray wnl = doc[F("wnl")].to<JsonArray>();
-      for (byte i = 0; i < n; i++)
-      {
-        JsonObject wnl0 = wnl.add<JsonObject>();
-        wnl0["SSID"] = WiFi.SSID(i);
-        wnl0["RSSI"] = WiFi.RSSI(i);
-      }
-      String networksJSON;
-      serializeJson(doc, networksJSON);
+              int8_t n = WiFi.scanComplete();
+              if (n == -2)
+              {
+                server.send(200, F("text/json"), F("{\"r\":-2,\"wnl\":[]}"));
+                WiFi.scanNetworks(true);
+              }
+              else if (n == -1)
+              {
+                server.send(200, F("text/json"), F("{\"r\":-1,\"wnl\":[]}"));
+              }
+              else
+              {
+                JsonDocument doc;
+                doc["r"] = n;
+                JsonArray wnl = doc[F("wnl")].to<JsonArray>();
+                for (byte i = 0; i < n; i++)
+                {
+                  JsonObject wnl0 = wnl.add<JsonObject>();
+                  wnl0["SSID"] = WiFi.SSID(i);
+                  wnl0["RSSI"] = WiFi.RSSI(i);
+                }
+                String networksJSON;
+                serializeJson(doc, networksJSON);
 
-      server.send(200, F("text/json"), networksJSON);
-      WiFi.scanDelete();
-    } });
+                server.send(200, F("text/json"), networksJSON);
+                WiFi.scanDelete();
+              }
+            });
 }
 
 void WifiMan::appRun()
