@@ -83,45 +83,58 @@ size_t Core::getHTMLContentSize(WebPageForPlaceHolder wp)
 void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseApplication)
 {
   // root is index
-  server.on("/", HTTP_GET, [&server]()
+  server.on("/", HTTP_GET,
+            [&server]()
             {
-    SERVER_KEEPALIVE_FALSE()
-    server.sendHeader(F("Content-Encoding"), F("gzip"));
-    server.send_P(200, PSTR("text/html"), indexhtmlgz, sizeof(indexhtmlgz)); });
+              SERVER_KEEPALIVE_FALSE()
+              server.sendHeader(F("Content-Encoding"), F("gzip"));
+              server.send_P(200, PSTR("text/html"), indexhtmlgz, sizeof(indexhtmlgz));
+            });
 
   // Ressources URLs
-  server.on(F("/pure-min.css"), HTTP_GET, [&server]()
+  server.on(F("/pure-min.css"), HTTP_GET,
+            [&server]()
             {
-    SERVER_KEEPALIVE_FALSE()
-    server.sendHeader(F("Content-Encoding"), F("gzip"));
-    server.sendHeader(F("Cache-Control"), F("max-age=604800, public"));
-    server.send_P(200, PSTR("text/css"), puremincssgz, sizeof(puremincssgz)); });
+              SERVER_KEEPALIVE_FALSE()
+              server.sendHeader(F("Content-Encoding"), F("gzip"));
+              server.sendHeader(F("Cache-Control"), F("max-age=604800, public"));
+              server.send_P(200, PSTR("text/css"), puremincssgz, sizeof(puremincssgz));
+            });
 
-  server.on(F("/side-menu.css"), HTTP_GET, [&server]()
+  server.on(F("/side-menu.css"), HTTP_GET,
+            [&server]()
             {
-    SERVER_KEEPALIVE_FALSE()
-    server.sendHeader(F("Content-Encoding"), F("gzip"));
-    server.sendHeader(F("Cache-Control"), F("max-age=604800, public"));
-    server.send_P(200, PSTR("text/css"), sidemenucssgz, sizeof(sidemenucssgz)); });
+              SERVER_KEEPALIVE_FALSE()
+              server.sendHeader(F("Content-Encoding"), F("gzip"));
+              server.sendHeader(F("Cache-Control"), F("max-age=604800, public"));
+              server.send_P(200, PSTR("text/css"), sidemenucssgz, sizeof(sidemenucssgz));
+            });
 
-  server.on(F("/side-menu.js"), HTTP_GET, [&server]()
+  server.on(F("/side-menu.js"), HTTP_GET,
+            [&server]()
             {
-    SERVER_KEEPALIVE_FALSE()
-    server.sendHeader(F("Content-Encoding"), F("gzip"));
-    server.sendHeader(F("Cache-Control"), F("max-age=604800, public"));
-    server.send_P(200, PSTR("text/javascript"), sidemenujsgz, sizeof(sidemenujsgz)); });
+              SERVER_KEEPALIVE_FALSE()
+              server.sendHeader(F("Content-Encoding"), F("gzip"));
+              server.sendHeader(F("Cache-Control"), F("max-age=604800, public"));
+              server.send_P(200, PSTR("text/javascript"), sidemenujsgz, sizeof(sidemenujsgz));
+            });
 
-  server.on(F("/fw.html"), HTTP_GET, [this, &server]()
+  server.on(F("/fw.html"), HTTP_GET,
+            [this, &server]()
             {
-    SERVER_KEEPALIVE_FALSE()
-    server.sendHeader(F("Content-Encoding"), F("gzip"));
-    server.send_P(200, PSTR("text/html"), fwhtmlgz, sizeof(fwhtmlgz)); });
+              SERVER_KEEPALIVE_FALSE()
+              server.sendHeader(F("Content-Encoding"), F("gzip"));
+              server.send_P(200, PSTR("text/html"), fwhtmlgz, sizeof(fwhtmlgz));
+            });
 
   // Get Update Infos ---------------------------------------------------------
-  server.on(F("/gui"), HTTP_GET, [this, &server]()
-            {
-    SERVER_KEEPALIVE_FALSE()
-    server.send(200, F("application/json"), getUpdateInfos(server.hasArg(F("refresh")))); });
+  server.on(
+      F("/gui"), HTTP_GET,
+      [this, &server]()
+      {
+        SERVER_KEEPALIVE_FALSE()
+        server.send(200, F("application/json"), getUpdateInfos(server.hasArg(F("refresh"))));
+      });
 
   // Update Firmware from Github ----------------------------------------------
   server.on(
@@ -198,24 +211,28 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
       });
 
   // reboot POST --------------------------------------------------------------
-  server.on(F("/rbt"), HTTP_POST, [&shouldReboot, &server]()
+  server.on(F("/rbt"), HTTP_POST,
+            [&shouldReboot, &server]()
             {
-    if(server.hasArg(F("rescue")))
-    {
-      //Set EEPROM for Rescue mode flag
-      EEPROM.begin(4);
-      EEPROM.write(0, 1);
-      EEPROM.end();
-    }
-    SERVER_KEEPALIVE_FALSE()
-    server.send_P(200,PSTR("text/html"),PSTR("Reboot command received"));
-    shouldReboot = true; });
+              if (server.hasArg(F("rescue")))
+              {
+                // Set EEPROM for Rescue mode flag
+                EEPROM.begin(4);
+                EEPROM.write(0, 1);
+                EEPROM.end();
+              }
+              SERVER_KEEPALIVE_FALSE()
+              server.send_P(200, PSTR("text/html"), PSTR("Reboot command received"));
+              shouldReboot = true;
+            });
 
   // 404 on not found ---------------------------------------------------------
-  server.onNotFound([&server]()
-                    {
-    SERVER_KEEPALIVE_FALSE()
-    server.send(404); });
+  server.onNotFound(
+      [&server]()
+      {
+        SERVER_KEEPALIVE_FALSE()
+        server.send(404);
+      });
 }
 
 void Core::appRun()
