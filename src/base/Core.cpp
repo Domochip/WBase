@@ -124,38 +124,46 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
     server.send(200, F("application/json"), getUpdateInfos(server.hasArg(F("refresh")))); });
 
   // Update Firmware from Github ----------------------------------------------
-  server.on(F("/update"), HTTP_POST, [this, &shouldReboot, &pauseApplication, &server]()
-            {
-              String Msg;
-              shouldReboot = updateFirmware(server.arg(F("plain")).c_str(),Msg);
+  server.on(
+      F("/update"), HTTP_POST,
+      [this, &shouldReboot, &pauseApplication, &server]()
+      {
+        String Msg;
+        shouldReboot = updateFirmware(server.arg(F("plain")).c_str(), Msg);
 
-              SERVER_KEEPALIVE_FALSE()
-              server.send(shouldReboot ? 200 : 500, F("text/html"), Msg); });
+        SERVER_KEEPALIVE_FALSE()
+        server.send(shouldReboot ? 200 : 500, F("text/html"), Msg);
+      });
 
   // Firmware POST URL allows to push new firmware ----------------------------
   server.on(
-      F("/fw"), HTTP_POST, [&shouldReboot, &pauseApplication, &server]()
+      F("/fw"), HTTP_POST,
+      [&shouldReboot, &pauseApplication, &server]()
       {
-    shouldReboot = !Update.hasError();
+        shouldReboot = !Update.hasError();
 
-          SERVER_KEEPALIVE_FALSE()
-    if (shouldReboot)
-    {
-      server.send_P(200, PSTR("text/html"), PSTR("Update successful"));
-    }
-    else
-    {
-      // Upload failed so restart to Run Application in loop
-      pauseApplication = false;
-      // Prepare response
-      String errorMsg;
+        String msg;
+
+        if (shouldReboot)
+          msg = F("Update successful");
+        else
+        {
+          msg = F("Update failed: ");
 #ifdef ESP8266
-      errorMsg = Update.getErrorString();
+          msg = Update.getErrorString();
 #else
-      errorMsg = Update.errorString();
+          msg = Update.errorString();
 #endif
-      server.send(500, F("text/html"), errorMsg);
-    } },
+          Update.clearError();
+          // Update failed so restart to Run Application in loop
+          pauseApplication = false;
+        }
+
+        LOG_SERIAL_PRINTLN(msg);
+
+        SERVER_KEEPALIVE_FALSE()
+        server.send(shouldReboot ? 200 : 500, F("text/html"), msg);
+      },
       [&pauseApplication, &server]()
       {
         HTTPUpload &upload = server.upload();
@@ -179,17 +187,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
         }
         else if (upload.status == UPLOAD_FILE_END)
         {
-          if (Update.end(true))
-            LOG_SERIAL_PRINTF_P(PSTR("Update successful: %uB\n"), upload.totalSize);
-          else
-          {
-            LOG_SERIAL_PRINT(F("Update Failed: "));
-#ifdef ESP8266
-            LOG_SERIAL_PRINTLN(Update.getErrorString());
-#else
-            LOG_SERIAL_PRINTLN(Update.errorString());
-#endif
-          }
+          Update.end(true);
         }
 
 #ifdef ESP8266
@@ -389,17 +387,7 @@ bool Core::updateFirmware(const char *version, String &retMsg)
 
   Update.writeStream(*stream);
 
-  if (Update.end())
-    LOG_SERIAL_PRINTF_P(PSTR("Update successful: %uB\n"), contentLength);
-  else
-  {
-    LOG_SERIAL_PRINT(F("Update Failed: "));
-#ifdef ESP8266
-    LOG_SERIAL_PRINTLN(Update.getErrorString());
-#else
-    LOG_SERIAL_PRINTLN(Update.errorString());
-#endif
-  }
+  Update.end();
 
   https.end();
 
@@ -413,7 +401,10 @@ bool Core::updateFirmware(const char *version, String &retMsg)
 #else
     retMsg = Update.errorString();
 #endif
+    Update.clearError();
   }
+
+  LOG_SERIAL_PRINTLN(retMsg);
 
   return success;
 }
