@@ -38,9 +38,7 @@ void WifiMan::refreshWiFi()
         STATUS_LED_GOOD
 #endif
 
-        LOG_SERIAL_PRINT(F("Connected ("));
-        LOG_SERIAL_PRINT(WiFi.localIP());
-        LOG_SERIAL_PRINT(F(") "));
+        LOG_SERIAL_PRINTF_P(PSTR("Connected (%s) "), WiFi.localIP().toString().c_str());
       }
       else // connection failed
       {
@@ -65,11 +63,7 @@ void WifiMan::refreshWiFi()
     STATUS_LED_GOOD
 #endif
 
-    LOG_SERIAL_PRINT(F(" AP mode("));
-    LOG_SERIAL_PRINT(_apSsid);
-    LOG_SERIAL_PRINT(F(" - "));
-    LOG_SERIAL_PRINT(WiFi.softAPIP());
-    LOG_SERIAL_PRINT(F(") "));
+    LOG_SERIAL_PRINTF_P(PSTR(" AP mode(%s - %s) "),_apSsid, WiFi.softAPIP().toString().c_str());
   }
 }
 
@@ -244,8 +238,7 @@ bool WifiMan::appInit(bool reInit = false)
   // scan networks to search for best free channel
   int n = WiFi.scanNetworks();
 
-  LOG_SERIAL_PRINT(n);
-  LOG_SERIAL_PRINT(F("N-CH"));
+  LOG_SERIAL_PRINTF_P(PSTR("%dN-CH"), n);
 
   if (n)
   {

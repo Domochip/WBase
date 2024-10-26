@@ -141,10 +141,8 @@ bool MQTTMan::loop()
             LOG_SERIAL_PRINT(F("MQTT Reconnection : "));
 
             bool res = connect(false);
-            if (res)
-                LOG_SERIAL_PRINTLN(F("OK"));
-            else
-                LOG_SERIAL_PRINTLN(F("Failed"));
+
+            LOG_SERIAL_PRINTLN(res ? F("OK") : F("Failed"));
         }
 
         // if not connected and reconnect ticker not started

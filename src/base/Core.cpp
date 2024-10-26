@@ -368,8 +368,7 @@ bool Core::updateFirmware(const char *version, String &retMsg)
   String fwUrl(F("https://github.com/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/download/"));
   fwUrl = fwUrl + versionToFlash + '/' + F(APPLICATION1_MODEL) + '.' + versionToFlash + F(".bin");
 
-  LOG_SERIAL_PRINT(F("Trying to Update from URL: "));
-  LOG_SERIAL_PRINTLN(fwUrl);
+  LOG_SERIAL_PRINTF_P(PSTR("Trying to Update from URL: %s\n"), fwUrl);
 
   HTTPClient https;
   https.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);

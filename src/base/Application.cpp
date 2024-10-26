@@ -35,8 +35,7 @@ bool Application::loadConfig()
     if (deserializeJsonError)
     {
 
-      LOG_SERIAL_PRINT(F("deserializeJson() failed : "));
-      LOG_SERIAL_PRINTLN(deserializeJsonError.c_str());
+      LOG_SERIAL_PRINTF_P(PSTR("deserializeJson() failed : %s\n"), deserializeJsonError.c_str());
 
       saveConfig();
     }
@@ -59,9 +58,7 @@ void Application::init(bool skipExistingConfig)
 {
   bool result = true;
 
-  LOG_SERIAL_PRINT(F("Start "));
-  LOG_SERIAL_PRINT(_appName);
-  LOG_SERIAL_PRINT(F(" : "));
+  LOG_SERIAL_PRINTF_P(PSTR("Start %s : "), _appName.c_str());
 
   setConfigDefaultValues();
 
@@ -71,10 +68,7 @@ void Application::init(bool skipExistingConfig)
   // Execute specific Application Init Code
   result = appInit() && result;
 
-  if (result)
-    LOG_SERIAL_PRINTLN(F("OK"));
-  else
-    LOG_SERIAL_PRINTLN(F("FAILED"));
+  LOG_SERIAL_PRINTLN(result ? F("OK") : F("FAILED"));
 }
 
 void Application::initWebServer(WebServer &server, bool &shouldReboot, bool &pauseApplication)
@@ -166,9 +160,7 @@ void Application::run()
 {
   if (_reInit)
   {
-    LOG_SERIAL_PRINT(F("ReStart "));
-    LOG_SERIAL_PRINT(_appName);
-    LOG_SERIAL_PRINT(F(" : "));
+    LOG_SERIAL_PRINTF_P(PSTR("ReStart %s : "), _appName.c_str());
 
     if (appInit(true))
       LOG_SERIAL_PRINTLN(F("OK"));

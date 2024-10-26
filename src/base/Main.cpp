@@ -54,8 +54,7 @@ void setup()
   STATUS_LED_ERROR
 #endif
 
-  LOG_SERIAL_PRINT(F(APPLICATION1_MANUFACTURER " " APPLICATION1_MODEL " "));
-  LOG_SERIAL_PRINTLN(VERSION);
+  LOG_SERIAL_PRINTLN(F(APPLICATION1_MANUFACTURER " " APPLICATION1_MODEL " " VERSION));
   LOG_SERIAL_PRINTLN(F("---Booting---"));
 
 #ifndef RESCUE_BUTTON_WAIT
@@ -75,9 +74,7 @@ void setup()
   // if config already skipped, don't wait for rescue button
   if (!skipExistingConfig)
   {
-    LOG_SERIAL_PRINT(F("Wait Rescue button for "));
-    LOG_SERIAL_PRINT(RESCUE_BUTTON_WAIT);
-    LOG_SERIAL_PRINTLN(F(" seconds"));
+    LOG_SERIAL_PRINTF_P(PSTR("Wait Rescue button for %d seconds\n"), RESCUE_BUTTON_WAIT);
 
     pinMode(RESCUE_BTN_PIN, (RESCUE_BTN_PIN != 16) ? INPUT_PULLUP : INPUT);
     for (int i = 0; i < 100 && skipExistingConfig == false; i++)
