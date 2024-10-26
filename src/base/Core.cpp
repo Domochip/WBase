@@ -142,7 +142,14 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
       [this, &shouldReboot, &pauseApplication, &server]()
       {
         String Msg;
-        shouldReboot = updateFirmware(server.arg(F("plain")).c_str(), Msg);
+        // Define the progress callback function
+        UpdaterClass::THandlerFunction_Progress progressCallback = [](size_t progress, size_t total)
+        {
+          LOG_SERIAL_PRINTF_P(PSTR("Progress: %d%%\n"), (progress * 100) / total);
+        };
+
+        // Call the updateFirmware function with the progress callback
+        shouldReboot = updateFirmware(server.arg(F("plain")).c_str(), Msg, progressCallback);
 
         SERVER_KEEPALIVE_FALSE()
         server.send(shouldReboot ? 200 : 500, F("text/html"), Msg);
@@ -345,7 +352,7 @@ String Core::getUpdateInfos(bool refresh)
   return infos;
 }
 
-bool Core::updateFirmware(const char *version, String &retMsg)
+bool Core::updateFirmware(const char *version, String &retMsg, UpdaterClass::THandlerFunction_Progress progressCallback)
 {
   char versionToFlash[8];
 
@@ -368,7 +375,7 @@ bool Core::updateFirmware(const char *version, String &retMsg)
   String fwUrl(F("https://github.com/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/download/"));
   fwUrl = fwUrl + versionToFlash + '/' + F(APPLICATION1_MODEL) + '.' + versionToFlash + F(".bin");
 
-  LOG_SERIAL_PRINTF_P(PSTR("Trying to Update from URL: %s\n"), fwUrl);
+  LOG_SERIAL_PRINTF_P(PSTR("Trying to Update from URL: %s\n"), fwUrl.c_str());
 
   HTTPClient https;
   https.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
@@ -394,6 +401,9 @@ bool Core::updateFirmware(const char *version, String &retMsg)
   int contentLength = https.getSize();
 
   LOG_SERIAL_PRINTF_P(PSTR("Update Start: %s (Online Update)\n"), (String(F(APPLICATION1_MODEL)) + '.' + versionToFlash + F(".bin")).c_str());
+
+  if (progressCallback)
+    Update.onProgress(progressCallback);
 
 #ifdef ESP8266
   Update.begin(contentLength);
