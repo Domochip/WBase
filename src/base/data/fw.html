@@ -172,37 +172,40 @@
         // add param to /gui for force refresh
         let url = refresh ? "/gui?refresh=true" : "/gui";
 
-        getJSON(url, function (GUI) {
-            for (k in GUI) {
-                if ((e = $(qsp + '#' + k)) != undefined) e.innerHTML = GUI[k];
+        getJSON(url,
+            (GUI) => {
+                for (k in GUI) {
+                    if ((e = $(qsp + '#' + k)) != undefined) e.innerHTML = GUI[k];
+                }
+                // transform the release url into a clickable link
+                const releaseUrlSpan = $(qsp + '#release_url');
+                const url = releaseUrlSpan.innerHTML;
+                if (url) {
+                    releaseUrlSpan.innerHTML = `<a href="${url}" target="_blank">${url}</a>`;
+                }
+
+                // transform line breaks into <br> tags in the release summary
+                const releaseSummarySpan = $(qsp + '#release_summary');
+                const summary = releaseSummarySpan.innerHTML;
+                if (summary) {
+                    releaseSummarySpan.innerHTML = summary.replace(/\r\n/g, '<br>').replace(/\n/g, '<br>');
+                }
+
+                // Update buttons
+                calculateAllButtonStates();
+
+                fadeOut($(qsp + "#l1"));
+                fadeOut($(qsp + "#l2"));
+
+            },
+            () => {
+
+                calculateAllButtonStates();
+                ['#l1', '#l2'].forEach(id => {
+                    $(qsp + id).innerHTML = '<h4 style="display:inline;color:red;"><b> Failed</b></h4>';
+                });
             }
-            // transform the release url into a clickable link
-            const releaseUrlSpan = $(qsp + '#release_url');
-            const url = releaseUrlSpan.innerHTML;
-            if (url) {
-                releaseUrlSpan.innerHTML = `<a href="${url}" target="_blank">${url}</a>`;
-            }
-
-            // transform line breaks into <br> tags in the release summary
-            const releaseSummarySpan = $(qsp + '#release_summary');
-            const summary = releaseSummarySpan.innerHTML;
-            if (summary) {
-                releaseSummarySpan.innerHTML = summary.replace(/\r\n/g, '<br>').replace(/\n/g, '<br>');
-            }
-
-            // Update buttons
-            calculateAllButtonStates();
-
-            fadeOut($(qsp + "#l1"));
-            fadeOut($(qsp + "#l2"));
-
-        }, function () {
-
-            calculateAllButtonStates();
-            ['#l1', '#l2'].forEach(id => {
-                $(qsp + id).innerHTML = '<h4 style="display:inline;color:red;"><b> Failed</b></h4>';
-            });
-        });
+        );
     }
     getUpdateInfos();
     $(qsp + "#refreshButton").addEventListener('click', () => { getUpdateInfos(true); });
@@ -212,42 +215,48 @@
         disableAllButtons();
         $(qsp + '#updateButton').innerHTML = '<span class="spinner"></span> Updating...';
 
-        post('/update', $(qsp + '#latest_version').textContent, () => {
-            $(qsp + '#updateButton').innerHTML = '<span class="spinner"></span> Rebooting...';
-            $(qsp + '#rUpdate').innerHTML = '<h3>Page refresh in <span id="cd">20</span>sec.</h3>';
-            loadScript('startCountdown("#cd", 19, () => {location.reload();});');
-        }, () => {
-            calculateAllButtonStates();
-        });
-    });
-
-    $(qsp + "#f").addEventListener('submit', function (evt) {
-        evt.preventDefault();
-        if (!firmwareValidation()) return;
-        disableAllButtons();
-
-        // Add loading animation to the submit button
-        $(qsp + '#uploadButton').innerHTML = '<span class="spinner"></span> <span id="progress">0%</span>';
-
-        post('/fw',
-            new FormData($(qsp + '#f')),
-            function () {
-                $(qsp + '#progress').innerHTML = 'Rebooting...';
-                $(qsp + '#rUpload').innerHTML = '<h3>Page refresh in <span id="cd">20</span>sec.</h3>';
+        post('/update', $(qsp + '#latest_version').textContent,
+            () => {
+                $(qsp + '#updateButton').innerHTML = '<span class="spinner"></span> Rebooting...';
+                $(qsp + '#rUpdate').innerHTML = '<h3>Page refresh in <span id="cd">20</span>sec.</h3>';
                 loadScript('startCountdown("#cd", 19, () => {location.reload();});');
             },
-            function (responseText) {
-                $(qsp + '#rUpload').innerHTML = '<span style="color: red;"><b>Failed</b></span> (' + responseText + ')';
-                $(qsp + '#f').reset();
+            (responseText) => {
+                $(qsp + '#rUpdate').innerHTML = '<span style="color: red;"><b>Failed</b></span> (' + responseText + ')';
                 calculateAllButtonStates();
-            },
-            30000,
-            function (evt) {
-                if (evt.lengthComputable) {
-                    const percentComplete = Math.round((evt.loaded / evt.total) * 100);
-                    $(qsp + '#progress').innerHTML = `${percentComplete}%`;
-                }
             }
         );
     });
+
+    $(qsp + "#f").addEventListener('submit',
+        (evt) => {
+            evt.preventDefault();
+            if (!firmwareValidation()) return;
+            disableAllButtons();
+
+            // Add loading animation to the submit button
+            $(qsp + '#uploadButton').innerHTML = '<span class="spinner"></span> <span id="progress">0%</span>';
+
+            post('/fw',
+                new FormData($(qsp + '#f')),
+                () => {
+                    $(qsp + '#progress').innerHTML = 'Rebooting...';
+                    $(qsp + '#rUpload').innerHTML = '<h3>Page refresh in <span id="cd">20</span>sec.</h3>';
+                    loadScript('startCountdown("#cd", 19, () => {location.reload();});');
+                },
+                (responseText) => {
+                    $(qsp + '#rUpload').innerHTML = '<span style="color: red;"><b>Failed</b></span> (' + responseText + ')';
+                    $(qsp + '#f').reset();
+                    calculateAllButtonStates();
+                },
+                30000,
+                function (evt) {
+                    if (evt.lengthComputable) {
+                        const percentComplete = Math.round((evt.loaded / evt.total) * 100);
+                        $(qsp + '#progress').innerHTML = `${percentComplete}%`;
+                    }
+                }
+            );
+        }
+    );
 </script>
