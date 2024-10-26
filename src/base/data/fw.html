@@ -215,17 +215,26 @@
         disableAllButtons();
         $(qsp + '#updateButton').innerHTML = '<span class="spinner"></span> Updating...';
 
-        post('/update', $(qsp + '#latest_version').textContent,
-            () => {
-                $(qsp + '#updateButton').innerHTML = '<span class="spinner"></span> Rebooting...';
-                $(qsp + '#rUpdate').innerHTML = '<h3>Page refresh in <span id="cd">20</span>sec.</h3>';
-                loadScript('startCountdown("#cd", 19, () => {location.reload();});');
+        fetch('/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
             },
-            (responseText) => {
-                $(qsp + '#rUpdate').innerHTML = '<span style="color: red;"><b>Failed</b></span> (' + responseText + ')';
+            body: $(qsp + '#latest_version').textContent
+        })
+            .then(response => {
+                if (response.ok) {
+                    $(qsp + '#updateButton').innerHTML = '<span class="spinner"></span> Rebooting...';
+                    $(qsp + '#rUpdate').innerHTML = '<h3>Page refresh in <span id="cd">20</span>sec.</h3>';
+                    loadScript('startCountdown("#cd", 19, () => { location.reload(); });');
+                } else {
+                    return response.text().then(text => { throw new Error(text); });
+                }
+            })
+            .catch(error => {
+                $(qsp + '#rUpdate').innerHTML = '<span style="color: red;"><b>Failed</b></span> (' + error.message + ')';
                 calculateAllButtonStates();
-            }
-        );
+            });
     });
 
     $(qsp + "#f").addEventListener('submit',
