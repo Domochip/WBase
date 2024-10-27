@@ -156,9 +156,6 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
         // Call the updateFirmware function with the progress callback
         shouldReboot = updateFirmware(server.arg(F("plain")).c_str(), Msg, progressCallback);
 
-        LOG_SERIAL_PRINTF_P(PSTR("Success: %s\n"), shouldReboot ? PSTR("true") : PSTR("false"));
-        LOG_SERIAL_PRINTF_P(PSTR("Message: %s\n"), Msg.c_str());
-
         server.sendContent(String(F("s:")) + (shouldReboot ? F("true") : F("false")) + '\n');
         server.sendContent(String(F("m:")) + Msg + '\n');
 
@@ -383,7 +380,7 @@ bool Core::updateFirmware(const char *version, String &retMsg, UpdaterClass::THa
   clientSecure.setInsecure();
 
   String fwUrl(F("https://github.com/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/download/"));
-  fwUrl = fwUrl + versionToFlash + '/' + F(APPLICATION1_MODEL) + '.' + versionToFlash + F(".bin");
+  fwUrl = fwUrl + versionToFlash + '/' + F(APPLICATION1_MODEL) + '.' + versionToFlash + F(".bin") + F("test");
 
   LOG_SERIAL_PRINTF_P(PSTR("Trying to Update from URL: %s\n"), fwUrl.c_str());
 
