@@ -139,13 +139,28 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
   // Update Firmware from Github ----------------------------------------------
   server.on(
       F("/update"), HTTP_POST,
-      [this, &shouldReboot, &pauseApplication, &server]()
+      [this, &shouldReboot, &server]()
       {
-        String Msg;
-        shouldReboot = updateFirmware(server.arg(F("plain")).c_str(), Msg);
+        String msg;
 
-        SERVER_KEEPALIVE_FALSE()
-        server.send(shouldReboot ? 200 : 500, F("text/html"), Msg);
+        server.chunkedResponseModeStart(200, PSTR("text/plain"));
+
+        // Define the progress callback function
+        UpdaterClass::THandlerFunction_Progress progressCallback = [&server](size_t progress, size_t total)
+        {
+          uint8_t percent = (progress * 100) / total;
+          LOG_SERIAL_PRINTF_P(PSTR("Progress: %d%%\n"), percent);
+          server.sendContent((String(F("p:")) + percent + '\n').c_str());
+        };
+
+        // Call the updateFirmware function with the progress callback
+        shouldReboot = updateFirmware(server.arg(F("plain")).c_str(), msg, progressCallback);
+        if (shouldReboot)
+          server.sendContent(F("s:true\n"));
+        else
+          server.sendContent(String(F("s:false\nm:")) + msg + '\n');
+
+        server.chunkedResponseFinalize();
       });
 
   // Firmware POST URL allows to push new firmware ----------------------------
@@ -345,7 +360,7 @@ String Core::getUpdateInfos(bool refresh)
   return infos;
 }
 
-bool Core::updateFirmware(const char *version, String &retMsg)
+bool Core::updateFirmware(const char *version, String &retMsg, UpdaterClass::THandlerFunction_Progress progressCallback)
 {
   char versionToFlash[8];
 
@@ -368,7 +383,7 @@ bool Core::updateFirmware(const char *version, String &retMsg)
   String fwUrl(F("https://github.com/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/download/"));
   fwUrl = fwUrl + versionToFlash + '/' + F(APPLICATION1_MODEL) + '.' + versionToFlash + F(".bin");
 
-  LOG_SERIAL_PRINTF_P(PSTR("Trying to Update from URL: %s\n"), fwUrl);
+  LOG_SERIAL_PRINTF_P(PSTR("Trying to Update from URL: %s\n"), fwUrl.c_str());
 
   HTTPClient https;
   https.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
@@ -395,6 +410,9 @@ bool Core::updateFirmware(const char *version, String &retMsg)
 
   LOG_SERIAL_PRINTF_P(PSTR("Update Start: %s (Online Update)\n"), (String(F(APPLICATION1_MODEL)) + '.' + versionToFlash + F(".bin")).c_str());
 
+  if (progressCallback)
+    Update.onProgress(progressCallback);
+
 #ifdef ESP8266
   Update.begin(contentLength);
 #else
@@ -409,7 +427,7 @@ bool Core::updateFirmware(const char *version, String &retMsg)
 
   bool success = !Update.hasError();
   if (success)
-    retMsg = F("Update successful");
+    LOG_SERIAL_PRINTLN(F("Update successful"));
   else
   {
 #ifdef ESP8266
@@ -417,10 +435,9 @@ bool Core::updateFirmware(const char *version, String &retMsg)
 #else
     retMsg = Update.errorString();
 #endif
+    LOG_SERIAL_PRINTF_P(PSTR("Update failed: %s\n"), retMsg.c_str());
     Update.clearError();
   }
-
-  LOG_SERIAL_PRINTLN(retMsg);
 
   return success;
 }

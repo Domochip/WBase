@@ -210,53 +210,82 @@
     getUpdateInfos();
     $(qsp + "#refreshButton").addEventListener('click', () => { getUpdateInfos(true); });
 
-    $(qsp + "#updateButton").addEventListener('click', () => {
-
+    $(qsp + "#updateButton").addEventListener('click', (evt) => {
+        evt.preventDefault();
         disableAllButtons();
-        $(qsp + '#updateButton').innerHTML = '<span class="spinner"></span> Updating...';
 
-        post('/update', $(qsp + '#latest_version').textContent,
+        $(qsp + '#updateButton').innerHTML = '<span class="spinner"></span> <span id="progress">0%</span>';
+
+        fetch('/update', {
+            method: 'POST',
+            body: $(qsp + '#latest_version').textContent
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => { throw new Error(text); });
+                }
+                const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+                let chunkAccumulator = '';
+                let success = false, message = '';
+
+                function processChunk({ done, value }) {
+                    if (done) {
+                        if (success) {
+                            $(qsp + '#progress').innerHTML = 'Rebooting...';
+                            $(qsp + '#rUpdate').innerHTML = '<h3>Page refresh in <span id="cd">20</span>sec.</h3>';
+                            loadScript('startCountdown("#cd", 19, () => { location.reload(); });');
+                        } else {
+                            $(qsp + '#rUpdate').innerHTML = `<span style="color: red;"><b>Failed</b></span> (${message})`;
+                            calculateAllButtonStates();
+                        }
+                        return;
+                    }
+                    chunkAccumulator += value;
+                    const chunks = chunkAccumulator.split('\n');
+                    chunkAccumulator = chunks.pop();
+                    chunks.forEach((chunk, index) => {
+                        if (chunk.startsWith('p:')) $(qsp + '#progress').innerHTML = `${parseInt(chunk.substring(2))}%`;
+                        else if (chunk.startsWith('s:')) success = chunk.substring(2) === 'true';
+                        else if (chunk.startsWith('m:')) message = chunk.substring(2);
+                    });
+                    reader.read().then(processChunk); // Read the next chunk
+                }
+                reader.read().then(processChunk); // Start reading chunks
+            })
+            .catch(error => {
+                $(qsp + '#rUpdate').innerHTML = `<span style="color: red;"><b>Failed</b></span> (${error.message})`;
+                calculateAllButtonStates();
+            });
+    });
+
+    $(qsp + "#f").addEventListener('submit', (evt) => {
+        evt.preventDefault();
+        if (!firmwareValidation()) return;
+        disableAllButtons();
+
+        // Add loading animation to the submit button
+        $(qsp + '#uploadButton').innerHTML = '<span class="spinner"></span> <span id="progress">0%</span>';
+
+        post('/fw',
+            new FormData($(qsp + '#f')),
             () => {
-                $(qsp + '#updateButton').innerHTML = '<span class="spinner"></span> Rebooting...';
-                $(qsp + '#rUpdate').innerHTML = '<h3>Page refresh in <span id="cd">20</span>sec.</h3>';
+                $(qsp + '#progress').innerHTML = 'Rebooting...';
+                $(qsp + '#rUpload').innerHTML = '<h3>Page refresh in <span id="cd">20</span>sec.</h3>';
                 loadScript('startCountdown("#cd", 19, () => {location.reload();});');
             },
             (responseText) => {
-                $(qsp + '#rUpdate').innerHTML = '<span style="color: red;"><b>Failed</b></span> (' + responseText + ')';
+                $(qsp + '#rUpload').innerHTML = `<span style="color: red;"><b>Failed</b></span> (${responseText})`;
+                $(qsp + '#f').reset();
                 calculateAllButtonStates();
+            },
+            30000,
+            function (evt) {
+                if (evt.lengthComputable) {
+                    const percentComplete = Math.round((evt.loaded / evt.total) * 100);
+                    $(qsp + '#progress').innerHTML = `${percentComplete}%`;
+                }
             }
         );
-    });
-
-    $(qsp + "#f").addEventListener('submit',
-        (evt) => {
-            evt.preventDefault();
-            if (!firmwareValidation()) return;
-            disableAllButtons();
-
-            // Add loading animation to the submit button
-            $(qsp + '#uploadButton').innerHTML = '<span class="spinner"></span> <span id="progress">0%</span>';
-
-            post('/fw',
-                new FormData($(qsp + '#f')),
-                () => {
-                    $(qsp + '#progress').innerHTML = 'Rebooting...';
-                    $(qsp + '#rUpload').innerHTML = '<h3>Page refresh in <span id="cd">20</span>sec.</h3>';
-                    loadScript('startCountdown("#cd", 19, () => {location.reload();});');
-                },
-                (responseText) => {
-                    $(qsp + '#rUpload').innerHTML = '<span style="color: red;"><b>Failed</b></span> (' + responseText + ')';
-                    $(qsp + '#f').reset();
-                    calculateAllButtonStates();
-                },
-                30000,
-                function (evt) {
-                    if (evt.lengthComputable) {
-                        const percentComplete = Math.round((evt.loaded / evt.total) * 100);
-                        $(qsp + '#progress').innerHTML = `${percentComplete}%`;
-                    }
-                }
-            );
-        }
+    }
     );
 </script>
