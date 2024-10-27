@@ -226,8 +226,7 @@
                 }
                 const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
                 let chunkAccumulator = '';
-                let success = false;
-                let message = '';
+                let success = false, message = '';
 
                 function processChunk({ done, value }) {
                     if (done) {
@@ -236,34 +235,25 @@
                             $(qsp + '#rUpdate').innerHTML = '<h3>Page refresh in <span id="cd">20</span>sec.</h3>';
                             loadScript('startCountdown("#cd", 19, () => { location.reload(); });');
                         } else {
-                            $(qsp + '#rUpdate').innerHTML = '<span style="color: red;"><b>Failed</b></span> (' + message + ')';
+                            $(qsp + '#rUpdate').innerHTML = `<span style="color: red;"><b>Failed</b></span> (${message})`;
                             calculateAllButtonStates();
                         }
                         return;
                     }
                     chunkAccumulator += value;
-                    // Split the chunks by newline
                     const chunks = chunkAccumulator.split('\n');
-                    // The last chunk is incomplete, so we'll keep it for the next iteration
                     chunkAccumulator = chunks.pop();
-                    // process chunks
                     chunks.forEach((chunk, index) => {
-                        if (chunk.startsWith('p:')) {
-                            const percentComplete = parseInt(chunk.substring(2));
-                            $(qsp + '#progress').innerHTML = `${percentComplete}%`;
-                        } else if (chunk.startsWith('s:')) {
-                            success = chunk.substring(2) === 'true';
-                        } else if (chunk.startsWith('m:')) {
-                            message = chunk.substring(2);
-                        }
+                        if (chunk.startsWith('p:')) $(qsp + '#progress').innerHTML = `${parseInt(chunk.substring(2))}%`;
+                        else if (chunk.startsWith('s:')) success = chunk.substring(2) === 'true';
+                        else if (chunk.startsWith('m:')) message = chunk.substring(2);
                     });
                     reader.read().then(processChunk); // Read the next chunk
                 }
-
                 reader.read().then(processChunk); // Start reading chunks
             })
             .catch(error => {
-                $(qsp + '#rUpdate').innerHTML = '<span style="color: red;"><b>Failed</b></span> (' + error.message + ')';
+                $(qsp + '#rUpdate').innerHTML = `<span style="color: red;"><b>Failed</b></span> (${error.message})`;
                 calculateAllButtonStates();
             });
     });
@@ -284,7 +274,7 @@
                 loadScript('startCountdown("#cd", 19, () => {location.reload();});');
             },
             (responseText) => {
-                $(qsp + '#rUpload').innerHTML = '<span style="color: red;"><b>Failed</b></span> (' + responseText + ')';
+                $(qsp + '#rUpload').innerHTML = `<span style="color: red;"><b>Failed</b></span> (${responseText})`;
                 $(qsp + '#f').reset();
                 calculateAllButtonStates();
             },
