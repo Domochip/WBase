@@ -141,7 +141,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
       F("/update"), HTTP_POST,
       [this, &shouldReboot, &server]()
       {
-        String Msg;
+        String msg;
 
         server.chunkedResponseModeStart(200, PSTR("text/plain"));
 
@@ -154,10 +154,11 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
         };
 
         // Call the updateFirmware function with the progress callback
-        shouldReboot = updateFirmware(server.arg(F("plain")).c_str(), Msg, progressCallback);
-
-        server.sendContent(String(F("s:")) + (shouldReboot ? F("true") : F("false")) + '\n');
-        server.sendContent(String(F("m:")) + Msg + '\n');
+        shouldReboot = updateFirmware(server.arg(F("plain")).c_str(), msg, progressCallback);
+        if (shouldReboot)
+          server.sendContent(F("s:true\n"));
+        else
+          server.sendContent(String(F("s:false\nm:")) + msg + '\n');
 
         server.chunkedResponseFinalize();
       });
@@ -426,7 +427,7 @@ bool Core::updateFirmware(const char *version, String &retMsg, UpdaterClass::THa
 
   bool success = !Update.hasError();
   if (success)
-    retMsg = F("Update successful");
+    LOG_SERIAL_PRINTLN(F("Update successful"));
   else
   {
 #ifdef ESP8266
@@ -434,10 +435,9 @@ bool Core::updateFirmware(const char *version, String &retMsg, UpdaterClass::THa
 #else
     retMsg = Update.errorString();
 #endif
+    LOG_SERIAL_PRINTF_P(PSTR("Update failed: %s\n"), retMsg.c_str());
     Update.clearError();
   }
-
-  LOG_SERIAL_PRINTLN(retMsg);
 
   return success;
 }
