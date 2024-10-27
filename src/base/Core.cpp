@@ -139,20 +139,30 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
   // Update Firmware from Github ----------------------------------------------
   server.on(
       F("/update"), HTTP_POST,
-      [this, &shouldReboot, &pauseApplication, &server]()
+      [this, &shouldReboot, &server]()
       {
         String Msg;
+
+        server.chunkedResponseModeStart(200, PSTR("text/plain"));
+
         // Define the progress callback function
-        UpdaterClass::THandlerFunction_Progress progressCallback = [](size_t progress, size_t total)
+        UpdaterClass::THandlerFunction_Progress progressCallback = [&server](size_t progress, size_t total)
         {
-          LOG_SERIAL_PRINTF_P(PSTR("Progress: %d%%\n"), (progress * 100) / total);
+          uint8_t percent = (progress * 100) / total;
+          LOG_SERIAL_PRINTF_P(PSTR("Progress: %d%%\n"), percent);
+          server.sendContent((String(F("p:")) + percent + '\n').c_str());
         };
 
         // Call the updateFirmware function with the progress callback
         shouldReboot = updateFirmware(server.arg(F("plain")).c_str(), Msg, progressCallback);
 
-        SERVER_KEEPALIVE_FALSE()
-        server.send(shouldReboot ? 200 : 500, F("text/html"), Msg);
+        LOG_SERIAL_PRINTF_P(PSTR("Success: %s\n"), shouldReboot ? PSTR("true") : PSTR("false"));
+        LOG_SERIAL_PRINTF_P(PSTR("Message: %s\n"), Msg.c_str());
+
+        server.sendContent(String(F("s:")) + (shouldReboot ? F("true") : F("false")) + '\n');
+        server.sendContent(String(F("m:")) + Msg + '\n');
+
+        server.chunkedResponseFinalize();
       });
 
   // Firmware POST URL allows to push new firmware ----------------------------
