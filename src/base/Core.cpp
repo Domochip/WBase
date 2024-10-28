@@ -42,16 +42,6 @@ String Core::generateStatusJSON()
 }
 bool Core::appInit(bool reInit = false)
 {
-
-// init ticker to check for update every 24h
-#ifdef ESP8266
-  _checkForUpdateTicker.attach(86400, [this]()
-                               { this->_needCheckForUpdateTick = true; });
-#else
-  _checkForUpdateTicker.attach<typeof this>(86400, [](typeof this core)
-                                            { core->_needCheckForUpdateTick = true; }, this);
-#endif
-
   return true;
 };
 const PROGMEM char *Core::getHTMLContent(WebPageForPlaceHolder wp)
@@ -252,12 +242,6 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
 
 void Core::appRun()
 {
-  if (_needCheckForUpdateTick)
-  {
-    _needCheckForUpdateTick = false;
-    // check for update
-    checkForUpdate();
-  }
 }
 
 Core::Core(char appId, String appName) : Application(appId, appName)

@@ -26,8 +26,6 @@ private:
   } LastFirmwareInfos;
 
   LastFirmwareInfos _lastFirmwareInfos;
-  Ticker _checkForUpdateTicker;
-  bool _needCheckForUpdateTick = false;
 
   void setConfigDefaultValues();
   bool parseConfigJSON(JsonDocument &doc, bool fromWebPage);
