@@ -249,8 +249,12 @@ Core::Core(char appId, String appName) : Application(appId, appName)
   _applicationList[Application::Applications::Core] = this;
 }
 
-void Core::checkForUpdate()
+bool Core::checkForUpdate(char (*version)[10], char (*title)[64] /* = nullptr */, char (*releaseDate)[11] /* = nullptr */, char (*summary)[256] /* = nullptr */)
 {
+  // version is mandatory
+  if (!version)
+    return false;
+
   String githubURL = F("https://api.github.com/repos/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/latest");
 
   WiFiClientSecure clientSecure;
@@ -259,82 +263,87 @@ void Core::checkForUpdate()
   clientSecure.setInsecure();
   http.begin(clientSecure, githubURL);
   int httpCode = http.GET();
-  if (httpCode == 200)
+
+  // check for http error
+  if (httpCode != 200)
   {
-    WiFiClient *stream = http.getStreamPtr();
-    JsonDocument doc;
-    DeserializationError error = deserializeJson(doc, *stream);
-    if (!error)
+    http.end();
+    return false;
+  }
+
+  // httpCode is 200, we can continue
+  WiFiClient *stream = http.getStreamPtr();
+  JsonDocument doc;
+  DeserializationError error = deserializeJson(doc, *stream);
+
+  // check for json error
+  if (error)
+  {
+    http.end();
+    return false;
+  }
+
+  // json is valid, we can continue
+  JsonVariant jv;
+
+  if ((jv = doc[F("tag_name")]).is<const char *>())
+    strlcpy(*version, jv.as<const char *>(), sizeof(*version));
+
+  // check if we got a version
+  if (!strlen(*version))
+  {
+    http.end();
+    return false;
+  }
+
+  // we got a version, we can continue
+  if (title && (jv = doc[F("name")]).is<const char *>())
+  {
+    // find the first space and copy the rest to title
+    if (const char *space = strchr(jv, ' '))
+      strlcpy(*title, space + 1, sizeof(*title));
+  }
+
+  if (releaseDate && (jv = doc[F("published_at")]).is<const char *>())
+    strlcpy(*releaseDate, jv.as<const char *>(), 11); // copy the part part only (10 chars)
+
+  if (summary && (jv = doc[F("body")]).is<const char *>())
+  {
+    // copy body to summary until "\r\n\r\n##"
+    const char *body = jv.as<const char *>();
+    const char *end = strstr(body, "\r\n\r\n##");
+    if (end)
     {
-      JsonVariant jv;
-      if ((jv = doc[F("tag_name")]).is<const char *>())
-        strlcpy(_lastFirmwareInfos.version, jv, sizeof(_lastFirmwareInfos.version));
-      if ((jv = doc[F("name")]).is<const char *>())
-      {
-        // find the first space and copy the rest to title
-        char *space = strchr(jv, ' ');
-        if (space)
-          strlcpy(_lastFirmwareInfos.title, space + 1, sizeof(_lastFirmwareInfos.title));
-        else
-          _lastFirmwareInfos.title[0] = 0;
-      }
-
-      if ((jv = doc[F("published_at")]).is<const char *>())
-        strlcpy(_lastFirmwareInfos.releaseDate, jv, sizeof(_lastFirmwareInfos.releaseDate));
-      else
-        _lastFirmwareInfos.releaseDate[0] = 0;
-
-      if ((jv = doc[F("body")]).is<const char *>())
-      {
-        // copy body to summary until "\r\n\r\n##"
-        const char *body = jv.as<const char *>();
-        const char *end = strstr(body, "\r\n\r\n##");
-        if (end)
-        {
-          size_t len = end - body;
-          if (len >= sizeof(_lastFirmwareInfos.summary))
-            len = sizeof(_lastFirmwareInfos.summary) - 1;
-
-          // Copy the string considering multi-byte characters
-          strncpy(_lastFirmwareInfos.summary, body, len);
-          _lastFirmwareInfos.summary[len] = 0;
-        }
-        else
-        {
-          size_t bodyLen = strlen(body);
-          if (bodyLen < sizeof(_lastFirmwareInfos.summary))
-          {
-            strncpy(_lastFirmwareInfos.summary, body, bodyLen);
-            _lastFirmwareInfos.summary[bodyLen] = 0;
-          }
-          else
-            _lastFirmwareInfos.summary[0] = 0;
-        }
-      }
+      size_t len = std::min<size_t>(end - body + 1, sizeof(*summary)); // +1 to include the null terminator
+      strlcpy(*summary, body, len);
     }
     else
-      _lastFirmwareInfos.version[0] = 0;
+      strlcpy(*summary, body, sizeof(*summary));
   }
-  else
-    _lastFirmwareInfos.version[0] = 0;
 
   http.end();
+
+  return true;
 }
 
 String Core::getUpdateInfos()
 {
-  checkForUpdate();
-
   JsonDocument doc;
 
   doc[F("installed_version")] = VERSION;
-  if (_lastFirmwareInfos.version[0])
+
+  char version[10] = {0};
+  char title[64] = {0};
+  char releaseDate[11] = {0};
+  char summary[256] = {0};
+
+  if (checkForUpdate(&version, &title, &releaseDate, &summary))
   {
-    doc[F("latest_version")] = _lastFirmwareInfos.version;
-    doc[F("title")] = _lastFirmwareInfos.title;
-    doc[F("release_date")] = _lastFirmwareInfos.releaseDate;
-    doc[F("release_summary")] = _lastFirmwareInfos.summary;
-    doc[F("release_url")] = String(F("https://github.com/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/tag/")) + _lastFirmwareInfos.version;
+    doc[F("latest_version")] = version;
+    doc[F("title")] = title;
+    doc[F("release_date")] = releaseDate;
+    doc[F("release_summary")] = summary;
+    doc[F("release_url")] = String(F("https://github.com/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/tag/")) + version;
   }
 
   String infos;
@@ -343,15 +352,16 @@ String Core::getUpdateInfos()
   return infos;
 }
 
-bool Core::updateFirmware(const char *version, String &retMsg, std::function<void(size_t, size_t)> progressCallback)
+bool Core::updateFirmware(const char *version, String &retMsg, std::function<void(size_t, size_t)> progressCallback /* = nullptr */)
 {
-  char versionToFlash[8];
+  char versionToFlash[8] = {0};
 
   if (version && !strcmp(version, "latest"))
   {
-    checkForUpdate();
-    if (_lastFirmwareInfos.version[0] and versionCompare(_lastFirmwareInfos.version, VERSION) > 0)
-      strlcpy(versionToFlash, _lastFirmwareInfos.version, sizeof(versionToFlash));
+    char _version[10] = {0};
+    
+    if (checkForUpdate(&_version) and versionCompare(_version, VERSION) > 0)
+      strlcpy(versionToFlash, _version, sizeof(versionToFlash));
     else
       return false;
   }
