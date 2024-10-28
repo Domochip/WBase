@@ -30,8 +30,8 @@ private:
 public:
   Core(char appId, String appName);
 
-  bool checkForUpdate(char (*version)[10], char (*title)[64] = nullptr, char (*releaseDate)[11] = nullptr, char (*summary)[256] = nullptr);
-  String getUpdateInfos();
+  bool getLastestUpdateInfo(char (*version)[10], char (*title)[64] = nullptr, char (*releaseDate)[11] = nullptr, char (*summary)[256] = nullptr);
+  String getLatestUpdateInfoJson();
   bool updateFirmware(const char *version, String &retMsg, std::function<void(size_t, size_t)> progressCallback = nullptr);
   static int8_t versionCompare(const char *version1, const char *version2);
 };

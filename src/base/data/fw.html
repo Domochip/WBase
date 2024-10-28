@@ -155,7 +155,7 @@
         $(qsp + '#fi').readOnly = false;
     }
 
-    function getUpdateInfos() {
+    function getLastestUpdateInfo() {
 
         disableAllButtons();
 
@@ -169,7 +169,7 @@
             $(qsp + id).innerHTML = '';
         });
 
-        getJSON('/gui',
+        getJSON('/glui',
             (GUI) => {
                 for (k in GUI) {
                     if ((e = $(qsp + '#' + k)) != undefined) e.innerHTML = GUI[k];
@@ -204,8 +204,8 @@
             }
         );
     }
-    getUpdateInfos();
-    $(qsp + "#refreshButton").addEventListener('click', () => { getUpdateInfos(); });
+    getLastestUpdateInfo();
+    $(qsp + "#refreshButton").addEventListener('click', () => { getLastestUpdateInfo(); });
 
     $(qsp + "#updateButton").addEventListener('click', (evt) => {
         evt.preventDefault();

@@ -117,13 +117,13 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
               server.send_P(200, PSTR("text/html"), fwhtmlgz, sizeof(fwhtmlgz));
             });
 
-  // Get Update Infos ---------------------------------------------------------
+  // Get Latest Update Info ---------------------------------------------------------
   server.on(
-      F("/gui"), HTTP_GET,
+      F("/glui"), HTTP_GET,
       [this, &server]()
       {
         SERVER_KEEPALIVE_FALSE()
-        server.send(200, F("application/json"), getUpdateInfos());
+        server.send(200, F("application/json"), getLatestUpdateInfoJson());
       });
 
   // Update Firmware from Github ----------------------------------------------
@@ -249,7 +249,7 @@ Core::Core(char appId, String appName) : Application(appId, appName)
   _applicationList[Application::Applications::Core] = this;
 }
 
-bool Core::checkForUpdate(char (*version)[10], char (*title)[64] /* = nullptr */, char (*releaseDate)[11] /* = nullptr */, char (*summary)[256] /* = nullptr */)
+bool Core::getLastestUpdateInfo(char (*version)[10], char (*title)[64] /* = nullptr */, char (*releaseDate)[11] /* = nullptr */, char (*summary)[256] /* = nullptr */)
 {
   // version is mandatory
   if (!version)
@@ -326,7 +326,7 @@ bool Core::checkForUpdate(char (*version)[10], char (*title)[64] /* = nullptr */
   return true;
 }
 
-String Core::getUpdateInfos()
+String Core::getLatestUpdateInfoJson()
 {
   JsonDocument doc;
 
@@ -337,7 +337,7 @@ String Core::getUpdateInfos()
   char releaseDate[11] = {0};
   char summary[256] = {0};
 
-  if (checkForUpdate(&version, &title, &releaseDate, &summary))
+  if (getLastestUpdateInfo(&version, &title, &releaseDate, &summary))
   {
     doc[F("latest_version")] = version;
     doc[F("title")] = title;
@@ -346,10 +346,10 @@ String Core::getUpdateInfos()
     doc[F("release_url")] = String(F("https://github.com/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/tag/")) + version;
   }
 
-  String infos;
-  serializeJson(doc, infos);
+  String info;
+  serializeJson(doc, info);
 
-  return infos;
+  return info;
 }
 
 bool Core::updateFirmware(const char *version, String &retMsg, std::function<void(size_t, size_t)> progressCallback /* = nullptr */)
@@ -359,8 +359,8 @@ bool Core::updateFirmware(const char *version, String &retMsg, std::function<voi
   if (version && !strcmp(version, "latest"))
   {
     char _version[10] = {0};
-    
-    if (checkForUpdate(&_version) and versionCompare(_version, VERSION) > 0)
+
+    if (getLastestUpdateInfo(&_version) and versionCompare(_version, VERSION) > 0)
       strlcpy(versionToFlash, _version, sizeof(versionToFlash));
     else
       return false;
