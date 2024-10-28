@@ -17,16 +17,6 @@
 class Core : public Application
 {
 private:
-  typedef struct
-  {
-    char version[8] = {0};
-    char title[64] = {0};
-    char releaseDate[11] = {0};
-    char summary[255] = {0};
-  } LastFirmwareInfos;
-
-  LastFirmwareInfos _lastFirmwareInfos;
-
   void setConfigDefaultValues();
   bool parseConfigJSON(JsonDocument &doc, bool fromWebPage);
   String generateConfigJSON(bool forSaveFile);
