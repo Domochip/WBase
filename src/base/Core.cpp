@@ -146,7 +146,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
         server.chunkedResponseModeStart(200, PSTR("text/plain"));
 
         // Define the progress callback function
-        UpdaterClass::THandlerFunction_Progress progressCallback = [&server](size_t progress, size_t total)
+        std::function<void(size_t, size_t)> progressCallback = [&server](size_t progress, size_t total)
         {
           uint8_t percent = (progress * 100) / total;
           LOG_SERIAL_PRINTF_P(PSTR("Progress: %d%%\n"), percent);
@@ -360,7 +360,7 @@ String Core::getUpdateInfos(bool refresh)
   return infos;
 }
 
-bool Core::updateFirmware(const char *version, String &retMsg, UpdaterClass::THandlerFunction_Progress progressCallback)
+bool Core::updateFirmware(const char *version, String &retMsg, std::function<void(size_t, size_t)> progressCallback)
 {
   char versionToFlash[8];
 
