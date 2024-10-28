@@ -133,7 +133,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
       [this, &server]()
       {
         SERVER_KEEPALIVE_FALSE()
-        server.send(200, F("application/json"), getUpdateInfos(server.hasArg(F("refresh"))));
+        server.send(200, F("application/json"), getUpdateInfos());
       });
 
   // Update Firmware from Github ----------------------------------------------
@@ -337,10 +337,9 @@ void Core::checkForUpdate()
   http.end();
 }
 
-String Core::getUpdateInfos(bool refresh)
+String Core::getUpdateInfos()
 {
-  if (refresh)
-    checkForUpdate();
+  checkForUpdate();
 
   JsonDocument doc;
 

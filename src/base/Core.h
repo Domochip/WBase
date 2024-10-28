@@ -43,7 +43,7 @@ public:
   Core(char appId, String appName);
 
   void checkForUpdate();
-  String getUpdateInfos(bool refresh = false);
+  String getUpdateInfos();
   bool updateFirmware(const char *version, String &retMsg, std::function<void(size_t, size_t)> progressCallback = nullptr);
   static int8_t versionCompare(const char *version1, const char *version2);
 };
