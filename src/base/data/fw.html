@@ -155,7 +155,7 @@
         $(qsp + '#fi').readOnly = false;
     }
 
-    function getUpdateInfos(refresh = false) {
+    function getUpdateInfos() {
 
         disableAllButtons();
 
@@ -169,10 +169,7 @@
             $(qsp + id).innerHTML = '';
         });
 
-        // add param to /gui for force refresh
-        let url = refresh ? "/gui?refresh=true" : "/gui";
-
-        getJSON(url,
+        getJSON('/gui',
             (GUI) => {
                 for (k in GUI) {
                     if ((e = $(qsp + '#' + k)) != undefined) e.innerHTML = GUI[k];
@@ -208,7 +205,7 @@
         );
     }
     getUpdateInfos();
-    $(qsp + "#refreshButton").addEventListener('click', () => { getUpdateInfos(true); });
+    $(qsp + "#refreshButton").addEventListener('click', () => { getUpdateInfos(); });
 
     $(qsp + "#updateButton").addEventListener('click', (evt) => {
         evt.preventDefault();
