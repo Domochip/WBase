@@ -49,7 +49,6 @@ bool Application::loadConfig()
   return result;
 }
 
-
 bool Application::getLastestUpdateInfo(char (*version)[10], char (*title)[64] /* = nullptr */, char (*releaseDate)[11] /* = nullptr */, char (*summary)[256] /* = nullptr */)
 {
   // version is mandatory
@@ -155,27 +154,17 @@ String Application::getLatestUpdateInfoJson()
 
 bool Application::updateFirmware(const char *version, String &retMsg, std::function<void(size_t, size_t)> progressCallback /* = nullptr */)
 {
-  char versionToFlash[8] = {0};
-
-  if (version && !strcmp(version, "latest"))
+  if (!version || !version[0])
   {
-    char _version[10] = {0};
-
-    if (getLastestUpdateInfo(&_version) and versionCompare(_version, VERSION) > 0)
-      strlcpy(versionToFlash, _version, sizeof(versionToFlash));
-    else
-      return false;
-  }
-  else if (version && version[0])
-    strlcpy(versionToFlash, version, sizeof(versionToFlash));
-  else
+    retMsg = F("No version provided");
     return false;
+  }
 
   WiFiClientSecure clientSecure;
   clientSecure.setInsecure();
 
   String fwUrl(F("https://github.com/" APPLICATION1_MANUFACTURER "/" APPLICATION1_MODEL "/releases/download/"));
-  fwUrl = fwUrl + versionToFlash + '/' + F(APPLICATION1_MODEL) + '.' + versionToFlash + F(".bin");
+  fwUrl = fwUrl + version + '/' + F(APPLICATION1_MODEL) + '.' + version + F(".bin");
 
   LOG_SERIAL_PRINTF_P(PSTR("Trying to Update from URL: %s\n"), fwUrl.c_str());
 
@@ -202,7 +191,7 @@ bool Application::updateFirmware(const char *version, String &retMsg, std::funct
   WiFiClient *stream = https.getStreamPtr();
   int contentLength = https.getSize();
 
-  LOG_SERIAL_PRINTF_P(PSTR("Update Start: %s (Online Update)\n"), (String(F(APPLICATION1_MODEL)) + '.' + versionToFlash + F(".bin")).c_str());
+  LOG_SERIAL_PRINTF_P(PSTR("Update Start: %s (Online Update)\n"), (String(F(APPLICATION1_MODEL)) + '.' + version + F(".bin")).c_str());
 
   if (progressCallback)
     Update.onProgress(progressCallback);
