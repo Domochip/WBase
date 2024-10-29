@@ -46,7 +46,6 @@ protected:
   static bool getLastestUpdateInfo(char (*version)[10], char (*title)[64] = nullptr, char (*releaseDate)[11] = nullptr, char (*summary)[256] = nullptr);
   static String getLatestUpdateInfoJson();
   static bool updateFirmware(const char *version, String &retMsg, std::function<void(size_t, size_t)> progressCallback = nullptr);
-  static int8_t versionCompare(const char *version1, const char *version2);
 
   // specialization required from the application
   virtual void setConfigDefaultValues() = 0;
