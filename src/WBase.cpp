@@ -148,7 +148,7 @@ void WBase::appRun()
 // Constructor
 WBase::WBase(char appId, String appName) : Application(appId, appName)
 {
-  _applicationList[Application1] = this;
+  _applicationList[CustomApp] = this;
 
   // TODO : Initialize special structure or libraries in constructor
   // Note : most of the time, init is done during AppInit based on configuration
