@@ -414,7 +414,7 @@ void WifiMan::appRun()
 #endif
 }
 
-WifiMan::WifiMan(char appId, String appName) : Application(appId, appName)
+WifiMan::WifiMan(AppId appId, String appName) : Application(appId, appName)
 {
   _applicationList[WifiManApp] = this;
 }

@@ -19,7 +19,7 @@ bool Application::saveConfig()
 bool Application::loadConfig()
 {
   // special exception for Core, there is no Core.json file to Load
-  if (_appId == '0')
+  if (_appId == CoreApp)
     return true;
 
   bool result = false;

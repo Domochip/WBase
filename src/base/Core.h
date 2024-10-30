@@ -23,7 +23,7 @@ private:
   void appRun();
 
 public:
-  Core(char appId, String appName);
+  Core(AppId appId, String appName);
 };
 
 #endif
