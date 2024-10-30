@@ -413,7 +413,3 @@ void WifiMan::appRun()
   MDNS.update();
 #endif
 }
-
-WifiMan::WifiMan() : Application(WifiManApp)
-{
-}

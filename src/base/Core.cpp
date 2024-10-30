@@ -239,11 +239,3 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
         server.send(404);
       });
 }
-
-void Core::appRun()
-{
-}
-
-Core::Core() : Application(CoreApp)
-{
-}
