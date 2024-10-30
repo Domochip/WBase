@@ -19,7 +19,7 @@ using WebServer = ESP8266WebServer;
 
 class Application
 {
-public:
+protected:
   typedef enum
   {
     CoreApp = 0,
@@ -27,7 +27,6 @@ public:
     CustomApp = 2
   } AppId;
 
-protected:
   static Application *_applicationList[3]; // static list of all applications
 
   typedef enum
