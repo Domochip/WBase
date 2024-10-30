@@ -2,6 +2,11 @@
 
 Application *Application::_applicationList[3] = {nullptr, nullptr, nullptr};
 
+Application::Application(AppId appId) : _appId(appId)
+{
+  _applicationList[_appId] = this;
+}
+
 char Application::getAppIdChar(AppId appId)
 {
   return '0' + appId;

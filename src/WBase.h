@@ -33,7 +33,7 @@ private:
   void appRun();
 
 public:
-  WBase(AppId appId);
+  WBase();
 };
 
 #endif

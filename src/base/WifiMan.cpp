@@ -63,7 +63,7 @@ void WifiMan::refreshWiFi()
     STATUS_LED_GOOD
 #endif
 
-    LOG_SERIAL_PRINTF_P(PSTR(" AP mode(%s - %s) "),_apSsid, WiFi.softAPIP().toString().c_str());
+    LOG_SERIAL_PRINTF_P(PSTR(" AP mode(%s - %s) "), _apSsid, WiFi.softAPIP().toString().c_str());
   }
 }
 
@@ -414,7 +414,6 @@ void WifiMan::appRun()
 #endif
 }
 
-WifiMan::WifiMan(AppId appId) : Application(appId)
+WifiMan::WifiMan() : Application(WifiManApp)
 {
-  _applicationList[WifiManApp] = this;
 }

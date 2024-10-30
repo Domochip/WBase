@@ -59,8 +59,7 @@ protected:
   virtual void appRun() = 0;
 
 public:
-  // already built methods
-  Application(AppId appId) : _appId(appId) {}
+  Application(AppId appId);
 
   static char getAppIdChar(AppId appId);
   static String getAppIdName(AppId appId);

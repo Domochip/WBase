@@ -146,10 +146,8 @@ void WBase::appRun()
 
 //------------------------------------------
 // Constructor
-WBase::WBase(AppId appId) : Application(appId)
+WBase::WBase() : Application(CustomApp)
 {
-  _applicationList[CustomApp] = this;
-
   // TODO : Initialize special structure or libraries in constructor
   // Note : most of the time, init is done during AppInit based on configuration
 }
