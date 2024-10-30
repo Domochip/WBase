@@ -121,7 +121,7 @@ void WBase::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseA
   // server.on(F("/getColor"), HTTP_GET, [this, &server]() {server.send(200, F("text/html"), GetColor());});
 
   // register EventSource
-  _eventSourceMan.initEventSourceServer(_appId, server);
+  _eventSourceMan.initEventSourceServer(getAppIdChar(_appId), server);
 }
 
 //------------------------------------------
