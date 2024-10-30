@@ -244,7 +244,7 @@ void Core::appRun()
 {
 }
 
-Core::Core(AppId appId, String appName) : Application(appId, appName)
+Core::Core(AppId appId) : Application(appId)
 {
   _applicationList[CoreApp] = this;
 }

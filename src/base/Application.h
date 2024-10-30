@@ -37,7 +37,6 @@ protected:
   } WebPageForPlaceHolder;
 
   AppId _appId;
-  String _appName;
   bool _reInit = false;
 
   // already built methods
@@ -61,7 +60,7 @@ protected:
 
 public:
   // already built methods
-  Application(AppId appId, String appName) : _appId(appId), _appName(appName) {}
+  Application(AppId appId) : _appId(appId) {}
 
   static char getAppIdChar(AppId appId);
   static String getAppIdName(AppId appId);

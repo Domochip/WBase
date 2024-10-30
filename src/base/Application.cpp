@@ -13,14 +13,14 @@ String Application::getAppIdName(AppId appId)
     return F("Core");
 
   if (appId == WifiManApp)
-    return F("WifiMan");
+    return F("WiFi");
 
   return F(CUSTOM_APP_NAME);
 }
 
 bool Application::saveConfig()
 {
-  File configFile = LittleFS.open(String('/') + _appName + F(".json"), "w");
+  File configFile = LittleFS.open(String('/') + getAppIdName(_appId) + F(".json"), "w");
   if (!configFile)
   {
     LOG_SERIAL_PRINTLN(F("Failed to open config file for writing"));
@@ -39,7 +39,7 @@ bool Application::loadConfig()
     return true;
 
   bool result = false;
-  File configFile = LittleFS.open(String('/') + _appName + F(".json"), "r");
+  File configFile = LittleFS.open(String('/') + getAppIdName(_appId) + F(".json"), "r");
   if (configFile)
   {
 
@@ -250,7 +250,7 @@ void Application::init(bool skipExistingConfig)
 {
   bool result = true;
 
-  LOG_SERIAL_PRINTF_P(PSTR("Start %s : "), _appName.c_str());
+  LOG_SERIAL_PRINTF_P(PSTR("Start %s : "), getAppIdName(_appId).c_str());
 
   setConfigDefaultValues();
 
@@ -352,7 +352,7 @@ void Application::run()
 {
   if (_reInit)
   {
-    LOG_SERIAL_PRINTF_P(PSTR("ReStart %s : "), _appName.c_str());
+    LOG_SERIAL_PRINTF_P(PSTR("ReStart %s : "), getAppIdName(_appId).c_str());
 
     if (appInit(true))
       LOG_SERIAL_PRINTLN(F("OK"));

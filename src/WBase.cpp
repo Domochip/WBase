@@ -146,7 +146,7 @@ void WBase::appRun()
 
 //------------------------------------------
 // Constructor
-WBase::WBase(AppId appId, String appName) : Application(appId, appName)
+WBase::WBase(AppId appId) : Application(appId)
 {
   _applicationList[CustomApp] = this;
 
