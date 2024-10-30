@@ -63,6 +63,8 @@ public:
   // already built methods
   Application(AppId appId, String appName) : _appId(appId), _appName(appName) {}
 
+  static char getAppIdChar(AppId appId);
+  static String getAppIdName(AppId appId);
   String getStatusJSON();
   void init(bool skipExistingConfig);
   void initWebServer(WebServer &server, bool &shouldReboot, bool &pauseApplication);

@@ -2,6 +2,22 @@
 
 Application *Application::_applicationList[3] = {nullptr, nullptr, nullptr};
 
+char Application::getAppIdChar(AppId appId)
+{
+  return '0' + appId;
+}
+
+String Application::getAppIdName(AppId appId)
+{
+  if (appId == CoreApp)
+    return F("Core");
+
+  if (appId == WifiManApp)
+    return F("WifiMan");
+
+  return F(CUSTOM_APP_NAME);
+}
+
 bool Application::saveConfig()
 {
   File configFile = LittleFS.open(String('/') + _appName + F(".json"), "w");
@@ -252,7 +268,7 @@ void Application::initWebServer(WebServer &server, bool &shouldReboot, bool &pau
   char url[16];
 
   // HTML Status handler
-  sprintf_P(url, PSTR("/status%c.html"), _appId);
+  sprintf_P(url, PSTR("/status%c.html"), getAppIdChar(_appId));
   server.on(url, HTTP_GET,
             [this, &server]()
             {
@@ -262,7 +278,7 @@ void Application::initWebServer(WebServer &server, bool &shouldReboot, bool &pau
             });
 
   // HTML Config handler
-  sprintf_P(url, PSTR("/config%c.html"), _appId);
+  sprintf_P(url, PSTR("/config%c.html"), getAppIdChar(_appId));
   server.on(url, HTTP_GET,
             [this, &server]()
             {
@@ -272,7 +288,7 @@ void Application::initWebServer(WebServer &server, bool &shouldReboot, bool &pau
             });
 
   // JSON Status handler
-  sprintf_P(url, PSTR("/gs%c"), _appId);
+  sprintf_P(url, PSTR("/gs%c"), getAppIdChar(_appId));
   server.on(url, HTTP_GET,
             [this, &server]()
             {
@@ -282,7 +298,7 @@ void Application::initWebServer(WebServer &server, bool &shouldReboot, bool &pau
             });
 
   // JSON Config handler
-  sprintf_P(url, PSTR("/gc%c"), _appId);
+  sprintf_P(url, PSTR("/gc%c"), getAppIdChar(_appId));
   server.on(url, HTTP_GET,
             [this, &server]()
             {
@@ -291,7 +307,7 @@ void Application::initWebServer(WebServer &server, bool &shouldReboot, bool &pau
               server.send(200, F("text/json"), generateConfigJSON());
             });
 
-  sprintf_P(url, PSTR("/sc%c"), _appId);
+  sprintf_P(url, PSTR("/sc%c"), getAppIdChar(_appId));
   server.on(url, HTTP_POST,
             [this, &server]()
             {
