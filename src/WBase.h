@@ -33,7 +33,7 @@ private:
   void appRun();
 
 public:
-  WBase(char appId, String fileName);
+  WBase();
 };
 
 #endif

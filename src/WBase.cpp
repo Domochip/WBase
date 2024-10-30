@@ -121,7 +121,7 @@ void WBase::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseA
   // server.on(F("/getColor"), HTTP_GET, [this, &server]() {server.send(200, F("text/html"), GetColor());});
 
   // register EventSource
-  _eventSourceMan.initEventSourceServer(_appId, server);
+  _eventSourceMan.initEventSourceServer(getAppIdChar(_appId), server);
 }
 
 //------------------------------------------
@@ -146,10 +146,8 @@ void WBase::appRun()
 
 //------------------------------------------
 // Constructor
-WBase::WBase(char appId, String appName) : Application(appId, appName)
+WBase::WBase() : Application(CustomApp)
 {
-  _applicationList[CustomApp] = this;
-
   // TODO : Initialize special structure or libraries in constructor
   // Note : most of the time, init is done during AppInit based on configuration
 }
