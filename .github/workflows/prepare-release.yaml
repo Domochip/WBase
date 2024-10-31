@@ -39,12 +39,12 @@ jobs:
 
       - name: Temporary Copy for old version update
         run: |
-          find .pio/build -type f -name 'W*.bin' -exec sh -c '
+          find .pio/build -type f -name 'W*.bin' -exec bash -c '
             for file; do
               new_file="${file/W/Wireless}"
               cp "$file" "$new_file"
             done
-          ' sh {} +
+          ' bash {} +
 
       - name: Create Draft Release
         uses: softprops/action-gh-release@v2
