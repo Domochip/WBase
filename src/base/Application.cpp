@@ -217,11 +217,7 @@ bool Application::updateFirmware(const char *version, String &retMsg, std::funct
   if (progressCallback)
     Update.onProgress(progressCallback);
 
-#ifdef ESP8266
   Update.begin(contentLength);
-#else
-  Update.begin();
-#endif
 
   // sometime the stream is not yet ready (no data available yet)
   // and writeStream start by a peek which then fail
