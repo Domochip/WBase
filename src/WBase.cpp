@@ -115,7 +115,7 @@ size_t WBase::getHTMLContentSize(WebPageForPlaceHolder wp)
 
 //------------------------------------------
 // code to register web request answer to the web server
-void WBase::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseApplication)
+void WBase::appInitWebServer(WebServer &server)
 {
   // TODO
   // server.on(F("/getColor"), HTTP_GET, [this, &server]() {server.send(200, F("text/html"), GetColor());});
