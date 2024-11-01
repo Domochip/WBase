@@ -178,8 +178,8 @@ void Core::appInitWebServer(WebServer &server)
           msg = Update.errorString();
 #endif
           Update.clearError();
-          // Update failed so restart to Run Application in loop
-          SystemState::pauseApplication = false;
+          // Update failed so restart to Run custom Application in loop
+          SystemState::pauseCustomApp = false;
         }
 
         LOG_SERIAL_PRINTLN(msg);
@@ -193,8 +193,8 @@ void Core::appInitWebServer(WebServer &server)
 
         if (upload.status == UPLOAD_FILE_START)
         {
-          // stop to Run Application in loop
-          SystemState::pauseApplication = true;
+          // stop to Run custom Application in loop
+          SystemState::pauseCustomApp = true;
 
           LOG_SERIAL_PRINTF_P(PSTR("Update Start: %s\n"), upload.filename.c_str());
 
