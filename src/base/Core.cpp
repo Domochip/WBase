@@ -179,7 +179,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
 #endif
           Update.clearError();
           // Update failed so restart to Run Application in loop
-          pauseApplication = false;
+          SystemState::pauseApplication = false;
         }
 
         LOG_SERIAL_PRINTLN(msg);
@@ -194,7 +194,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
         if (upload.status == UPLOAD_FILE_START)
         {
           // stop to Run Application in loop
-          pauseApplication = true;
+          SystemState::pauseApplication = true;
 
           LOG_SERIAL_PRINTF_P(PSTR("Update Start: %s\n"), upload.filename.c_str());
 

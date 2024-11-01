@@ -131,7 +131,7 @@ void loop(void)
   // Handle WebServer
   server.handleClient();
 
-  if (!pauseApplication)
+  if (!SystemState::pauseApplication)
   {
     custom.run();
   }
