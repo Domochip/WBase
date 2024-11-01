@@ -22,9 +22,9 @@ using WebServer = ESP8266WebServer;
 
 // WebServer
 WebServer server(80);
-// flag to pause application Run during Firmware Update
+
 bool pauseApplication = false;
-// variable used by objects to indicate system reboot is required
+
 bool shouldReboot = false;
 
 // Core App
