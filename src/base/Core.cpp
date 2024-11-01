@@ -148,8 +148,8 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
         };
 
         // Call the updateFirmware function with the progress callback
-        shouldReboot = updateFirmware(server.arg(F("plain")).c_str(), msg, progressCallback);
-        if (shouldReboot)
+        SystemState::shouldReboot = updateFirmware(server.arg(F("plain")).c_str(), msg, progressCallback);
+        if (SystemState::shouldReboot)
           server.sendContent(F("s:true\n"));
         else
           server.sendContent(String(F("s:false\nm:")) + msg + '\n');
@@ -163,11 +163,11 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
       F("/fw"), HTTP_POST,
       [&shouldReboot, &pauseApplication, &server]()
       {
-        shouldReboot = !Update.hasError();
+        SystemState::shouldReboot = !Update.hasError();
 
         String msg;
 
-        if (shouldReboot)
+        if (SystemState::shouldReboot)
           msg = F("Update successful");
         else
         {
@@ -185,7 +185,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
         LOG_SERIAL_PRINTLN(msg);
 
         SERVER_KEEPALIVE_FALSE()
-        server.send(shouldReboot ? 200 : 500, F("text/html"), msg);
+        server.send(SystemState::shouldReboot ? 200 : 500, F("text/html"), msg);
       },
       [&pauseApplication, &server]()
       {
@@ -233,7 +233,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
               }
               SERVER_KEEPALIVE_FALSE()
               server.send_P(200, PSTR("text/html"), PSTR("Reboot command received"));
-              shouldReboot = true;
+              SystemState::shouldReboot = true;
             });
 
   // 404 on not found ---------------------------------------------------------

@@ -138,7 +138,7 @@ void loop(void)
 
   wifiMan.run();
 
-  if (shouldReboot)
+  if (SystemState::shouldReboot)
   {
 #ifdef LOG_SERIAL
     LOG_SERIAL_PRINTLN(F("Rebooting..."));
