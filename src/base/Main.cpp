@@ -23,10 +23,6 @@ using WebServer = ESP8266WebServer;
 // WebServer
 WebServer server(80);
 
-bool pauseApplication = false;
-
-bool shouldReboot = false;
-
 // Core App
 Core core;
 
