@@ -12,6 +12,7 @@ using WebServer = ESP8266WebServer;
 
 #include "Version.h"
 #include "../Main.h"
+#include "SystemState.h"
 #include "Application.h"
 #include "Core.h"
 #include "WifiMan.h"

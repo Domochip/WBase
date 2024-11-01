@@ -2,6 +2,7 @@
 #define Application_h
 
 #include "../Main.h"
+#include "SystemState.h"
 #include <LittleFS.h>
 #ifdef ESP8266
 #include <ESP8266WebServer.h>
