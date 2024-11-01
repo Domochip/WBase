@@ -72,7 +72,7 @@ size_t Core::getHTMLContentSize(WebPageForPlaceHolder wp)
   };
   return 0;
 }
-void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseApplication)
+void Core::appInitWebServer(WebServer &server)
 {
   // root is index
   server.on("/", HTTP_GET,
@@ -131,7 +131,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
   // Update Firmware from Github ----------------------------------------------
   server.on(
       F("/update"), HTTP_POST,
-      [this, &shouldReboot, &server]()
+      [this, &server]()
       {
         String msg;
 
@@ -161,7 +161,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
   // Firmware POST URL allows to push new firmware ----------------------------
   server.on(
       F("/fw"), HTTP_POST,
-      [&shouldReboot, &pauseApplication, &server]()
+      [&server]()
       {
         SystemState::shouldReboot = !Update.hasError();
 
@@ -187,7 +187,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
         SERVER_KEEPALIVE_FALSE()
         server.send(SystemState::shouldReboot ? 200 : 500, F("text/html"), msg);
       },
-      [&pauseApplication, &server]()
+      [&server]()
       {
         HTTPUpload &upload = server.upload();
 
@@ -222,7 +222,7 @@ void Core::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseAp
 
   // reboot POST --------------------------------------------------------------
   server.on(F("/rbt"), HTTP_POST,
-            [&shouldReboot, &server]()
+            [&server]()
             {
               if (server.hasArg(F("rescue")))
               {

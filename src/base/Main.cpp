@@ -112,9 +112,9 @@ void setup()
 
   LOG_SERIAL_PRINT(F("Start WebServer : "));
 
-  core.initWebServer(server, shouldReboot, pauseApplication);
-  wifiMan.initWebServer(server, shouldReboot, pauseApplication);
-  custom.initWebServer(server, shouldReboot, pauseApplication);
+  core.initWebServer(server);
+  wifiMan.initWebServer(server);
+  custom.initWebServer(server);
 
   server.begin();
 
