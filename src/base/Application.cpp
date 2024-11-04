@@ -189,7 +189,7 @@ bool Application::getLastestUpdateInfo(char (*version)[10], char (*title)[64] /*
           valueBuffer.concat(c);
 
         // for summary, stop at "\r\n\r\n##"
-        if (targetArray == (char *)summary && valueBuffer.endsWith("\r\n\r\n##"))
+        if (targetArray == (char *)summary && valueBuffer.endsWith(F("\r\n\r\n##")))
         {
           // remove the last 6 characters
           valueBuffer.remove(valueBuffer.length() - 6);
