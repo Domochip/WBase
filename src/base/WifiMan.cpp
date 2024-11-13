@@ -6,7 +6,7 @@ void WifiMan::enableAP(bool force = false)
   {
     WiFi.enableAP(true);
     WiFi.softAP(F(DEFAULT_AP_SSID), F(DEFAULT_AP_PSK), _apChannel);
-    //Start DNS server
+    // Start DNS server
     _dnsServer = new DNSServer();
     _dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
     while (!WiFi.softAPIP().isSet())
@@ -412,7 +412,7 @@ void WifiMan::appRun()
     refreshWiFi();
   }
 
-  if(_dnsServer)
+  if (_dnsServer)
     _dnsServer->processNextRequest();
 
 #ifdef ESP8266
