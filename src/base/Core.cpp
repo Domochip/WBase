@@ -236,7 +236,7 @@ void Core::appInitWebServer(WebServer &server)
               SystemState::shouldReboot = true;
             });
 
-  // 404 on not found ---------------------------------------------------------
+  // 302 on not found ---------------------------------------------------------
   server.onNotFound(
       [&server]()
       {
