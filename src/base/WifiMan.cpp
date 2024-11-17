@@ -9,7 +9,7 @@ void WifiMan::enableAP(bool force = false)
     // Start DNS server
     _dnsServer = new DNSServer();
     _dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
-    while (!WiFi.softAPIP().isSet())
+    while (WiFi.softAPIP() == INADDR_NONE)
     {
       delay(10);
     }
