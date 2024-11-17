@@ -242,7 +242,7 @@ void Core::appInitWebServer(WebServer &server)
       {
         // redirect to my IP receiving the request
         SERVER_KEEPALIVE_FALSE()
-        server.sendHeader(F("Location"), F("http://") + server.client().localIP().toString(), true);
+        server.sendHeader(F("Location"), String(F("http://")) + server.client().localIP().toString(), true);
         server.send(302, F("text/plain"), ""); // Empty content inhibits Content-length header so we have to close the socket ourselves.
         server.client().stop();
       });
