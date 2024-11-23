@@ -76,6 +76,15 @@ bool Application::getLastestUpdateInfo(char (*version)[10], char (*title)[64] /*
   if (!version)
     return false;
 
+  // initialize the output strings
+  *version[0] = 0;
+  if (title)
+    *title[0] = 0;
+  if (releaseDate)
+    *releaseDate[0] = 0;
+  if (summary)
+    *summary[0] = 0;
+
   String githubURL = F("https://api.github.com/repos/" CUSTOM_APP_MANUFACTURER "/" CUSTOM_APP_MODEL "/releases/latest");
 
   WiFiClientSecure clientSecure;
