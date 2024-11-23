@@ -113,6 +113,10 @@ bool Application::getLastestUpdateInfo(char (*version)[10], char (*title)[64] /*
   char *targetArray = nullptr;
   size_t targetArraySize = 0;
 
+  // sometime the stream is not yet ready (no data available yet)
+  for (byte i = 0; i < 200 && stream->available() == 0; i++) // available include an optimistic_yield of 100us
+    ;
+
   // while there is data to read
   while (http.connected() && stream->available())
   {
