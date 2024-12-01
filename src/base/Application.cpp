@@ -94,7 +94,6 @@ bool Application::getLastestUpdateInfo(String &version, String &title, String &r
   // We need to parse the JSON response without loading the whole response in memory
 
   char keyBuffer[16] = {0}; // Shifting buffer used to find keys (longest one is "\"published_at\":"" =>15 chars)
-  String valueBuffer;       // used to store the value before copying it to the target array
   uint8_t treeLevel = 0;    // used to skip unwanted data
   bool keyFound = false;    // used to know if we found a key we are looking for
   String *targetString = nullptr;
@@ -165,8 +164,6 @@ bool Application::getLastestUpdateInfo(String &version, String &title, String &r
 
     if (keyFound)
     {
-      valueBuffer.clear();
-
       // read until the next quote (should be next to semicolon)
       stream->readStringUntil('"');
 
@@ -179,33 +176,26 @@ bool Application::getLastestUpdateInfo(String &version, String &title, String &r
       {
         c = stream->read();
 
-        if (c == '"' && !valueBuffer.endsWith(F("\\")))
+        if (c == '"' && !targetString->endsWith(F("\\")))
           break;
 
-        if (valueBuffer.endsWith(F("\\")) && c == 'n')
-          valueBuffer[valueBuffer.length() - 1] = '\n';
-        else if (valueBuffer.endsWith(F("\\")) && c == 'r')
-          valueBuffer[valueBuffer.length() - 1] = '\r';
-        else if (valueBuffer.endsWith(F("\\")) && c == '"')
-          valueBuffer[valueBuffer.length() - 1] = '"';
-        else if (valueBuffer.length() < targetStringSize)
-          valueBuffer.concat(c);
+        if (targetString->endsWith(F("\\")) && c == 'n')
+          (*targetString)[targetString->length() - 1] = '\n';
+        else if (targetString->endsWith(F("\\")) && c == 'r')
+          (*targetString)[targetString->length() - 1] = '\r';
+        else if (targetString->endsWith(F("\\")) && c == '"')
+          (*targetString)[targetString->length() - 1] = '"';
+        else if (targetString->length() < targetStringSize)
+          targetString->concat(c);
 
         // for summary, stop at "\r\n\r\n##"
-        if (targetString == &summary && valueBuffer.endsWith(F("\r\n\r\n##")))
+        if (targetString == &summary && targetString->endsWith(F("\r\n\r\n##")))
         {
           // remove the last 6 characters
-          valueBuffer.remove(valueBuffer.length() - 6);
+          targetString->remove(targetString->length() - 6);
           break;
         }
       }
-    }
-
-    // if we found the key and the value is not empty, copy it to the target array
-    if (keyFound && valueBuffer.length() > 0)
-    {
-      valueBuffer.remove(targetStringSize);
-      *targetString = valueBuffer;
     }
   }
 
