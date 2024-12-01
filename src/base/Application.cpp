@@ -70,21 +70,8 @@ bool Application::loadConfig()
   return result;
 }
 
-bool Application::getLastestUpdateInfo(char (*version)[10], char (*title)[64] /* = nullptr */, char (*releaseDate)[11] /* = nullptr */, char (*summary)[256] /* = nullptr */)
+bool Application::getLastestUpdateInfo(String &version, String &title, String &releaseDate, String &summary)
 {
-  // version is mandatory
-  if (!version)
-    return false;
-
-  // initialize the output strings
-  *version[0] = 0;
-  if (title)
-    *title[0] = 0;
-  if (releaseDate)
-    *releaseDate[0] = 0;
-  if (summary)
-    *summary[0] = 0;
-
   String githubURL = F("https://api.github.com/repos/" CUSTOM_APP_MANUFACTURER "/" CUSTOM_APP_MODEL "/releases/latest");
 
   WiFiClientSecure clientSecure;
@@ -110,8 +97,8 @@ bool Application::getLastestUpdateInfo(char (*version)[10], char (*title)[64] /*
   String valueBuffer;       // used to store the value before copying it to the target array
   uint8_t treeLevel = 0;    // used to skip unwanted data
   bool keyFound = false;    // used to know if we found a key we are looking for
-  char *targetArray = nullptr;
-  size_t targetArraySize = 0;
+  String *targetString = nullptr;
+  size_t targetStringSize = 0;
 
   // sometime the stream is not yet ready (no data available yet)
   for (byte i = 0; i < 200 && stream->available() == 0; i++) // available include an optimistic_yield of 100us
@@ -148,32 +135,32 @@ bool Application::getLastestUpdateInfo(char (*version)[10], char (*title)[64] /*
     if (c == ':' && strlen(keyBuffer) >= 11 && !strcmp_P(keyBuffer + strlen(keyBuffer) - 11, PSTR("\"tag_name\":")))
     {
       keyFound = true;
-      targetArray = (char *)version;
-      targetArraySize = sizeof(*version);
+      targetString = &version;
+      targetStringSize = 9;
     }
 
     // if we found the key "name"
     if (c == ':' && title && strlen(keyBuffer) >= 7 && !strcmp_P(keyBuffer + strlen(keyBuffer) - 7, PSTR("\"name\":")))
     {
       keyFound = true;
-      targetArray = (char *)title;
-      targetArraySize = sizeof(*title);
+      targetString = &title;
+      targetStringSize = 63;
     }
 
     // if we found the key "published_at"
     if (c == ':' && releaseDate && strlen(keyBuffer) >= 15 && !strcmp_P(keyBuffer + strlen(keyBuffer) - 15, PSTR("\"published_at\":")))
     {
       keyFound = true;
-      targetArray = (char *)releaseDate;
-      targetArraySize = sizeof(*releaseDate);
+      targetString = &releaseDate;
+      targetStringSize = 10;
     }
 
     // if we found the key "body"
     if (c == ':' && summary && strlen(keyBuffer) >= 7 && !strcmp_P(keyBuffer + strlen(keyBuffer) - 7, PSTR("\"body\":")))
     {
       keyFound = true;
-      targetArray = (char *)summary;
-      targetArraySize = sizeof(*summary);
+      targetString = &summary;
+      targetStringSize = 255;
     }
 
     if (keyFound)
@@ -184,7 +171,7 @@ bool Application::getLastestUpdateInfo(char (*version)[10], char (*title)[64] /*
       stream->readStringUntil('"');
 
       // for name/title key, skip text until the first space
-      if (targetArray == (char *)title)
+      if (targetString == &title)
         stream->readStringUntil(' ');
 
       // read the value
@@ -202,7 +189,7 @@ bool Application::getLastestUpdateInfo(char (*version)[10], char (*title)[64] /*
           valueBuffer.concat(c);
 
         // for summary, stop at "\r\n\r\n##"
-        if (targetArray == (char *)summary && valueBuffer.endsWith(F("\r\n\r\n##")))
+        if (targetString == &summary && valueBuffer.endsWith(F("\r\n\r\n##")))
         {
           // remove the last 6 characters
           valueBuffer.remove(valueBuffer.length() - 6);
@@ -214,13 +201,14 @@ bool Application::getLastestUpdateInfo(char (*version)[10], char (*title)[64] /*
     // if we found the key and the value is not empty, copy it to the target array
     if (keyFound && valueBuffer.length() > 0)
     {
-      strlcpy(targetArray, valueBuffer.c_str(), targetArraySize);
+      valueBuffer.remove(targetStringSize);
+      *targetString = valueBuffer;
     }
   }
 
   http.end();
 
-  return strlen(*version) > 0;
+  return version.length() > 0;
 }
 
 String Application::getLatestUpdateInfoJson(bool forWebPage /* = false */)
@@ -229,12 +217,9 @@ String Application::getLatestUpdateInfoJson(bool forWebPage /* = false */)
 
   doc[F("installed_version")] = VERSION;
 
-  char version[10] = {0};
-  char title[64] = {0};
-  char releaseDate[11] = {0};
-  char summary[256] = {0};
+  String version, title, releaseDate, summary;
 
-  if (getLastestUpdateInfo(&version, &title, &releaseDate, &summary))
+  if (getLastestUpdateInfo(version, title, releaseDate, summary))
   {
     doc[F("latest_version")] = version;
     doc[F("title")] = title;
