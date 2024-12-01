@@ -93,9 +93,10 @@ bool Application::getLastestUpdateInfo(String &version, String &title, String &r
 
   // We need to parse the JSON response without loading the whole response in memory
 
-  char keyBuffer[16] = {0}; // Shifting buffer used to find keys (longest one is "\"published_at\":"" =>15 chars)
-  uint8_t treeLevel = 0;    // used to skip unwanted data
-  bool keyFound = false;    // used to know if we found a key we are looking for
+  uint8_t maxKeyLength = 16; // longest key is "\"published_at\":"" =>15 chars
+  String keyBuffer;          // Shifting buffer used to find keys
+  uint8_t treeLevel = 0;     // used to skip unwanted data
+  bool keyFound = false;     // used to know if we found a key we are looking for
   String *targetString = nullptr;
   size_t targetStringSize = 0;
 
@@ -121,17 +122,16 @@ bool Application::getLastestUpdateInfo(String &version, String &title, String &r
       continue;
 
     // if keyBuffer is full, shift it to the left by one character
-    if (strlen(keyBuffer) == sizeof(keyBuffer) - 1)
-      memmove(keyBuffer, keyBuffer + 1, sizeof(keyBuffer) - 1);
+    if (keyBuffer.length() == maxKeyLength)
+      keyBuffer.remove(0, 1);
 
     // add the new character at the end
-    keyBuffer[strlen(keyBuffer) + 1] = 0;
-    keyBuffer[strlen(keyBuffer)] = c;
+    keyBuffer.concat(c);
 
     keyFound = false;
 
     // if we found the key "tag_name"
-    if (c == ':' && strlen(keyBuffer) >= 11 && !strcmp_P(keyBuffer + strlen(keyBuffer) - 11, PSTR("\"tag_name\":")))
+    if (c == ':' && keyBuffer.endsWith(F("\"tag_name\":")))
     {
       keyFound = true;
       targetString = &version;
@@ -139,7 +139,7 @@ bool Application::getLastestUpdateInfo(String &version, String &title, String &r
     }
 
     // if we found the key "name"
-    if (c == ':' && title && strlen(keyBuffer) >= 7 && !strcmp_P(keyBuffer + strlen(keyBuffer) - 7, PSTR("\"name\":")))
+    if (c == ':' && keyBuffer.endsWith(F("\"name\":")))
     {
       keyFound = true;
       targetString = &title;
@@ -147,7 +147,7 @@ bool Application::getLastestUpdateInfo(String &version, String &title, String &r
     }
 
     // if we found the key "published_at"
-    if (c == ':' && releaseDate && strlen(keyBuffer) >= 15 && !strcmp_P(keyBuffer + strlen(keyBuffer) - 15, PSTR("\"published_at\":")))
+    if (c == ':' && keyBuffer.endsWith(F("\"published_at\":")))
     {
       keyFound = true;
       targetString = &releaseDate;
@@ -155,7 +155,7 @@ bool Application::getLastestUpdateInfo(String &version, String &title, String &r
     }
 
     // if we found the key "body"
-    if (c == ':' && summary && strlen(keyBuffer) >= 7 && !strcmp_P(keyBuffer + strlen(keyBuffer) - 7, PSTR("\"body\":")))
+    if (c == ':' && keyBuffer.endsWith(F("\"body\":")))
     {
       keyFound = true;
       targetString = &summary;
