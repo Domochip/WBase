@@ -178,14 +178,17 @@ bool Application::getLastestUpdateInfo(String &version, String &title, String &r
       while (stream->available())
       {
         c = stream->read();
-        if (c == '"' && valueBuffer[valueBuffer.length() - 1] != '\\')
+
+        if (c == '"' && !valueBuffer.endsWith(F("\\")))
           break;
 
-        if (valueBuffer[valueBuffer.length() - 1] == '\\' && c == 'n')
+        if (valueBuffer.endsWith(F("\\")) && c == 'n')
           valueBuffer[valueBuffer.length() - 1] = '\n';
-        else if (valueBuffer[valueBuffer.length() - 1] == '\\' && c == 'r')
+        else if (valueBuffer.endsWith(F("\\")) && c == 'r')
           valueBuffer[valueBuffer.length() - 1] = '\r';
-        else
+        else if (valueBuffer.endsWith(F("\\")) && c == '"')
+          valueBuffer[valueBuffer.length() - 1] = '"';
+        else if (valueBuffer.length() < targetStringSize)
           valueBuffer.concat(c);
 
         // for summary, stop at "\r\n\r\n##"
