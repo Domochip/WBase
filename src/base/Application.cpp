@@ -193,7 +193,8 @@ bool Application::getLastestUpdateInfo(String &version, String &title, String &r
         {
           // remove the last 6 characters
           targetString->remove(targetString->length() - 6);
-          break;
+          // avoid adding more text in summary
+          targetStringSize = targetString->length();
         }
       }
     }
