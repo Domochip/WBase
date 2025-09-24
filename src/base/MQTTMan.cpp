@@ -42,7 +42,8 @@ bool MQTTMan::connect(bool firstConnection)
     char *password = (_username[0] ? _password : nullptr);
     char *willTopic = (_connectedAndWillTopic[0] ? _connectedAndWillTopic : nullptr);
     const char *willMessage = (_connectedAndWillTopic[0] ? "0" : nullptr);
-    PubSubClient::connect(clientID.c_str(), username, password, willTopic, 0, true, willMessage);
+    MQTTClient::setWill(willTopic, willMessage, true, 0);
+    MQTTClient::connect(clientID.c_str(), username, password);
 
     if (connected())
     {
@@ -109,10 +110,9 @@ void MQTTMan::disconnect()
     // Stop MQTT Reconnect
     _mqttReconnectTicker.detach();
     // Disconnect
-    if (connected()) // Issue #598 : disconnect() crash if client not yet set
+    if (connected() && MQTTClient::disconnect())
     {
-        PubSubClient::disconnect();
-        // call disconnected callback if set
+        // call disconnected callback
         if (_disconnectedCallBack)
             _disconnectedCallBack();
     }
@@ -127,28 +127,29 @@ bool MQTTMan::publishToConnectedTopic(const char *payload)
 
 String MQTTMan::getStateString()
 {
-    switch (state())
+    //TODO complete with all lwmqtt_err_t or choose relevant ones
+    switch (lastError())
     {
-    case MQTT_CONNECTION_TIMEOUT:
-        return F("Timed Out");
-    case MQTT_CONNECTION_LOST:
-        return F("Lost");
-    case MQTT_CONNECT_FAILED:
-        return F("Failed");
-    case MQTT_DISCONNECTED:
-        return F("Disconnected");
-    case MQTT_CONNECTED:
-        return F("Connected");
-    case MQTT_CONNECT_BAD_PROTOCOL:
-        return F("Bad Protocol Version");
-    case MQTT_CONNECT_BAD_CLIENT_ID:
-        return F("Incorrect ClientID");
-    case MQTT_CONNECT_UNAVAILABLE:
-        return F("Server Unavailable");
-    case MQTT_CONNECT_BAD_CREDENTIALS:
-        return F("Bad Credentials");
-    case MQTT_CONNECT_UNAUTHORIZED:
-        return F("Unauthorized Connection");
+    case LWMQTT_SUCCESS:
+        return F("Success");
+    case LWMQTT_BUFFER_TOO_SHORT:
+        return F("Buffer Too Short");
+    case LWMQTT_VARNUM_OVERFLOW:
+        return F("VarNum Overflow");
+    case LWMQTT_NETWORK_FAILED_CONNECT:
+        return F("Network Failed Connect");
+    case LWMQTT_NETWORK_TIMEOUT:
+        return F("Network Timeout");
+    case LWMQTT_NETWORK_FAILED_READ:
+        return F("Network Failed Read");
+    case LWMQTT_NETWORK_FAILED_WRITE:
+        return F("Network Failed Write");
+    case LWMQTT_REMAINING_LENGTH_OVERFLOW:
+        return F("Remaining Length Overflow");
+    case LWMQTT_REMAINING_LENGTH_MISMATCH:
+        return F("Remaining Length Mismatch");
+    case LWMQTT_MISSING_OR_WRONG_PACKET:
+        return F("Missing or Wrong Packet");
     default:
         return F("Unknown");
     }
@@ -156,7 +157,7 @@ String MQTTMan::getStateString()
 
 bool MQTTMan::loop()
 {
-    if (state() != MQTT_DISCONNECTED)
+    if (lastError() != LWMQTT_SUCCESS) // TODO to be verified for reliability
     {
         // evaluate connection status and call disconnected callback if needed
         // if we are not connected, reconnect ticker not started nor _needMqttReconnect flag raised and disconnected callback set
@@ -189,7 +190,7 @@ bool MQTTMan::loop()
 #endif
         }
 
-        return PubSubClient::loop();
+        return MQTTClient::loop();
     }
     return true;
 }

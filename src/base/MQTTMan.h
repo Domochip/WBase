@@ -9,12 +9,12 @@
 #endif
 
 #include <Ticker.h>
-#include <PubSubClient.h>
+#include <MQTT.h>
 
 #define CONNECTED_CALLBACK_SIGNATURE std::function<void(MQTTMan * mqttMan, bool firstConnection)>
 #define DISCONNECTED_CALLBACK_SIGNATURE std::function<void()>
 
-class MQTTMan : private PubSubClient
+class MQTTMan : private MQTTClient
 {
 private:
     char _username[64] = {0};
@@ -31,22 +31,21 @@ private:
 public:
     static void prepareTopic(String &topic);
 
-    using PubSubClient::setClient;
-    using PubSubClient::setServer;
+    using MQTTClient::begin;
     MQTTMan &setConnectedAndWillTopic(const char *topic);
     MQTTMan &setConnectedCallback(CONNECTED_CALLBACK_SIGNATURE connectedCallback);
     MQTTMan &setDisconnectedCallback(DISCONNECTED_CALLBACK_SIGNATURE disconnectedCallback);
-    using PubSubClient::setCallback;
+    using MQTTClient::onMessageAdvanced;
     bool connect(const char *username = nullptr, const char *password = nullptr);
-    using PubSubClient::connected;
+    using MQTTClient::connected;
     void disconnect();
-    using PubSubClient::publish;
+    using MQTTClient::publish;
     bool publishToConnectedTopic(const char *payload);
-    using PubSubClient::state;
     String getStateString();
-    using PubSubClient::subscribe;
-    using PubSubClient::setBufferSize;
+    using MQTTClient::subscribe;
     bool loop();
+
+    MQTTMan(int readBufSize, int writeBufSize) : MQTTClient(readBufSize, writeBufSize) {};
 };
 
 #endif
