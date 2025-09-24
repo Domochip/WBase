@@ -40,15 +40,11 @@ public:
     bool connect(const char *username = nullptr, const char *password = nullptr);
     using PubSubClient::connected;
     void disconnect();
-    using PubSubClient::beginPublish;
-    using PubSubClient::endPublish;
     using PubSubClient::publish;
     bool publishToConnectedTopic(const char *payload);
-    using PubSubClient::publish_P;
     using PubSubClient::state;
     String getStateString();
     using PubSubClient::subscribe;
-    using PubSubClient::getBufferSize;
     using PubSubClient::setBufferSize;
     bool loop();
 };
