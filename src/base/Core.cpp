@@ -146,7 +146,9 @@ void Core::appInitWebServer(WebServer &server)
         {
           uint8_t percent = (progress * 100) / total;
           LOG_SERIAL_PRINTF_P(PSTR("Progress: %d%%\n"), percent);
-          server.sendContent((String(F("p:")) + percent + '\n').c_str());
+          char pct[10];
+          snprintf_P(pct, sizeof(pct), PSTR("p:%d\n"), percent);
+          server.sendContent(pct);
         };
 
         // Call the updateFirmware function with the progress callback
