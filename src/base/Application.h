@@ -62,7 +62,7 @@ public:
   Application(AppId appId);
 
   static char getAppIdChar(AppId appId);
-  static String getAppIdName(AppId appId);
+  static const __FlashStringHelper *getAppIdName(AppId appId);
   String getStatusJSON();
   void init(bool skipExistingConfig);
   void initWebServer(WebServer &server);

@@ -12,7 +12,7 @@ char Application::getAppIdChar(AppId appId)
   return '0' + appId;
 }
 
-String Application::getAppIdName(AppId appId)
+const __FlashStringHelper *Application::getAppIdName(AppId appId)
 {
   if (appId == CoreApp)
     return F("Core");
@@ -336,7 +336,7 @@ void Application::init(bool skipExistingConfig)
 {
   bool result = true;
 
-  LOG_SERIAL_PRINTF_P(PSTR("Start %s : "), getAppIdName(_appId).c_str());
+  LOG_SERIAL_PRINTF_P(PSTR("Start %s : "), (const char *)getAppIdName(_appId));
 
   setConfigDefaultValues();
 
@@ -438,7 +438,7 @@ void Application::run()
 {
   if (_reInit)
   {
-    LOG_SERIAL_PRINTF_P(PSTR("ReStart %s : "), getAppIdName(_appId).c_str());
+    LOG_SERIAL_PRINTF_P(PSTR("ReStart %s : "), (const char *)getAppIdName(_appId));
 
     if (appInit(true))
       LOG_SERIAL_PRINTLN(F("OK"));
