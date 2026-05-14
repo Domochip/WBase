@@ -162,6 +162,27 @@ bool MQTTMan::publishToConnectedTopic(const char *payload)
     return false;
 }
 
+bool MQTTMan::publish(const char *topic, const JsonDocument &jsonDoc, bool retained)
+{
+    const size_t payloadLen = measureJson(jsonDoc);
+    if (!beginPublish(topic, payloadLen, retained))
+        return false;
+
+    struct MQTTWriter
+    {
+        MQTTMan &mqtt;
+
+        size_t write(uint8_t c) { return mqtt.write(c); }
+        size_t write(const uint8_t *buffer, size_t size) { return mqtt.write(buffer, size); }
+    } writer{*this};
+
+    const size_t written = serializeJson(jsonDoc, writer);
+    if (written != payloadLen)
+        return false;
+
+    return endPublish();
+}
+
 const __FlashStringHelper *MQTTMan::getStateString()
 {
     switch (state())
