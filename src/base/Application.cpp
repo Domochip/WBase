@@ -72,13 +72,12 @@ bool Application::loadConfig()
 
 bool Application::getLastestUpdateInfo(String &version, String &title, String &releaseDate, String &summary)
 {
-  String githubURL = F("https://api.github.com/repos/" CUSTOM_APP_MANUFACTURER "/" CUSTOM_APP_MODEL "/releases/latest");
 
   WiFiClientSecure clientSecure;
   HTTPClient http;
 
   clientSecure.setInsecure();
-  http.begin(clientSecure, githubURL);
+  http.begin(clientSecure, String(F("https://api.github.com/repos/" CUSTOM_APP_MANUFACTURER "/" CUSTOM_APP_MODEL "/releases/latest")));
   int httpCode = http.GET();
 
   // check for http error
