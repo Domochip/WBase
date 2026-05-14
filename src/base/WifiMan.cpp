@@ -12,7 +12,12 @@ void WifiMan::enableAP(bool force = false)
   {
     WiFi.enableAP(true);
     WiFi.softAP(F(DEFAULT_AP_SSID), F(DEFAULT_AP_PSK), _apChannel);
-    // Start DNS server
+    // Free existing DNS server if any, and start a new one
+    if (_dnsServer)
+    {
+      _dnsServer->stop();
+      delete _dnsServer;
+    }
     _dnsServer = new DNSServer();
     _dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
     while (WiFi.softAPIP() == INADDR_NONE)
