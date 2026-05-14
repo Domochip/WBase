@@ -162,7 +162,7 @@ bool MQTTMan::publishToConnectedTopic(const char *payload)
     return false;
 }
 
-String MQTTMan::getStateString()
+const __FlashStringHelper *MQTTMan::getStateString()
 {
     switch (state())
     {

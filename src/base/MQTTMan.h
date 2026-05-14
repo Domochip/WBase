@@ -46,7 +46,7 @@ public:
     bool publishToConnectedTopic(const char *payload);
     using PubSubClient::publish_P;
     using PubSubClient::state;
-    String getStateString();
+    const __FlashStringHelper *getStateString();
     using PubSubClient::subscribe;
     using PubSubClient::getBufferSize;
     using PubSubClient::setBufferSize;
