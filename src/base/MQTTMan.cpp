@@ -71,15 +71,15 @@ bool MQTTMan::connect(bool firstConnection)
 #endif
 
     // generate clientID
-    String clientID(F(CUSTOM_APP_MODEL));
-    clientID += sn;
+    char clientID[sizeof(CUSTOM_APP_MODEL) + 9];
+    snprintf_P(clientID, sizeof(clientID), PSTR(CUSTOM_APP_MODEL "%s"), sn);
 
     // Connect
     char *username = (_username[0] ? _username : nullptr);
     char *password = (_username[0] ? _password : nullptr);
     char *willTopic = (_connectedAndWillTopic[0] ? _connectedAndWillTopic : nullptr);
     const char *willMessage = (_connectedAndWillTopic[0] ? "0" : nullptr);
-    PubSubClient::connect(clientID.c_str(), username, password, willTopic, 0, true, willMessage);
+    PubSubClient::connect(clientID, username, password, willTopic, 0, true, willMessage);
 
     if (connected())
     {
