@@ -291,7 +291,9 @@ bool Application::updateFirmware(const char *version, String &retMsg, std::funct
   WiFiClient *stream = https.getStreamPtr();
   int contentLength = https.getSize();
 
-  LOG_SERIAL_PRINTF_P(PSTR("Update Start: %s (Online Update)\n"), (String(F(CUSTOM_APP_MODEL)) + '.' + version + F(".bin")).c_str());
+  const char *fwName = strrchr(fwUrl, '/');
+  fwName = fwName ? fwName + 1 : fwUrl;
+  LOG_SERIAL_PRINTF_P(PSTR("Update Start: %s (Online Update)\n"), fwName);
 
   if (progressCallback)
     Update.onProgress(progressCallback);
