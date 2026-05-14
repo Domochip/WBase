@@ -121,7 +121,7 @@ void WBase::appRun()
 
   if (currentMillis - lastEvtSrcSentMillis >= 10000)
   {                                                                   // Check if it's time to send a new event
-    _eventSourceMan.eventSourceBroadcast(F("{\"Hello\":\"World\"}")); // Send a message to all connected clients
+    _eventSourceMan.eventSourceBroadcast("{\"Hello\":\"World\"}"); // Send a message to all connected clients
     lastEvtSrcSentMillis = currentMillis;
   }
 
