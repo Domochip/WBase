@@ -70,8 +70,9 @@ bool Application::loadConfig()
   return result;
 }
 
-bool Application::getLastestUpdateInfo(String &version, String &title, String &releaseDate, String &summary)
+bool Application::getLastestUpdateInfo(char *version, char *title, char *releaseDate, char *summary)
 {
+  version[0] = title[0] = releaseDate[0] = summary[0] = '\0';
 
   WiFiClientSecure clientSecure;
   HTTPClient http;
@@ -92,12 +93,10 @@ bool Application::getLastestUpdateInfo(String &version, String &title, String &r
 
   // We need to parse the JSON response without loading the whole response in memory
 
-  uint8_t maxKeyLength = 16; // longest key is "\"published_at\":"" =>15 chars
-  String keyBuffer;          // Shifting buffer used to find keys
-  uint8_t treeLevel = 0;     // used to skip unwanted data
-  bool keyFound = false;     // used to know if we found a key we are looking for
-  String *targetString = nullptr;
-  size_t targetStringSize = 0;
+  const uint8_t maxKeyLength = 16; // longest key is "\"published_at\":"" => 15 chars
+  char keyBuffer[17] = {0};        // Shifting buffer used to find keys
+  uint8_t keyLen = 0;              // current length of the key in the buffer (up to maxKeyLength)
+  uint8_t treeLevel = 0;           // used to skip unwanted data
 
   // sometime the stream is not yet ready (no data available yet)
   for (byte i = 0; i < 200 && stream->available() == 0; i++) // available include an optimistic_yield of 100us
@@ -121,87 +120,104 @@ bool Application::getLastestUpdateInfo(String &version, String &title, String &r
       continue;
 
     // if keyBuffer is full, shift it to the left by one character
-    if (keyBuffer.length() == maxKeyLength)
-      keyBuffer.remove(0, 1);
+    if (keyLen == maxKeyLength)
+    {
+      memmove(keyBuffer, keyBuffer + 1, maxKeyLength - 1);
+      keyLen = maxKeyLength - 1;
+    }
+    // and add the new character at the end
+    keyBuffer[keyLen++] = c;
+    keyBuffer[keyLen] = '\0';
 
-    // add the new character at the end
-    keyBuffer.concat(c);
+    if (c != ':')
+      continue;
 
-    keyFound = false;
+    char *targetPtr = nullptr;
+    size_t targetMaxLen = 0;
 
     // if we found the key "tag_name"
-    if (c == ':' && keyBuffer.endsWith(F("\"tag_name\":")))
+    if (keyLen >= 11 && memcmp(keyBuffer + keyLen - 11, "\"tag_name\":", 11) == 0)
     {
-      keyFound = true;
-      targetString = &version;
-      targetStringSize = 9;
+      targetPtr = version;
+      targetMaxLen = 9;
     }
-
     // if we found the key "name"
-    if (c == ':' && keyBuffer.endsWith(F("\"name\":")))
+    else if (keyLen >= 7 && memcmp(keyBuffer + keyLen - 7, "\"name\":", 7) == 0)
     {
-      keyFound = true;
-      targetString = &title;
-      targetStringSize = 63;
+      targetPtr = title;
+      targetMaxLen = 63;
     }
-
     // if we found the key "published_at"
-    if (c == ':' && keyBuffer.endsWith(F("\"published_at\":")))
+    else if (keyLen >= 15 && memcmp(keyBuffer + keyLen - 15, "\"published_at\":", 15) == 0)
     {
-      keyFound = true;
-      targetString = &releaseDate;
-      targetStringSize = 10;
+      targetPtr = releaseDate;
+      targetMaxLen = 10;
     }
-
     // if we found the key "body"
-    if (c == ':' && keyBuffer.endsWith(F("\"body\":")))
+    else if (keyLen >= 7 && memcmp(keyBuffer + keyLen - 7, "\"body\":", 7) == 0)
     {
-      keyFound = true;
-      targetString = &summary;
-      targetStringSize = 255;
+      targetPtr = summary;
+      targetMaxLen = 255;
     }
 
-    if (keyFound)
+    // if this is not a key we are looking for, continue
+    if (!targetPtr)
+      continue;
+
+    //otherwise prepare target buffer
+    targetPtr[0] = '\0';
+    size_t curLen = 0;
+
+    // skip until opening doublequote
+    while (stream->available() && stream->read() != '"')
+      ;
+
+    // for title, skip version prefix up to first space
+    if (targetPtr == title)
+      while (stream->available() && stream->read() != ' ')
+        ;
+
+    // read the value
+    while (stream->available())
     {
-      // read until the next quote (should be next to semicolon)
-      stream->readStringUntil('"');
+      c = stream->read();
 
-      // for name/title key, skip text until the first space
-      if (targetString == &title)
-        stream->readStringUntil(' ');
+      // endsWithBackslash is used to handle escaped characters in JSON (e.g. \n, \r, \") and avoid stopping at an escaped double quote
+      bool endsWithBackslash = (curLen > 0 && targetPtr[curLen - 1] == '\\');
 
-      // read the value
-      while (stream->available())
+      if (c == '"' && !endsWithBackslash)
+        break;
+
+      if (endsWithBackslash)
       {
-        c = stream->read();
+        if (c == 'n')
+          targetPtr[curLen - 1] = '\n';
+        else if (c == 'r')
+          targetPtr[curLen - 1] = '\r';
+        else if (c == '"')
+          targetPtr[curLen - 1] = '"';
+      }
+      else if (curLen < targetMaxLen)
+      {
+        targetPtr[curLen++] = c;
+        targetPtr[curLen] = '\0';
+      }
 
-        if (c == '"' && !targetString->endsWith(F("\\")))
-          break;
-
-        if (targetString->endsWith(F("\\")) && c == 'n')
-          (*targetString)[targetString->length() - 1] = '\n';
-        else if (targetString->endsWith(F("\\")) && c == 'r')
-          (*targetString)[targetString->length() - 1] = '\r';
-        else if (targetString->endsWith(F("\\")) && c == '"')
-          (*targetString)[targetString->length() - 1] = '"';
-        else if (targetString->length() < targetStringSize)
-          targetString->concat(c);
-
-        // for summary, stop at "\r\n\r\n##"
-        if (targetString == &summary && targetString->endsWith(F("\r\n\r\n##")))
-        {
-          // remove the last 6 characters
-          targetString->remove(targetString->length() - 6);
-          // avoid adding more text in summary
-          targetStringSize = targetString->length();
-        }
+      // for summary, stop at first section break "\r\n\r\n##"
+      if (targetPtr == summary && curLen >= 6 && memcmp(targetPtr + curLen - 6, "\r\n\r\n##", 6) == 0)
+      {
+        // remove the last 6 characters
+        curLen -= 6;
+        targetPtr[curLen] = '\0';
+        // avoid adding more text in summary
+        targetMaxLen = curLen;
       }
     }
   }
 
   http.end();
 
-  return version.length() > 0;
+  return version[0] != '\0';
 }
 
 String Application::getLatestUpdateInfoJson(bool forWebPage /* = false */)
@@ -210,14 +226,17 @@ String Application::getLatestUpdateInfoJson(bool forWebPage /* = false */)
 
   doc[F("installed_version")] = VERSION;
 
-  String version, title, releaseDate, summary;
+  char version[10], title[64], releaseDate[11], summary[256];
 
   if (getLastestUpdateInfo(version, title, releaseDate, summary))
   {
     doc[F("latest_version")] = version;
     doc[F("title")] = title;
     doc[F("release_summary")] = summary;
-    doc[F("release_url")] = String(F("https://github.com/" CUSTOM_APP_MANUFACTURER "/" CUSTOM_APP_MODEL "/releases/tag/")) + version;
+
+    char releaseUrl[128];
+    snprintf_P(releaseUrl, sizeof(releaseUrl), PSTR("https://github.com/" CUSTOM_APP_MANUFACTURER "/" CUSTOM_APP_MODEL "/releases/tag/%s"), version);
+    doc[F("release_url")] = releaseUrl;
 
     if (forWebPage)
       doc[F("release_date")] = releaseDate;

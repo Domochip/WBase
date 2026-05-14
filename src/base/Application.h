@@ -43,7 +43,7 @@ protected:
   bool saveConfig();
   bool loadConfig();
 
-  static bool getLastestUpdateInfo(String &version, String &title, String &releaseDate, String &summary);
+  static bool getLastestUpdateInfo(char *version, char *title, char *releaseDate, char *summary);
   static String getLatestUpdateInfoJson(bool forWebPage = false);
   static bool updateFirmware(const char *version, String &retMsg, std::function<void(size_t, size_t)> progressCallback = nullptr);
 
