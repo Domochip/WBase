@@ -28,7 +28,9 @@ String Core::generateStatusJSON()
   doc[F("sn")] = sn;
   doc[F("baseversion")] = BASE_VERSION;
   doc[F("version")] = VERSION;
-  doc[F("uptime")] = String((byte)(minutes / 1440)) + 'd' + (byte)(minutes / 60 % 24) + 'h' + (byte)(minutes % 60) + 'm';
+  char uptime[12];
+  snprintf_P(uptime, sizeof(uptime), PSTR("%dd%dh%dm"), (byte)(minutes / 1440), (byte)(minutes / 60 % 24), (byte)(minutes % 60));
+  doc[F("uptime")] = uptime;
   doc[F("freeheap")] = ESP.getFreeHeap();
 #ifdef ESP8266
   doc[F("freestack")] = ESP.getFreeContStack();
