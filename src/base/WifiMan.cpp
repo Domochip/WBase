@@ -62,7 +62,8 @@ void WifiMan::refreshWiFi()
         STATUS_LED_GOOD
 #endif
 
-        LOG_SERIAL_PRINTF_P(PSTR("Connected (%s) "), WiFi.localIP().toString().c_str());
+        char ipBuf[16];
+        LOG_SERIAL_PRINTF_P(PSTR("Connected (%s) "), formatIP(ipBuf, static_cast<uint32_t>(WiFi.localIP())));
       }
       else // connection failed
       {
@@ -87,7 +88,8 @@ void WifiMan::refreshWiFi()
     STATUS_LED_GOOD
 #endif
 
-    LOG_SERIAL_PRINTF_P(PSTR(" AP mode(%s - %s) "), F(DEFAULT_AP_SSID), WiFi.softAPIP().toString().c_str());
+    char ipBuf[16];
+    LOG_SERIAL_PRINTF_P(PSTR(" AP mode(%s - %s) "), F(DEFAULT_AP_SSID), formatIP(ipBuf, static_cast<uint32_t>(WiFi.softAPIP())));
   }
 }
 
