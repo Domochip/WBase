@@ -216,7 +216,11 @@ String WifiMan::generateStatusJSON()
   else
     doc[F("stationmode")] = F("off");
 
-  doc[F("mac")] = WiFi.macAddress();
+  uint8_t macBuf[6];
+  char mac[18];
+  WiFi.macAddress(macBuf);
+  snprintf_P(mac, sizeof(mac), PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), macBuf[0], macBuf[1], macBuf[2], macBuf[3], macBuf[4], macBuf[5]);
+  doc[F("mac")] = mac;
 
   String gs;
   serializeJson(doc, gs);
