@@ -2,26 +2,63 @@
 
 void MQTTMan::prepareTopic(String &topic)
 {
-    if (topic.indexOf(F("$sn$")) != -1)
+    // Build result in one pass into a fixed buffer
+    char result[128];
+    const char *src = topic.c_str();
+    char *dst = result;
+    const char *end = result + sizeof(result) - 2; // reserve 2 bytes: trailing '/' + '\0'
+
+    while (*src && dst < end)
     {
-        char sn[9];
+        if (src[0] == '$' && src[1] == 's' && src[2] == 'n' && src[3] == '$')
+        {
+            char sn[9];
 #ifdef ESP8266
-        sprintf_P(sn, PSTR("%08x"), ESP.getChipId());
+            sprintf_P(sn, PSTR("%08x"), ESP.getChipId());
 #else
-        sprintf_P(sn, PSTR("%08x"), (uint32_t)(ESP.getEfuseMac() << 40 >> 40));
+            sprintf_P(sn, PSTR("%08x"), (uint32_t)(ESP.getEfuseMac() << 40 >> 40));
 #endif
-        topic.replace(F("$sn$"), sn);
+            size_t len = strlen(sn);
+            if (dst + len > end)
+                len = end - dst;
+            memcpy(dst, sn, len);
+            dst += len;
+            src += 4;
+        }
+        else if (src[0] == '$' && src[1] == 'm' && src[2] == 'a' && src[3] == 'c' && src[4] == '$')
+        {
+            uint8_t macBuf[6];
+            char mac[18];
+            WiFi.macAddress(macBuf);
+            snprintf_P(mac, sizeof(mac), PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), macBuf[0], macBuf[1], macBuf[2], macBuf[3], macBuf[4], macBuf[5]);
+            size_t len = strlen(mac);
+            if (dst + len > end)
+                len = end - dst;
+            memcpy(dst, mac, len);
+            dst += len;
+            src += 5;
+        }
+        else if (src[0] == '$' && src[1] == 'm' && src[2] == 'o' && src[3] == 'd' && src[4] == 'e' && src[5] == 'l' && src[6] == '$')
+        {
+            const char *model = CUSTOM_APP_MODEL;
+            size_t len = strlen(model);
+            if (dst + len > end)
+                len = end - dst;
+            memcpy(dst, model, len);
+            dst += len;
+            src += 7;
+        }
+        else
+        {
+            *dst++ = *src++;
+        }
     }
 
-    if (topic.indexOf(F("$mac$")) != -1)
-        topic.replace(F("$mac$"), WiFi.macAddress());
+    if (dst > result && *(dst - 1) != '/')
+        *dst++ = '/';
+    *dst = '\0';
 
-    if (topic.indexOf(F("$model$")) != -1)
-        topic.replace(F("$model$"), CUSTOM_APP_MODEL);
-
-    // check for final slash
-    if (topic.length() && topic.charAt(topic.length() - 1) != '/')
-        topic += '/';
+    topic = result;
 }
 
 bool MQTTMan::connect(bool firstConnection)
