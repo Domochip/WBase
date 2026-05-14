@@ -179,9 +179,9 @@ void Core::appInitWebServer(WebServer &server)
         {
           msg = F("Update failed: ");
 #ifdef ESP8266
-          msg = Update.getErrorString();
+          msg += Update.getErrorString();
 #else
-          msg = Update.errorString();
+          msg += Update.errorString();
 #endif
           Update.clearError();
           // Update failed so restart to Run custom Application in loop
