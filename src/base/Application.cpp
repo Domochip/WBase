@@ -25,7 +25,9 @@ const __FlashStringHelper *Application::getAppIdName(AppId appId)
 
 bool Application::saveConfig()
 {
-  File configFile = LittleFS.open(String('/') + getAppIdName(_appId) + F(".json"), "w");
+  char configPath[32];
+  snprintf_P(configPath, sizeof(configPath), PSTR("/%s.json"), (const char *)getAppIdName(_appId));
+  File configFile = LittleFS.open(configPath, "w");
   if (!configFile)
   {
     LOG_SERIAL_PRINTLN(F("Failed to open config file for writing"));
@@ -44,7 +46,9 @@ bool Application::loadConfig()
     return true;
 
   bool result = false;
-  File configFile = LittleFS.open(String('/') + getAppIdName(_appId) + F(".json"), "r");
+  char configPath[32];
+  snprintf_P(configPath, sizeof(configPath), PSTR("/%s.json"), (const char *)getAppIdName(_appId));
+  File configFile = LittleFS.open(configPath, "r");
   if (configFile)
   {
 
