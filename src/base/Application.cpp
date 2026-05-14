@@ -276,8 +276,9 @@ bool Application::updateFirmware(const char *version, String &retMsg, std::funct
   {
     https.end();
 
-    retMsg = F("Failed to download file, httpCode: ");
-    retMsg += httpCode;
+    char retMsgBuf[48];
+    snprintf_P(retMsgBuf, sizeof(retMsgBuf), PSTR("Failed to download file, httpCode: %d"), httpCode);
+    retMsg = retMsgBuf;
 
     LOG_SERIAL_PRINTLN(retMsg);
 
