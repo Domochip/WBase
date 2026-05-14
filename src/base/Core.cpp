@@ -156,7 +156,11 @@ void Core::appInitWebServer(WebServer &server)
         if (SystemState::shouldReboot)
           server.sendContent(F("s:true\n"));
         else
-          server.sendContent(String(F("s:false\nm:")) + msg + '\n');
+        {
+          server.sendContent(F("s:false\nm:"));
+          server.sendContent(msg);
+          server.sendContent("\n");
+        }
 
         // finalize chunked response
         server.sendContent(emptyString);
