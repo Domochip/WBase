@@ -38,7 +38,7 @@ private:
   WiFiEventHandler _staDisconnectedHandler;
 #endif
   DNSServer *_dnsServer = nullptr;
-  int _apChannel = 2;
+  uint8_t _apChannel = 2;
   bool _needRefreshWifi = false;
   bool _stationConnectedToSoftAP = false;
   Ticker _refreshTicker;
