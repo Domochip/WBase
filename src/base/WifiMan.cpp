@@ -1,5 +1,11 @@
 #include "WifiMan.h"
 
+static const char *formatIP(char (&buf)[16], uint32_t v)
+{
+  snprintf_P(buf, sizeof(buf), PSTR("%u.%u.%u.%u"), (uint8_t)v, (uint8_t)(v >> 8), (uint8_t)(v >> 16), (uint8_t)(v >> 24));
+  return buf;
+}
+
 void WifiMan::enableAP(bool force = false)
 {
   if (!(WiFi.getMode() & WIFI_AP) || force)
@@ -171,20 +177,22 @@ String WifiMan::generateConfigJSON(bool forSaveFile = false)
   doc["h"] = hostname;
 
   doc[F("staticip")] = (ip ? 1 : 0);
+
+  char ipBuf[16];
   if (ip)
-    doc["ip"] = IPAddress(ip).toString();
+    doc["ip"] = formatIP(ipBuf, ip);
   if (gw)
-    doc["gw"] = IPAddress(gw).toString();
+    doc["gw"] = formatIP(ipBuf, gw);
   else
     doc["gw"] = F("0.0.0.0");
   if (mask)
-    doc[F("mask")] = IPAddress(mask).toString();
+    doc[F("mask")] = formatIP(ipBuf, mask);
   else
     doc[F("mask")] = F("0.0.0.0");
   if (dns1)
-    doc[F("dns1")] = IPAddress(dns1).toString();
+    doc[F("dns1")] = formatIP(ipBuf, dns1);
   if (dns2)
-    doc[F("dns2")] = IPAddress(dns2).toString();
+    doc[F("dns2")] = formatIP(ipBuf, dns2);
 
   String gc;
   serializeJson(doc, gc);
@@ -196,10 +204,12 @@ String WifiMan::generateStatusJSON()
 {
   JsonDocument doc;
 
+  char ipBuf[16];
+
   if ((WiFi.getMode() & WIFI_AP))
   {
     doc[F("apmode")] = F("on");
-    doc[F("apip")] = WiFi.softAPIP().toString();
+    doc[F("apip")] = formatIP(ipBuf, static_cast<uint32_t>(WiFi.softAPIP()));
   }
   else
     doc[F("apmode")] = F("off");
@@ -209,7 +219,7 @@ String WifiMan::generateStatusJSON()
     doc[F("stationmode")] = F("on");
     if (WiFi.isConnected())
     {
-      doc[F("stationip")] = WiFi.localIP().toString();
+      doc[F("stationip")] = formatIP(ipBuf, static_cast<uint32_t>(WiFi.localIP()));
       doc[F("stationipsource")] = ip ? F("Static IP") : F("DHCP");
     }
   }
