@@ -401,10 +401,10 @@ void WifiMan::appInitWebServer(WebServer &server)
                   wnl0["SSID"] = WiFi.SSID(i);
                   wnl0["RSSI"] = WiFi.RSSI(i);
                 }
-                String networksJSON;
-                serializeJson(doc, networksJSON);
-
-                server.send(200, F("text/json"), networksJSON);
+                server.setContentLength(measureJson(doc));
+                server.send(200, F("text/json"), "");
+                WiFiClient client = server.client();
+                serializeJson(doc, client);
                 WiFi.scanDelete();
               }
             });
