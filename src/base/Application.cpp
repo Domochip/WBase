@@ -259,14 +259,14 @@ bool Application::updateFirmware(const char *version, String &retMsg, std::funct
   WiFiClientSecure clientSecure;
   clientSecure.setInsecure();
 
-  String fwUrl(F("https://github.com/" CUSTOM_APP_MANUFACTURER "/" CUSTOM_APP_MODEL "/releases/download/"));
+  char fwUrl[200];
 #ifdef ESP8266
-  fwUrl = fwUrl + version + '/' + F(CUSTOM_APP_MODEL) + '.' + version + F(".bin");
+  snprintf_P(fwUrl, sizeof(fwUrl), PSTR("https://github.com/" CUSTOM_APP_MANUFACTURER "/" CUSTOM_APP_MODEL "/releases/download/%s/" CUSTOM_APP_MODEL ".%s.bin"), version, version);
 #else
-  fwUrl = fwUrl + version + '/' + F(CUSTOM_APP_MODEL) + F(".esp32") + '.' + version + F(".bin");
+  snprintf_P(fwUrl, sizeof(fwUrl), PSTR("https://github.com/" CUSTOM_APP_MANUFACTURER "/" CUSTOM_APP_MODEL "/releases/download/%s/" CUSTOM_APP_MODEL ".esp32.%s.bin"), version, version);
 #endif
 
-  LOG_SERIAL_PRINTF_P(PSTR("Trying to Update from URL: %s\n"), fwUrl.c_str());
+  LOG_SERIAL_PRINTF_P(PSTR("Trying to Update from URL: %s\n"), fwUrl);
 
   HTTPClient https;
   https.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
