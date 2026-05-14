@@ -36,34 +36,20 @@ bool WBase::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
 
 //------------------------------------------
 // Generate JSON from configuration properties
-String WBase::generateConfigJSON(bool forSaveFile = false)
+void WBase::fillConfigJSON(JsonDocument &doc, bool forSaveFile)
 {
-  JsonDocument doc;
-
   // TODO
   // doc["p1"] = property1;
   // doc["p2"] = property2;
-
-  String gc;
-  serializeJson(doc, gc);
-
-  return gc;
 }
 
 //------------------------------------------
 // Generate JSON of application status
-String WBase::generateStatusJSON()
+void WBase::fillStatusJSON(JsonDocument &doc)
 {
-  JsonDocument doc;
-
   // TODO
   // doc["p1"] = property1;
   // doc["p2"] = property2;
-
-  String gs;
-  serializeJson(doc, gs);
-
-  return gs;
 }
 
 //------------------------------------------

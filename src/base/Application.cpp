@@ -34,7 +34,9 @@ bool Application::saveConfig()
     return false;
   }
 
-  configFile.print(generateConfigJSON(true));
+  JsonDocument doc;
+  fillConfigJSON(doc, true);
+  serializeJson(doc, configFile);
   configFile.close();
   return true;
 }
@@ -224,10 +226,8 @@ bool Application::getLastestUpdateInfo(char *version, char *title, char *release
   return version[0] != '\0';
 }
 
-String Application::getLatestUpdateInfoJson(bool forWebPage /* = false */)
+void Application::fillLatestUpdateInfoJson(JsonDocument &doc, bool forWebPage /* = false */)
 {
-  JsonDocument doc;
-
   doc[F("installed_version")] = VERSION;
 
   char version[10], title[64], releaseDate[11], summary[256];
@@ -245,11 +245,6 @@ String Application::getLatestUpdateInfoJson(bool forWebPage /* = false */)
     if (forWebPage)
       doc[F("release_date")] = releaseDate;
   }
-
-  String info;
-  serializeJson(doc, info);
-
-  return info;
 }
 
 bool Application::updateFirmware(const char *version, String &retMsg, std::function<void(size_t, size_t)> progressCallback /* = nullptr */)
@@ -333,7 +328,11 @@ bool Application::updateFirmware(const char *version, String &retMsg, std::funct
 
 String Application::getStatusJSON()
 {
-  return generateStatusJSON();
+  JsonDocument doc;
+  fillStatusJSON(doc);
+  String s;
+  serializeJson(doc, s);
+  return s;
 }
 
 void Application::init(bool skipExistingConfig)
@@ -384,7 +383,12 @@ void Application::initWebServer(WebServer &server)
             {
               SERVER_KEEPALIVE_FALSE()
               server.sendHeader(F("Cache-Control"), F("no-cache"));
-              server.send(200, F("text/json"), generateStatusJSON());
+              JsonDocument doc;
+              fillStatusJSON(doc);
+              server.setContentLength(measureJson(doc));
+              server.send(200, F("text/json"), "");
+              WiFiClient client = server.client();
+              serializeJson(doc, client);
             });
 
   // JSON Config handler
@@ -394,7 +398,12 @@ void Application::initWebServer(WebServer &server)
             {
               SERVER_KEEPALIVE_FALSE()
               server.sendHeader(F("Cache-Control"), F("no-cache"));
-              server.send(200, F("text/json"), generateConfigJSON());
+              JsonDocument doc;
+              fillConfigJSON(doc);
+              server.setContentLength(measureJson(doc));
+              server.send(200, F("text/json"), "");
+              WiFiClient client = server.client();
+              serializeJson(doc, client);
             });
 
   sprintf_P(url, PSTR("/sc%c"), getAppIdChar(_appId));

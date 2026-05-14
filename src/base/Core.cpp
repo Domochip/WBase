@@ -10,11 +10,9 @@
 
 void Core::setConfigDefaultValues() {};
 bool Core::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false) { return true; };
-String Core::generateConfigJSON(bool forSaveFile = false) { return String(); };
-String Core::generateStatusJSON()
+void Core::fillConfigJSON(JsonDocument &doc, bool forSaveFile) {};
+void Core::fillStatusJSON(JsonDocument &doc)
 {
-  JsonDocument doc;
-
   char sn[9];
 #ifdef ESP8266
   sprintf_P(sn, PSTR("%08x"), ESP.getChipId());
@@ -38,11 +36,6 @@ String Core::generateStatusJSON()
 #else
   doc[F("freestack")] = uxTaskGetStackHighWaterMark(nullptr);
 #endif
-
-  String gs;
-  serializeJson(doc, gs);
-
-  return gs;
 }
 bool Core::appInit(bool reInit = false)
 {
@@ -127,7 +120,12 @@ void Core::appInitWebServer(WebServer &server)
       [this, &server]()
       {
         SERVER_KEEPALIVE_FALSE()
-        server.send(200, F("application/json"), getLatestUpdateInfoJson(true));
+        JsonDocument doc;
+        fillLatestUpdateInfoJson(doc, true);
+        server.setContentLength(measureJson(doc));
+        server.send(200, F("application/json"), "");
+        WiFiClient client = server.client();
+        serializeJson(doc, client);
       });
 
   // Update Firmware from Github ----------------------------------------------

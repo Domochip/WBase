@@ -169,10 +169,8 @@ bool WifiMan::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
   return true;
 }
 
-String WifiMan::generateConfigJSON(bool forSaveFile = false)
+void WifiMan::fillConfigJSON(JsonDocument &doc, bool forSaveFile)
 {
-  JsonDocument doc;
-
   doc["s"] = ssid;
 
   if (forSaveFile)
@@ -200,17 +198,10 @@ String WifiMan::generateConfigJSON(bool forSaveFile = false)
     doc[F("dns1")] = formatIP(ipBuf, dns1);
   if (dns2)
     doc[F("dns2")] = formatIP(ipBuf, dns2);
-
-  String gc;
-  serializeJson(doc, gc);
-
-  return gc;
 }
 
-String WifiMan::generateStatusJSON()
+void WifiMan::fillStatusJSON(JsonDocument &doc)
 {
-  JsonDocument doc;
-
   char ipBuf[16];
 
   if ((WiFi.getMode() & WIFI_AP))
@@ -238,11 +229,6 @@ String WifiMan::generateStatusJSON()
   WiFi.macAddress(macBuf);
   snprintf_P(mac, sizeof(mac), PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), macBuf[0], macBuf[1], macBuf[2], macBuf[3], macBuf[4], macBuf[5]);
   doc[F("mac")] = mac;
-
-  String gs;
-  serializeJson(doc, gs);
-
-  return gs;
 }
 
 bool WifiMan::appInit(bool reInit = false)
