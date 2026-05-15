@@ -72,7 +72,7 @@ extern "C" void custom_crash_callback(struct rst_info *rst_info, uint32_t stack,
 
 FS *CrashSaver::_fs = nullptr;
 
-char CrashSaver::_nextLogFilePath[128] = {0};
+char CrashSaver::_nextLogFilePath[LOG_FILE_PATH_LEN] = {0};
 
 void CrashSaver::init(FS &fs)
 {
@@ -126,8 +126,12 @@ void CrashSaver::iterateCrashLogFiles(std::function<void(uint16_t, const char *)
         {
             fileNumber++;
         }
-        const String fileName = dir.fileName();
-        callback(fileNumber, fileName.c_str());
+
+        char fullPath[LOG_FILE_PATH_LEN] = {0};
+        strncpy(fullPath, DEFAULT_DIR, sizeof(fullPath) - 1);
+        strncat(fullPath, dir.fileName().c_str(), sizeof(fullPath) - strlen(fullPath) - 1);
+
+        callback(fileNumber, fullPath);
         yield();
     }
 }
@@ -143,8 +147,11 @@ bool CrashSaver::clearAllLogs()
     Dir dir = _fs->openDir(DEFAULT_DIR);
     while (dir.next())
     {
-        const String fileName = dir.fileName();
-        if (!_fs->remove(fileName))
+        char fullPath[LOG_FILE_PATH_LEN] = {0};
+        strncpy(fullPath, DEFAULT_DIR, sizeof(fullPath) - 1);
+        strncat(fullPath, dir.fileName().c_str(), sizeof(fullPath) - strlen(fullPath) - 1);
+
+        if (!_fs->remove(fullPath))
         {
             allRemoved = false;
         }

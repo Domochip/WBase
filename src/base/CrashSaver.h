@@ -15,6 +15,7 @@ class CrashSaver
 {
 public:
     static constexpr const char *DEFAULT_DIR = "/crash/";
+    static constexpr unsigned LOG_FILE_PATH_LEN = 13; // "/crash/" + "65535" + '\0'
     static FS *_fs;
 
     CrashSaver() = delete;
@@ -28,7 +29,7 @@ public:
 
 private:
     static void calculateNextLogFilePath();
-    static char _nextLogFilePath[128];
+    static char _nextLogFilePath[LOG_FILE_PATH_LEN];
 };
 
 #endif
