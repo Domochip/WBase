@@ -33,8 +33,12 @@ void Core::fillStatusJSON(JsonDocument &doc)
 #ifdef ESP8266
   doc[F("freestack")] = ESP.getFreeContStack();
   doc[F("flashsize")] = ESP.getFlashChipRealSize();
+
+  uint32_t crashCount = SaveCrashSpiffs.count();
+  doc[F("crashcount")] = crashCount;
 #else
   doc[F("freestack")] = uxTaskGetStackHighWaterMark(nullptr);
+  doc[F("crashcount")] = 0;
 #endif
 }
 bool Core::appInit(bool reInit = false)
