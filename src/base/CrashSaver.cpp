@@ -27,11 +27,23 @@ extern "C" void custom_crash_callback(struct rst_info *rst_info, uint32_t stack,
     }
     // if the file is (now) a valid file
 
-    // maximum tmpBuffer size needed is 83, so 100 should be enough
+    // maximum tmpBuffer size needed is 93 (UTC datetime crash line), so 100 should be enough
     char tmpBuffer[100];
 
-    // max. 65 chars of Crash time, reason, exception
-    sprintf_P(tmpBuffer, PSTR("Crashed at %d ms\nRestart reason: %d\nException cause: %d\n"), crashTime, rst_info->reason, rst_info->exccause);
+    if (CrashSaver::_ntpEpoch != 0)
+    {
+        time_t crashEpoch = (time_t)(CrashSaver::_ntpEpoch + (crashTime - CrashSaver::_ntpMillis) / 1000);
+        struct tm tmInfo;
+        gmtime_r(&crashEpoch, &tmInfo);
+        sprintf_P(tmpBuffer, PSTR("Crashed at %04d-%02d-%02d %02d:%02d:%02d UTC\nRestart reason: %d\nException cause: %d\n"),
+                  tmInfo.tm_year + 1900, tmInfo.tm_mon + 1, tmInfo.tm_mday,
+                  tmInfo.tm_hour, tmInfo.tm_min, tmInfo.tm_sec,
+                  rst_info->reason, rst_info->exccause);
+    }
+    else
+    {
+        sprintf_P(tmpBuffer, PSTR("Crashed at %lu ms (no NTP)\nRestart reason: %d\nException cause: %d\n"), crashTime, rst_info->reason, rst_info->exccause);
+    }
     logFile.write(tmpBuffer, strlen(tmpBuffer));
 
     // 83 chars of epc1, epc2, epc3, excvaddr, depc info + 13 chars of >stack>
@@ -71,12 +83,23 @@ extern "C" void custom_crash_callback(struct rst_info *rst_info, uint32_t stack,
 }
 
 FS *CrashSaver::_fs = nullptr;
+uint32_t CrashSaver::_ntpEpoch = 0;
+uint32_t CrashSaver::_ntpMillis = 0;
 
 char CrashSaver::_nextLogFilePath[LOG_FILE_PATH_LEN] = {0};
 
-void CrashSaver::init(FS &fs)
+void CrashSaver::init(FS &fs, const char *ntpServer)
 {
     _fs = &fs;
+    configTime(0, 0, ntpServer);
+    settimeofday_cb([]()
+                    {
+        time_t t = time(nullptr);
+        if (t > 1000000000UL)
+        {
+            _ntpEpoch = (uint32_t)t;
+            _ntpMillis = millis();
+        } });
     calculateNextLogFilePath();
 }
 
