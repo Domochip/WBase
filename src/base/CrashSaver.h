@@ -10,7 +10,6 @@ Inspired by https://github.com/brainelectronics/EspSaveCrashSpiffs
 #include <FS.h>
 #include <functional>
 #include <user_interface.h>
-#include <coredecls.h>
 
 class CrashSaver
 {
