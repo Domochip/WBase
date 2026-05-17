@@ -9,6 +9,7 @@ void MQTTMan::prepareTopic(const char *topic, char (&result)[128])
     const char *src = topic;
     char *dst = result;
     char *end = result + sizeof(result) - 2; // reserve 2 bytes: trailing '/' + '\0'
+    bool overflow = false;
 
     char sn[9];
 #ifdef ESP8266
@@ -54,15 +55,24 @@ void MQTTMan::prepareTopic(const char *topic, char (&result)[128])
         }
 
         if (dst + replacementLen > end)
+        {
+            overflow = true;
             replacementLen = end - dst;
+        }
 
         memcpy(dst, replacement, replacementLen);
         dst += replacementLen;
     }
 
+    if (*src)
+        overflow = true;
+
     if (dst > result && *(dst - 1) != '/')
         *dst++ = '/';
     *dst = '\0';
+
+    if (overflow)
+        LOG_SERIAL_PRINTLN(F("/!\\MQTT prepareTopic overflow/!\\"));
 }
 
 void MQTTMan::prepareTopic(String &topic)
