@@ -3,9 +3,7 @@
 extern "C" void custom_crash_callback(struct rst_info *rst_info, uint32_t stack, uint32_t stack_end)
 {
     if (CrashSaver::_fs == nullptr)
-    {
         return;
-    }
 
     FS &fs = *CrashSaver::_fs;
 
@@ -22,9 +20,8 @@ extern "C" void custom_crash_callback(struct rst_info *rst_info, uint32_t stack,
     }
 
     if (!logFile)
-    {
         return;
-    }
+
     // if the file is (now) a valid file
 
     // maximum tmpBuffer size needed is 93 (UTC datetime crash line), so 100 should be enough
@@ -41,9 +38,8 @@ extern "C" void custom_crash_callback(struct rst_info *rst_info, uint32_t stack,
                   rst_info->reason, rst_info->exccause);
     }
     else
-    {
         sprintf_P(tmpBuffer, PSTR("Crashed at %lu ms (no NTP)\nRestart reason: %d\nException cause: %d\n"), crashTime, rst_info->reason, rst_info->exccause);
-    }
+
     logFile.write(tmpBuffer, strlen(tmpBuffer));
 
     // 83 chars of epc1, epc2, epc3, excvaddr, depc info + 13 chars of >stack>
@@ -74,9 +70,7 @@ extern "C" void custom_crash_callback(struct rst_info *rst_info, uint32_t stack,
             *p3);
 
         if (writtenLen > 0)
-        {
             logFile.write(tmpBuffer, writtenLen);
-        }
     }
     logFile.write("<<<stack<<<\n\n");
     logFile.close();
@@ -107,9 +101,7 @@ void CrashSaver::calculateNextLogFilePath()
 {
     uint16_t nextFileIndex = count();
     if (nextFileIndex < UINT16_MAX)
-    {
         nextFileIndex++;
-    }
 
     snprintf(_nextLogFilePath, sizeof(_nextLogFilePath), "%s%u", DEFAULT_DIR, nextFileIndex);
 }
@@ -117,18 +109,14 @@ void CrashSaver::calculateNextLogFilePath()
 uint16_t CrashSaver::count()
 {
     if (_fs == nullptr)
-    {
         return 0;
-    }
 
     uint16_t fileCount = 0;
     Dir dir = _fs->openDir(DEFAULT_DIR);
     while (dir.next())
     {
         if (fileCount < UINT16_MAX)
-        {
             fileCount++;
-        }
     }
 
     return fileCount;
@@ -136,19 +124,15 @@ uint16_t CrashSaver::count()
 
 void CrashSaver::iterateCrashLogFiles(std::function<void(uint16_t, const char *)> callback)
 {
-    if (!callback || _fs == nullptr)
-    {
+    if (_fs == nullptr || !callback)
         return;
-    }
 
     Dir dir = _fs->openDir(DEFAULT_DIR);
     uint16_t fileNumber = 0;
     while (dir.next())
     {
         if (fileNumber < UINT16_MAX)
-        {
             fileNumber++;
-        }
 
         char fullPath[LOG_FILE_PATH_LEN] = {0};
         strncpy(fullPath, DEFAULT_DIR, sizeof(fullPath) - 1);
@@ -162,9 +146,7 @@ void CrashSaver::iterateCrashLogFiles(std::function<void(uint16_t, const char *)
 bool CrashSaver::clearAllLogs()
 {
     if (_fs == nullptr)
-    {
         return false;
-    }
 
     bool allRemoved = true;
     Dir dir = _fs->openDir(DEFAULT_DIR);
@@ -175,9 +157,7 @@ bool CrashSaver::clearAllLogs()
         strncat(fullPath, dir.fileName().c_str(), sizeof(fullPath) - strlen(fullPath) - 1);
 
         if (!_fs->remove(fullPath))
-        {
             allRemoved = false;
-        }
     }
 
     calculateNextLogFilePath();
