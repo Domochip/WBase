@@ -1,17 +1,14 @@
 #include "MQTTMan.h"
 
-void MQTTMan::prepareTopic(const char *topic, char *result, size_t resultSize)
+void MQTTMan::prepareTopic(const char *topic, char (&result)[128])
 {
-    if (!result || resultSize == 0)
-        return;
-
     result[0] = '\0';
-    if (!topic || resultSize == 1)
+    if (!topic)
         return;
 
     const char *src = topic;
     char *dst = result;
-    char *end = result + resultSize - 2; // reserve 2 bytes: trailing '/' + '\0'
+    char *end = result + sizeof(result) - 2; // reserve 2 bytes: trailing '/' + '\0'
 
     char sn[9];
 #ifdef ESP8266
@@ -71,7 +68,7 @@ void MQTTMan::prepareTopic(const char *topic, char *result, size_t resultSize)
 void MQTTMan::prepareTopic(String &topic)
 {
     char result[128];
-    prepareTopic(topic.c_str(), result, sizeof(result));
+    prepareTopic(topic.c_str(), result);
     topic = result;
 }
 
