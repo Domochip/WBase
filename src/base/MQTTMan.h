@@ -49,9 +49,9 @@ public:
     using PubSubClient::publish_P;
     using PubSubClient::state;
     const __FlashStringHelper *getStateString();
-    using PubSubClient::subscribe;
     using PubSubClient::getBufferSize;
     using PubSubClient::setBufferSize;
+    using PubSubClient::subscribe;
     bool loop();
 };
 
