@@ -78,13 +78,6 @@ void MQTTMan::prepareTopic(const char *topic, char *result, size_t resultSize)
         LOG_SERIAL_PRINTLN(F("/!\\MQTT prepareTopic overflow/!\\"));
 }
 
-void MQTTMan::prepareTopic(String &topic)
-{
-    char result[128];
-    prepareTopic(topic.c_str(), result, sizeof(result));
-    topic = result;
-}
-
 bool MQTTMan::connect(bool firstConnection)
 {
     char sn[9];

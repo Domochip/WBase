@@ -31,7 +31,6 @@ private:
 
 public:
     static void prepareTopic(const char *topic, char *result, size_t resultSize);
-    static void prepareTopic(String &topic);
 
     using PubSubClient::setClient;
     using PubSubClient::setServer;
