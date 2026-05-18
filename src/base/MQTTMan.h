@@ -44,7 +44,7 @@ public:
     using PubSubClient::beginPublish;
     using PubSubClient::endPublish;
     using PubSubClient::publish;
-    bool publish(const char *topic, const JsonDocument &jsonDoc, bool retained = false);
+    bool publish(const char *topic, JsonVariantConst payload, bool retained = false);
     bool publishToConnectedTopic(const char *payload);
     using PubSubClient::publish_P;
     using PubSubClient::state;
