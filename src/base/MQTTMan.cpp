@@ -11,7 +11,7 @@ void MQTTMan::prepareTopic(const char *topic, char *result, size_t resultSize)
 
     const char *src = topic;
     char *dst = result;
-    char *end = result + resultSize - 2; // reserve 2 bytes: trailing '/' + '\0'
+    char *end = result + resultSize - 1; // reserve 1 byte: '\0'
     bool overflow = false;
 
     char sn[9];
@@ -70,8 +70,8 @@ void MQTTMan::prepareTopic(const char *topic, char *result, size_t resultSize)
     if (*src)
         overflow = true;
 
-    if (dst > result && *(dst - 1) != '/')
-        *dst++ = '/';
+    if (dst > result && *(dst - 1) == '/')
+        --dst;
     *dst = '\0';
 
     if (overflow)
