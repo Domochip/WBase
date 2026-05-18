@@ -1,14 +1,17 @@
 #include "MQTTMan.h"
 
-void MQTTMan::prepareTopic(const char *topic, char (&result)[128])
+void MQTTMan::prepareTopic(const char *topic, char *result, size_t resultSize)
 {
+    if (!result || resultSize == 0)
+        return;
+
     result[0] = '\0';
-    if (!topic)
+    if (!topic || resultSize == 1)
         return;
 
     const char *src = topic;
     char *dst = result;
-    char *end = result + sizeof(result) - 2; // reserve 2 bytes: trailing '/' + '\0'
+    char *end = result + resultSize - 2; // reserve 2 bytes: trailing '/' + '\0'
     bool overflow = false;
 
     char sn[9];
@@ -78,7 +81,7 @@ void MQTTMan::prepareTopic(const char *topic, char (&result)[128])
 void MQTTMan::prepareTopic(String &topic)
 {
     char result[128];
-    prepareTopic(topic.c_str(), result);
+    prepareTopic(topic.c_str(), result, sizeof(result));
     topic = result;
 }
 
