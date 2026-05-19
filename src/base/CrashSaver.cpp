@@ -1,4 +1,5 @@
 #include "CrashSaver.h"
+#include "../Main.h" // for VERSION_NUMBER and CUSTOM_APP_MODEL
 
 #ifdef ESP8266
 
@@ -32,6 +33,10 @@ extern "C" void custom_crash_callback(struct rst_info *rst_info, uint32_t stack,
 
     // maximum tmpBuffer size needed is 93 (UTC datetime crash line), so 100 should be enough
     char tmpBuffer[100];
+
+    int writtenLen = snprintf_P(tmpBuffer, sizeof(tmpBuffer), PSTR("Model: %s\nVersion: %s\n"), CUSTOM_APP_MODEL, VERSION_NUMBER);
+    if (writtenLen > 0)
+        logFile.write(tmpBuffer, writtenLen);
 
     if (CrashSaver::_ntpEpoch != 0)
     {
