@@ -65,15 +65,7 @@ extern "C" void custom_crash_callback(struct rst_info *rst_info, uint32_t stack,
         uint32_t *p2 = (uint32_t *)(stack + i + 8);
         uint32_t *p3 = (uint32_t *)(stack + i + 12);
 
-        int writtenLen = snprintf_P(
-            tmpBuffer,
-            sizeof(tmpBuffer),
-            PSTR("%08x: %08x %08x %08x %08x\n"),
-            stack + i,
-            *p0,
-            *p1,
-            *p2,
-            *p3);
+        writtenLen = snprintf_P(tmpBuffer, sizeof(tmpBuffer), PSTR("%08x: %08x %08x %08x %08x\n"), stack + i, *p0, *p1, *p2, *p3);
 
         if (writtenLen > 0)
             logFile.write(tmpBuffer, writtenLen);
