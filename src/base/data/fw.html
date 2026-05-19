@@ -108,7 +108,7 @@
 
         // Check if the filename matches either pattern
         if (!filenamePattern1.test(fn) && (!filenamePattern2 || !filenamePattern2.test(fn))) {
-            alert(`You didn't select a valid Firmware file for ${model}`);
+            alert(`You didn't select a valid Firmware file for ${model} (${model}.1.2.3.bin expected)`);
             return false;
         }
         return confirm("Please do not power off the device during the update process.");
