@@ -1,9 +1,9 @@
 #include "WifiMan.h"
 
-static const char *formatIP(uint32_t v)
+const char *WifiMan::ipToCString(IPAddress ip)
 {
   static char buf[16];
-  snprintf_P(buf, sizeof(buf), PSTR("%u.%u.%u.%u"), (uint8_t)v, (uint8_t)(v >> 8), (uint8_t)(v >> 16), (uint8_t)(v >> 24));
+  snprintf_P(buf, sizeof(buf), PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
   return buf;
 }
 
@@ -63,7 +63,7 @@ void WifiMan::refreshWiFi()
         STATUS_LED_GOOD
 #endif
 
-        LOG_SERIAL_PRINTF_P(PSTR("Connected (%s) "), formatIP(static_cast<uint32_t>(WiFi.localIP())));
+        LOG_SERIAL_PRINTF_P(PSTR("Connected (%s) "), ipToCString(WiFi.localIP()));
       }
       else // connection failed
       {
@@ -88,7 +88,7 @@ void WifiMan::refreshWiFi()
     STATUS_LED_GOOD
 #endif
 
-    LOG_SERIAL_PRINTF_P(PSTR(" AP mode(%s - %s) "), F(DEFAULT_AP_SSID), formatIP(static_cast<uint32_t>(WiFi.softAPIP())));
+    LOG_SERIAL_PRINTF_P(PSTR(" AP mode(%s - %s) "), F(DEFAULT_AP_SSID), ipToCString(WiFi.softAPIP()));
   }
 }
 
@@ -125,7 +125,7 @@ bool WifiMan::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
   if ((jv = doc["ip"]).is<const char *>())
   {
     if (ipParser.fromString(jv.as<const char *>()))
-      ip = static_cast<uint32_t>(ipParser);
+      ip = ipParser;
     else
       ip = 0;
   }
@@ -133,7 +133,7 @@ bool WifiMan::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
   if ((jv = doc["gw"]).is<const char *>())
   {
     if (ipParser.fromString(jv.as<const char *>()))
-      gw = static_cast<uint32_t>(ipParser);
+      gw = ipParser;
     else
       gw = 0;
   }
@@ -141,7 +141,7 @@ bool WifiMan::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
   if ((jv = doc[F("mask")]).is<const char *>())
   {
     if (ipParser.fromString(jv.as<const char *>()))
-      mask = static_cast<uint32_t>(ipParser);
+      mask = ipParser;
     else
       mask = 0;
   }
@@ -149,7 +149,7 @@ bool WifiMan::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
   if ((jv = doc[F("dns1")]).is<const char *>())
   {
     if (ipParser.fromString(jv.as<const char *>()))
-      dns1 = static_cast<uint32_t>(ipParser);
+      dns1 = ipParser;
     else
       dns1 = 0;
   }
@@ -157,7 +157,7 @@ bool WifiMan::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
   if ((jv = doc[F("dns2")]).is<const char *>())
   {
     if (ipParser.fromString(jv.as<const char *>()))
-      dns2 = static_cast<uint32_t>(ipParser);
+      dns2 = ipParser;
     else
       dns2 = 0;
   }
@@ -180,19 +180,19 @@ void WifiMan::fillConfigJSON(JsonDocument &doc, bool forSaveFile)
   doc[F("staticip")] = (ip ? 1 : 0);
 
   if (ip)
-    doc["ip"] = formatIP(ip);
+    doc["ip"] = ipToCString(ip);
   if (gw)
-    doc["gw"] = formatIP(gw);
+    doc["gw"] = ipToCString(gw);
   else
     doc["gw"] = F("0.0.0.0");
   if (mask)
-    doc[F("mask")] = formatIP(mask);
+    doc[F("mask")] = ipToCString(mask);
   else
     doc[F("mask")] = F("0.0.0.0");
   if (dns1)
-    doc[F("dns1")] = formatIP(dns1);
+    doc[F("dns1")] = ipToCString(dns1);
   if (dns2)
-    doc[F("dns2")] = formatIP(dns2);
+    doc[F("dns2")] = ipToCString(dns2);
 }
 
 void WifiMan::fillStatusJSON(JsonDocument &doc)
@@ -201,7 +201,7 @@ void WifiMan::fillStatusJSON(JsonDocument &doc)
   if ((WiFi.getMode() & WIFI_AP))
   {
     doc[F("apmode")] = F("on");
-    doc[F("apip")] = formatIP(static_cast<uint32_t>(WiFi.softAPIP()));
+    doc[F("apip")] = ipToCString(WiFi.softAPIP());
   }
   else
     doc[F("apmode")] = F("off");
@@ -211,7 +211,7 @@ void WifiMan::fillStatusJSON(JsonDocument &doc)
     doc[F("stationmode")] = F("on");
     if (WiFi.isConnected())
     {
-      doc[F("stationip")] = formatIP(static_cast<uint32_t>(WiFi.localIP()));
+      doc[F("stationip")] = ipToCString(WiFi.localIP());
       doc[F("stationipsource")] = ip ? F("Static IP") : F("DHCP");
     }
   }
