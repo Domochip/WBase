@@ -1,7 +1,8 @@
 #include "WifiMan.h"
 
-static const char *formatIP(char (&buf)[16], uint32_t v)
+static const char *formatIP(uint32_t v)
 {
+  static char buf[16];
   snprintf_P(buf, sizeof(buf), PSTR("%u.%u.%u.%u"), (uint8_t)v, (uint8_t)(v >> 8), (uint8_t)(v >> 16), (uint8_t)(v >> 24));
   return buf;
 }
@@ -62,8 +63,7 @@ void WifiMan::refreshWiFi()
         STATUS_LED_GOOD
 #endif
 
-        char ipBuf[16];
-        LOG_SERIAL_PRINTF_P(PSTR("Connected (%s) "), formatIP(ipBuf, static_cast<uint32_t>(WiFi.localIP())));
+        LOG_SERIAL_PRINTF_P(PSTR("Connected (%s) "), formatIP(static_cast<uint32_t>(WiFi.localIP())));
       }
       else // connection failed
       {
@@ -88,8 +88,7 @@ void WifiMan::refreshWiFi()
     STATUS_LED_GOOD
 #endif
 
-    char ipBuf[16];
-    LOG_SERIAL_PRINTF_P(PSTR(" AP mode(%s - %s) "), F(DEFAULT_AP_SSID), formatIP(ipBuf, static_cast<uint32_t>(WiFi.softAPIP())));
+    LOG_SERIAL_PRINTF_P(PSTR(" AP mode(%s - %s) "), F(DEFAULT_AP_SSID), formatIP(static_cast<uint32_t>(WiFi.softAPIP())));
   }
 }
 
@@ -180,31 +179,29 @@ void WifiMan::fillConfigJSON(JsonDocument &doc, bool forSaveFile)
 
   doc[F("staticip")] = (ip ? 1 : 0);
 
-  char ipBuf[16];
   if (ip)
-    doc["ip"] = formatIP(ipBuf, ip);
+    doc["ip"] = formatIP(ip);
   if (gw)
-    doc["gw"] = formatIP(ipBuf, gw);
+    doc["gw"] = formatIP(gw);
   else
     doc["gw"] = F("0.0.0.0");
   if (mask)
-    doc[F("mask")] = formatIP(ipBuf, mask);
+    doc[F("mask")] = formatIP(mask);
   else
     doc[F("mask")] = F("0.0.0.0");
   if (dns1)
-    doc[F("dns1")] = formatIP(ipBuf, dns1);
+    doc[F("dns1")] = formatIP(dns1);
   if (dns2)
-    doc[F("dns2")] = formatIP(ipBuf, dns2);
+    doc[F("dns2")] = formatIP(dns2);
 }
 
 void WifiMan::fillStatusJSON(JsonDocument &doc)
 {
-  char ipBuf[16];
 
   if ((WiFi.getMode() & WIFI_AP))
   {
     doc[F("apmode")] = F("on");
-    doc[F("apip")] = formatIP(ipBuf, static_cast<uint32_t>(WiFi.softAPIP()));
+    doc[F("apip")] = formatIP(static_cast<uint32_t>(WiFi.softAPIP()));
   }
   else
     doc[F("apmode")] = F("off");
@@ -214,7 +211,7 @@ void WifiMan::fillStatusJSON(JsonDocument &doc)
     doc[F("stationmode")] = F("on");
     if (WiFi.isConnected())
     {
-      doc[F("stationip")] = formatIP(ipBuf, static_cast<uint32_t>(WiFi.localIP()));
+      doc[F("stationip")] = formatIP(static_cast<uint32_t>(WiFi.localIP()));
       doc[F("stationipsource")] = ip ? F("Static IP") : F("DHCP");
     }
   }
