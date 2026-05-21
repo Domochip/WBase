@@ -124,12 +124,12 @@ void Core::appInitWebServer(WebServer &server)
       [this, &server]()
       {
         SERVER_KEEPALIVE_FALSE()
-        JsonDocument doc;
-        fillLatestUpdateInfoJson(doc, true);
-        server.setContentLength(measureJson(doc));
+        JsonDocument json;
+        fillLatestUpdateInfoJson(json, true);
+        server.setContentLength(measureJson(json));
         server.send(200, F("application/json"), "");
         WiFiClient client = server.client();
-        serializeJson(doc, client);
+        serializeJson(json, client);
       });
 
   // Update Firmware from Github ----------------------------------------------
@@ -256,7 +256,7 @@ void Core::appInitWebServer(WebServer &server)
               server.sendHeader(F("Content-Disposition"), F("attachment; filename=\"crashes.txt\""));
               server.send(200, F("text/plain"), "");
               CrashSaver::iterateCrashLogFiles([&server](uint32_t, const char *fileName)
-                                                   {
+                                               {
                 File f = LittleFS.open(fileName, "r");
                 if (f) {
                   server.sendContent(F("--- "));

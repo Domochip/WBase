@@ -386,19 +386,19 @@ void WifiMan::appInitWebServer(WebServer &server)
               }
               else
               {
-                JsonDocument doc;
-                doc["r"] = n;
-                JsonArray wnl = doc[F("wnl")].to<JsonArray>();
+                JsonDocument json;
+                json["r"] = n;
+                JsonArray wnl = json[F("wnl")].to<JsonArray>();
                 for (byte i = 0; i < n; i++)
                 {
                   JsonObject wnl0 = wnl.add<JsonObject>();
                   wnl0["SSID"] = WiFi.SSID(i);
                   wnl0["RSSI"] = WiFi.RSSI(i);
                 }
-                server.setContentLength(measureJson(doc));
+                server.setContentLength(measureJson(json));
                 server.send(200, F("text/json"), "");
                 WiFiClient client = server.client();
-                serializeJson(doc, client);
+                serializeJson(json, client);
                 WiFi.scanDelete();
               }
             });
