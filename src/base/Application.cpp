@@ -170,7 +170,7 @@ bool Application::getLastestUpdateInfo(char *version, char *title, char *release
     if (!targetPtr)
       continue;
 
-    //otherwise prepare target buffer
+    // otherwise prepare target buffer
     targetPtr[0] = '\0';
     size_t curLen = 0;
 
