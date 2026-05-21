@@ -9,6 +9,8 @@ import re
 import sys
 import collections
 
+Import("env")
+
 
 def find_files(root, ext):
     out = []
@@ -209,15 +211,18 @@ def compute_top_paths(graph, weights, topn=3):
     return results[:topn]
 
 
-def main():
-    build_dir = os.path.join('.pio', 'build', 'd1_mini_debug')
+def execute(source, target, env):
+    print()
+    print('---- pio_post_find_biggest_callstack_paths.py start ----')
+    
+    build_dir = os.path.join('.pio', 'build', env["PIOENV"])
     if not os.path.isdir(build_dir):
         print('ERROR: build dir not found: %s' % build_dir, file=sys.stderr)
         sys.exit(2)
 
     su_files = find_files(build_dir, '.su')
     # also check global libdeps
-    libdeps = os.path.join('.pio', 'libdeps', 'd1_mini_debug')
+    libdeps = os.path.join('.pio', 'libdeps', env["PIOENV"])
     if os.path.isdir(libdeps):
         for r, d, files in os.walk(libdeps):
             for f in files:
@@ -243,20 +248,26 @@ def main():
         norm_to_src = {}
         print('WARNING: no .ci files found; cannot use callgraph info', file=sys.stderr)
 
-    top = compute_top_paths(graph, weights, topn=10)
+    top = compute_top_paths(graph, weights, topn=15)
 
-    print('TOP_CALLSTACKS (.ci + .su)')
-    for i, (s, p) in enumerate(top, start=1):
-        print('RANK %d: TOTAL_STACK=%d' % (i, s))
-        for fn in p:
-            print('  %s %d' % (fn, weights.get(fn, 0)))
-            if fn in norm_to_src and norm_to_src[fn]:
-                for src in sorted(norm_to_src[fn]):
-                    print('    -> %s' % src)
-        print('')
+    out_path = os.path.join(build_dir, 'biggest_callstacks.txt')
+    try:
+        with open(out_path, 'w', encoding='utf-8') as out_f:
+            out_f.write('TOP_CALLSTACKS (.ci + .su)\n')
+            for i, (s, p) in enumerate(top, start=1):
+                out_f.write('RANK %d: TOTAL_STACK=%d\n' % (i, s))
+                for fn in p:
+                    out_f.write('  %s %d\n' % (fn, weights.get(fn, 0)))
+                    if fn in norm_to_src and norm_to_src[fn]:
+                        for src in sorted(norm_to_src[fn]):
+                            out_f.write('    -> %s\n' % src)
+                out_f.write('\n')
+        print('WROTE: %s' % out_path)
+    except Exception as e:
+        print('ERROR: cannot write output file %s: %s' % (out_path, e), file=sys.stderr)
 
-    print('SUMMARY: funcs_with_stack=%d, callgraph_nodes=%d, su_files=%d, ci_files=%d' % (len(weights), len(graph), len(su_files), len(ci_files)), file=sys.stderr)
+    print('SUMMARY: funcs_with_stack=%d, callgraph_nodes=%d, su_files=%d, ci_files=%d' % (len(weights), len(graph), len(su_files), len(ci_files)))
+    print('---- pio_post_find_biggest_callstack_paths.py end ----')
+    print()
 
-
-if __name__ == '__main__':
-    main()
+env.AddPostAction("$PROGPATH", execute)
