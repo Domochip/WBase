@@ -11,7 +11,7 @@ void WBase::setConfigDefaultValues()
 
 //------------------------------------------
 // Parse JSON object into configuration properties
-bool WBase::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
+bool WBase::parseConfigJSON(JsonVariant json, bool fromWebPage = false)
 {
   // Be carefull about the type of the properties
   // when Json is coming from web page (fromWebPage = true), all properties are string
@@ -21,11 +21,11 @@ bool WBase::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
   // JsonVariant jv;
 
   // example for numeric value
-  // if ((jv = doc[F("prop1")]).is<JsonVariant>()) // check if property is present
+  // if ((jv = json[F("prop1")]).is<JsonVariant>()) // check if property is present
   //   property1 = jv; // if the property is a string, it will be automatically converted to a number (be carefull default value if conversion fail is 0)
 
   // example for string value
-  // if ((jv = doc[F("prop2")]).is<const char *>()) // do a more precise check about the type otherwise strlcpy will crash
+  // if ((jv = json[F("prop2")]).is<const char *>()) // do a more precise check about the type otherwise strlcpy will crash
   //   strlcpy(property2, jv, sizeof(property2));
 
   // example for boolean value
@@ -36,20 +36,20 @@ bool WBase::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
 
 //------------------------------------------
 // Generate JSON from configuration properties
-void WBase::fillConfigJSON(JsonDocument &doc, bool forSaveFile)
+void WBase::fillConfigJSON(JsonVariant json, bool forSaveFile)
 {
   // TODO
-  // doc["p1"] = property1;
-  // doc["p2"] = property2;
+  // json["p1"] = property1;
+  // json["p2"] = property2;
 }
 
 //------------------------------------------
 // Generate JSON of application status
-void WBase::fillStatusJSON(JsonDocument &doc)
+void WBase::fillStatusJSON(JsonVariant json)
 {
   // TODO
-  // doc["p1"] = property1;
-  // doc["p2"] = property2;
+  // json["p1"] = property1;
+  // json["p2"] = property2;
 }
 
 //------------------------------------------
