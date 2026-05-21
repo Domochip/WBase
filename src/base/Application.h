@@ -52,7 +52,6 @@ public:
 
   static char getAppIdChar(AppId appId);
   static const __FlashStringHelper *getAppIdName(AppId appId);
-  String getStatusJSON();
   void init(bool skipExistingConfig);
   void initWebServer(WebServer &server);
   void run();

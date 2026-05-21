@@ -324,15 +324,6 @@ bool Application::updateFirmware(const char *version, String &retMsg, std::funct
   return success;
 }
 
-String Application::getStatusJSON()
-{
-  JsonDocument json;
-  fillStatusJSON(json);
-  String s;
-  serializeJson(json, s);
-  return s;
-}
-
 void Application::init(bool skipExistingConfig)
 {
   bool result = true;
