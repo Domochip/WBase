@@ -34,9 +34,9 @@ bool Application::saveConfig()
     return false;
   }
 
-  JsonDocument doc;
-  fillConfigJSON(doc, true);
-  serializeJson(doc, configFile);
+  JsonDocument json;
+  fillConfigJSON(json, true);
+  serializeJson(json, configFile);
   configFile.close();
   return true;
 }
@@ -53,22 +53,19 @@ bool Application::loadConfig()
   File configFile = LittleFS.open(configPath, "r");
   if (configFile)
   {
+    JsonDocument json;
 
-    JsonDocument jsonDoc;
-
-    DeserializationError deserializeJsonError = deserializeJson(jsonDoc, configFile);
+    DeserializationError deserializeJsonError = deserializeJson(json, configFile);
 
     // if deserialization failed, then log error and save current config (default values)
     if (deserializeJsonError)
     {
-
       LOG_SERIAL_PRINTF_P(PSTR("deserializeJson() failed : %s\n"), deserializeJsonError.c_str());
-
       saveConfig();
     }
     else
     { // otherwise pass it to application
-      result = parseConfigJSON(jsonDoc);
+      result = parseConfigJSON(json);
     }
     configFile.close();
   }
@@ -329,10 +326,10 @@ bool Application::updateFirmware(const char *version, String &retMsg, std::funct
 
 String Application::getStatusJSON()
 {
-  JsonDocument jsonDoc;
-  fillStatusJSON(jsonDoc);
+  JsonDocument json;
+  fillStatusJSON(json);
   String s;
-  serializeJson(jsonDoc, s);
+  serializeJson(json, s);
   return s;
 }
 
@@ -384,12 +381,12 @@ void Application::initWebServer(WebServer &server)
             {
               SERVER_KEEPALIVE_FALSE()
               server.sendHeader(F("Cache-Control"), F("no-cache"));
-              JsonDocument doc;
-              fillStatusJSON(doc);
-              server.setContentLength(measureJson(doc));
+              JsonDocument json;
+              fillStatusJSON(json);
+              server.setContentLength(measureJson(json));
               server.send(200, F("text/json"), "");
               WiFiClient client = server.client();
-              serializeJson(doc, client);
+              serializeJson(json, client);
             });
 
   // JSON Config handler
@@ -399,12 +396,12 @@ void Application::initWebServer(WebServer &server)
             {
               SERVER_KEEPALIVE_FALSE()
               server.sendHeader(F("Cache-Control"), F("no-cache"));
-              JsonDocument doc;
-              fillConfigJSON(doc);
-              server.setContentLength(measureJson(doc));
+              JsonDocument json;
+              fillConfigJSON(json);
+              server.setContentLength(measureJson(json));
               server.send(200, F("text/json"), "");
               WiFiClient client = server.client();
-              serializeJson(doc, client);
+              serializeJson(json, client);
             });
 
   sprintf_P(url, PSTR("/sc%c"), getAppIdChar(_appId));
@@ -417,8 +414,8 @@ void Application::initWebServer(WebServer &server)
               // config json are received in POST body (arg("plain"))
 
               // Deserialize it
-              JsonDocument doc;
-              DeserializationError error = deserializeJson(doc, server.arg(F("plain")));
+              JsonDocument json;
+              DeserializationError error = deserializeJson(json, server.arg(F("plain")));
               if (error)
               {
                 server.send(400, F("text/html"), F("Malformed JSON"));
@@ -426,7 +423,7 @@ void Application::initWebServer(WebServer &server)
               }
 
               // Parse it using the application method
-              if (!parseConfigJSON(doc, true))
+              if (!parseConfigJSON(json, true))
               {
                 server.send(400, F("text/html"), F("Invalid Configuration"));
                 return;
