@@ -11,7 +11,7 @@ void WBase::setConfigDefaultValues()
 
 //------------------------------------------
 // Parse JSON object into configuration properties
-bool WBase::parseConfigJSON(JsonVariant json, bool fromWebPage)
+bool WBase::parseConfigJSON(JsonVariant json, bool fromWebPage /* = false */)
 {
   // Be carefull about the type of the properties
   // when Json is coming from web page (fromWebPage = true), all properties are string
@@ -36,7 +36,7 @@ bool WBase::parseConfigJSON(JsonVariant json, bool fromWebPage)
 
 //------------------------------------------
 // Generate JSON from configuration properties
-void WBase::fillConfigJSON(JsonVariant json, bool forSaveFile)
+void WBase::fillConfigJSON(JsonVariant json, bool forSaveFile /* = false */)
 {
   // TODO
   // json["p1"] = property1;
@@ -54,7 +54,7 @@ void WBase::fillStatusJSON(JsonVariant json)
 
 //------------------------------------------
 // code to execute during initialization and reinitialization of the app
-bool WBase::appInit(bool reInit)
+bool WBase::appInit(bool reInit /* = false */)
 {
   // TODO
   // if (toto.enabled) _sendTimer.setInterval(SEND_PERIOD, [this]() {this->SendTimerTick();});

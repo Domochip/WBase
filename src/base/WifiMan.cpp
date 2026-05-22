@@ -104,7 +104,7 @@ void WifiMan::setConfigDefaultValues()
   dns2 = 0;
 }
 
-bool WifiMan::parseConfigJSON(JsonVariant json, bool fromWebPage)
+bool WifiMan::parseConfigJSON(JsonVariant json, bool fromWebPage /* = false */)
 {
   JsonVariant jv;
 
@@ -165,7 +165,7 @@ bool WifiMan::parseConfigJSON(JsonVariant json, bool fromWebPage)
   return true;
 }
 
-void WifiMan::fillConfigJSON(JsonVariant json, bool forSaveFile)
+void WifiMan::fillConfigJSON(JsonVariant json, bool forSaveFile /* = false */)
 {
   json["s"] = ssid;
 
@@ -225,7 +225,7 @@ void WifiMan::fillStatusJSON(JsonVariant json)
   json[F("mac")] = mac;
 }
 
-bool WifiMan::appInit(bool reInit)
+bool WifiMan::appInit(bool reInit /* = false */)
 {
 
   // make changes saved to flash
