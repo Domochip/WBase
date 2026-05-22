@@ -133,7 +133,7 @@ MQTTMan &MQTTMan::setDisconnectedCallback(DISCONNECTED_CALLBACK_SIGNATURE discon
     return *this;
 }
 
-bool MQTTMan::connect(const char *username, const char *password)
+bool MQTTMan::connect(const char *username, const char *password /* = nullptr */)
 {
     // check logins
     if (username && strlen(username) >= sizeof(_username))
