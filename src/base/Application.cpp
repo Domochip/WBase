@@ -47,7 +47,7 @@ bool Application::loadConfig()
   if (_appId == CoreApp)
     return true;
 
-  bool result = false;
+  bool result = true; // missing file is not an error: default values are already set
   char configPath[32];
   snprintf_P(configPath, sizeof(configPath), PSTR("/%s.json"), (const char *)getAppIdName(_appId));
   File configFile = LittleFS.open(configPath, "r");
@@ -62,6 +62,7 @@ bool Application::loadConfig()
     {
       LOG_SERIAL_PRINTF_P(PSTR("deserializeJson() failed : %s\n"), deserializeJsonError.c_str());
       saveConfig();
+      result = false;
     }
     else
     { // otherwise pass it to application
