@@ -199,6 +199,8 @@ bool Application::getLatestUpdateInfo(char *version, char *title, char *releaseD
           targetPtr[curLen - 1] = '\r';
         else if (c == '"')
           targetPtr[curLen - 1] = '"';
+        else if (c == '\\')
+          targetPtr[curLen - 1] = '\\';
       }
       else if (curLen < targetMaxLen)
       {
