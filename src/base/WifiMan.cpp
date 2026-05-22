@@ -7,7 +7,7 @@ const char *WifiMan::ipToCString(IPAddress ip)
   return buf;
 }
 
-void WifiMan::enableAP(bool force = false)
+void WifiMan::enableAP(bool force)
 {
   if (!(WiFi.getMode() & WIFI_AP) || force)
   {
@@ -104,7 +104,7 @@ void WifiMan::setConfigDefaultValues()
   dns2 = 0;
 }
 
-bool WifiMan::parseConfigJSON(JsonVariant json, bool fromWebPage = false)
+bool WifiMan::parseConfigJSON(JsonVariant json, bool fromWebPage)
 {
   JsonVariant jv;
 
@@ -225,7 +225,7 @@ void WifiMan::fillStatusJSON(JsonVariant json)
   json[F("mac")] = mac;
 }
 
-bool WifiMan::appInit(bool reInit = false)
+bool WifiMan::appInit(bool reInit)
 {
 
   // make changes saved to flash

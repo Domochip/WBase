@@ -9,7 +9,7 @@
 #include "data/side-menu.js.gz.h"
 
 void Core::setConfigDefaultValues() {};
-bool Core::parseConfigJSON(JsonVariant json, bool fromWebPage = false) { return true; };
+bool Core::parseConfigJSON(JsonVariant json, bool fromWebPage) { return true; };
 void Core::fillConfigJSON(JsonVariant json, bool forSaveFile) {};
 void Core::fillStatusJSON(JsonVariant json)
 {
@@ -41,7 +41,7 @@ void Core::fillStatusJSON(JsonVariant json)
   json[F("crashcount")] = 0;
 #endif
 }
-bool Core::appInit(bool reInit = false)
+bool Core::appInit(bool reInit)
 {
   return true;
 };

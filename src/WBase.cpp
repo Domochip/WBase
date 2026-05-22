@@ -11,7 +11,7 @@ void WBase::setConfigDefaultValues()
 
 //------------------------------------------
 // Parse JSON object into configuration properties
-bool WBase::parseConfigJSON(JsonVariant json, bool fromWebPage = false)
+bool WBase::parseConfigJSON(JsonVariant json, bool fromWebPage)
 {
   // Be carefull about the type of the properties
   // when Json is coming from web page (fromWebPage = true), all properties are string
