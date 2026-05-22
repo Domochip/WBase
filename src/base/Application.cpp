@@ -100,6 +100,8 @@ bool Application::getLatestUpdateInfo(char *version, char *title, char *releaseD
   char keyBuffer[17] = {0};        // Shifting buffer used to find keys
   uint8_t keyLen = 0;              // current length of the key in the buffer (up to maxKeyLength)
   uint8_t treeLevel = 0;           // used to skip unwanted data
+  bool inOuterString = false;      // true while the outer loop is inside a JSON string value
+  bool prevWasBackslash = false;   // used to detect escaped quotes inside strings
 
   // readNextChar waits briefly for the next byte, allowing the WiFi stack to
   // process incoming TCP segments that haven't arrived yet (fixes premature exit
@@ -119,11 +121,18 @@ bool Application::getLatestUpdateInfo(char *version, char *title, char *releaseD
   while (readNextChar(c))
   {
 
-    // if c is a brace or bracket, increment or decrement the treeLevel
-    if (c == '{' || c == '[')
-      treeLevel++;
-    else if (c == '}' || c == ']')
-      treeLevel--;
+    // toggle string mode on unescaped quotes; only count braces/brackets outside strings
+    if (c == '"' && !prevWasBackslash)
+      inOuterString = !inOuterString;
+    prevWasBackslash = !prevWasBackslash && (c == '\\');
+
+    if (!inOuterString)
+    {
+      if (c == '{' || c == '[')
+        treeLevel++;
+      else if (c == '}' || c == ']')
+        treeLevel--;
+    }
 
     // if we are not at the first treeLevel, skip the character
     // (there is some "name" key in assets that we don't want to parse)
