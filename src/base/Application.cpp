@@ -73,7 +73,7 @@ bool Application::loadConfig()
   return result;
 }
 
-bool Application::getLastestUpdateInfo(char *version, char *title, char *releaseDate, char *summary)
+bool Application::getLatestUpdateInfo(char *version, char *title, char *releaseDate, char *summary)
 {
   version[0] = title[0] = releaseDate[0] = summary[0] = '\0';
 
@@ -229,7 +229,7 @@ void Application::fillLatestUpdateInfoJson(JsonVariant json, bool forWebPage /* 
 
   char version[10], title[64], releaseDate[11], summary[256];
 
-  if (getLastestUpdateInfo(version, title, releaseDate, summary))
+  if (getLatestUpdateInfo(version, title, releaseDate, summary))
   {
     json[F("latest_version")] = version;
     json[F("title")] = title;
