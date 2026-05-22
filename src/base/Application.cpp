@@ -101,15 +101,23 @@ bool Application::getLatestUpdateInfo(char *version, char *title, char *releaseD
   uint8_t keyLen = 0;              // current length of the key in the buffer (up to maxKeyLength)
   uint8_t treeLevel = 0;           // used to skip unwanted data
 
-  // sometime the stream is not yet ready (no data available yet)
-  for (byte i = 0; i < 200 && stream->available() == 0; i++) // available include an optimistic_yield of 100us
-    ;
+  // readNextChar waits briefly for the next byte, allowing the WiFi stack to
+  // process incoming TCP segments that haven't arrived yet (fixes premature exit
+  // when the receive buffer empties between two TCP segments)
+  auto readNextChar = [&](char &c) -> bool
+  {
+    for (uint8_t i = 0; i < 200 && !stream->available(); i++) // available includes an optimistic_yield of 100us
+      ;
+    if (!stream->available())
+      return false;
+    c = stream->read();
+    return true;
+  };
 
   // while there is data to read
-  while (http.connected() && stream->available())
+  char c;
+  while (readNextChar(c))
   {
-    // read the next character
-    char c = stream->read();
 
     // if c is a brace or bracket, increment or decrement the treeLevel
     if (c == '{' || c == '[')
@@ -172,18 +180,17 @@ bool Application::getLatestUpdateInfo(char *version, char *title, char *releaseD
     size_t curLen = 0;
 
     // skip until opening doublequote
-    while (stream->available() && stream->read() != '"')
+    while (readNextChar(c) && c != '"')
       ;
 
     // for title, skip version prefix up to first space
     if (targetPtr == title)
-      while (stream->available() && stream->read() != ' ')
+      while (readNextChar(c) && c != ' ')
         ;
 
     // read the value
-    while (stream->available())
+    while (readNextChar(c))
     {
-      c = stream->read();
 
       // endsWithBackslash is used to handle escaped characters in JSON (e.g. \n, \r, \") and avoid stopping at an escaped double quote
       bool endsWithBackslash = (curLen > 0 && targetPtr[curLen - 1] == '\\');
