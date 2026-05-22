@@ -7,7 +7,7 @@ const char *WifiMan::ipToCString(IPAddress ip)
   return buf;
 }
 
-void WifiMan::enableAP(bool force)
+void WifiMan::enableAP(bool force /* = false */)
 {
   if (!(WiFi.getMode() & WIFI_AP) || force)
   {

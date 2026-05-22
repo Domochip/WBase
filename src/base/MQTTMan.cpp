@@ -179,7 +179,7 @@ bool MQTTMan::publishToConnectedTopic(const char *payload)
     return false;
 }
 
-bool MQTTMan::publish(const char *topic, JsonVariantConst payload, bool retained)
+bool MQTTMan::publish(const char *topic, JsonVariantConst payload, bool retained /* = false */)
 {
     const size_t payloadLen = measureJson(payload);
     if (!beginPublish(topic, payloadLen, retained))
