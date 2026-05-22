@@ -70,15 +70,11 @@ const PROGMEM char *WBase::getHTMLContent(WebPageForPlaceHolder wp)
   {
   case status:
     return status2htmlgz;
-    break;
   case config:
     return config2htmlgz;
-    break;
   default:
     return nullptr;
-    break;
-  };
-  return nullptr;
+  }
 }
 
 // and his Size
@@ -88,15 +84,11 @@ size_t WBase::getHTMLContentSize(WebPageForPlaceHolder wp)
   {
   case status:
     return sizeof(status2htmlgz);
-    break;
   case config:
     return sizeof(config2htmlgz);
-    break;
   default:
     return 0;
-    break;
-  };
-  return 0;
+  }
 }
 
 //------------------------------------------

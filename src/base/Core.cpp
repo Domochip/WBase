@@ -51,10 +51,8 @@ const PROGMEM char *Core::getHTMLContent(WebPageForPlaceHolder wp)
   {
   case status:
     return status0htmlgz;
-    break;
   case config:
     return config0htmlgz;
-    break;
   };
   return nullptr;
 }
@@ -64,10 +62,8 @@ size_t Core::getHTMLContentSize(WebPageForPlaceHolder wp)
   {
   case status:
     return sizeof(status0htmlgz);
-    break;
   case config:
     return sizeof(config0htmlgz);
-    break;
   };
   return 0;
 }

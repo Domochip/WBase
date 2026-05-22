@@ -338,31 +338,23 @@ const PROGMEM char *WifiMan::getHTMLContent(WebPageForPlaceHolder wp)
   {
   case status:
     return status1htmlgz;
-    break;
   case config:
     return config1htmlgz;
-    break;
   default:
     return nullptr;
-    break;
-  };
-  return nullptr;
-};
+  }
+}
 size_t WifiMan::getHTMLContentSize(WebPageForPlaceHolder wp)
 {
   switch (wp)
   {
   case status:
     return sizeof(status1htmlgz);
-    break;
   case config:
     return sizeof(config1htmlgz);
-    break;
   default:
     return 0;
-    break;
-  };
-  return 0;
+  }
 }
 
 void WifiMan::appInitWebServer(WebServer &server)
