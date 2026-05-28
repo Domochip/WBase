@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 import gzip
 import shutil
 
@@ -64,7 +65,8 @@ def convert_all_webfiles(dir):
     curentDir=os.getcwd()
     os.chdir(dir)
     for file in os.listdir('.'):
-        if file.endswith(('.html','.js','.css')):
+        # only convert .html, .js and .css files (i.e. don't have a digit before .html)
+        if file.endswith(('.html','.js','.css')) and not re.search(r'\d+\.html$', file):
             if is_convert_needed(file):
                 print('Converting %s to header' % file)
                 convert_file_to_cppheader(file)
