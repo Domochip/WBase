@@ -66,31 +66,17 @@ bool WBase::appInit(bool reInit /* = false */)
 }
 
 //------------------------------------------
-// Return HTML Code to insert into Status Web page
-const PROGMEM char *WBase::getHTMLContent(WebPageForPlaceHolder wp)
+// Return HTML compressed pages
+Application::HtmlPage WBase::getHTMLContent(WebPageForPlaceHolder wp)
 {
   switch (wp)
   {
   case status:
-    return status2htmlgz;
+    return {status2htmlgz, sizeof(status2htmlgz)};
   case config:
-    return config2htmlgz;
+    return {config2htmlgz, sizeof(config2htmlgz)};
   default:
-    return nullptr;
-  }
-}
-
-// and his Size
-size_t WBase::getHTMLContentSize(WebPageForPlaceHolder wp)
-{
-  switch (wp)
-  {
-  case status:
-    return sizeof(status2htmlgz);
-  case config:
-    return sizeof(config2htmlgz);
-  default:
-    return 0;
+    return {nullptr, 0};
   }
 }
 
@@ -115,7 +101,7 @@ void WBase::appRun()
   unsigned long currentMillis = millis();
 
   if (currentMillis - lastEvtSrcSentMillis >= 10000)
-  {                                                                   // Check if it's time to send a new event
+  {                                                                // Check if it's time to send a new event
     _eventSourceMan.eventSourceBroadcast("{\"Hello\":\"World\"}"); // Send a message to all connected clients
     lastEvtSrcSentMillis = currentMillis;
   }
