@@ -218,7 +218,7 @@
 
         function clearMenuAndContent() {
             unloadScripts();
-            ["#menuStatus", "#menuConfig", "#menuFirmware"].forEach(item => { $(item).classList.remove("pure-menu-selected"); });
+            document.querySelectorAll('#menu .pure-menu-item').forEach(item => item.classList.remove('pure-menu-selected'));
             $('#content').innerHTML = '';
         }
 
