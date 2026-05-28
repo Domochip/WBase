@@ -8,9 +8,6 @@
 
 const char appDataPredefPassword[] PROGMEM = "ewcXoCt4HHjZUvY1";
 
-#include "data/status2.html.gz.h"
-#include "data/config2.html.gz.h"
-
 // TODO : Rename WBase
 class WBase : public Application
 {

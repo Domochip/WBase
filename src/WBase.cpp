@@ -1,5 +1,8 @@
 #include "WBase.h"
 
+#include "data/status2.html.gz.h"
+#include "data/config2.html.gz.h"
+
 //------------------------------------------
 // Used to initialize configuration properties to default values
 void WBase::setConfigDefaultValues()
