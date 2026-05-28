@@ -61,6 +61,8 @@
         </div>
     </div>
 
+    <!-- TEMPLATES -->
+
     <script>
         function $(selector, el = document) {
             return el.querySelector(selector);
@@ -106,34 +108,32 @@
             xhr.send(data);
         }
 
-        function load(element, url, callback) {
-            request("GET", url, null, (response) => {
-                element.innerHTML = response;
-                const scriptList = element.getElementsByTagName('script');
-                for (const script of scriptList) {
-                    //Replace "QuerySelectorPrefix" aka "qsp" : allow script to search into the parent element
-                    script.innerHTML = script.innerHTML.replace(/qsp/g, `'#${element.id} '`);
-                    loadScript(script.innerHTML);
-                }
-                if (typeof callback === 'function') callback();
-            }, (error) => {
-                console.error(`Failed to load content from ${url}: ${error}`);
-            });
-        };
+        // Loads a page from an embedded <template> element into the target element.
+        // Scripts inside the template are executed with qsp resolved to the target element's id.
+        function load(element, templateId) {
+            const tpl = document.getElementById(templateId);
+            element.innerHTML = tpl.innerHTML;
+            const scriptList = element.getElementsByTagName('script');
+            for (const script of scriptList) {
+                //Replace "QuerySelectorPrefix" aka "qsp" : allow script to search into the parent element
+                script.innerHTML = script.innerHTML.replace(/qsp/g, `'#${element.id} '`);
+                loadScript(script.innerHTML);
+            }
+        }
 
         function get(url, success, fail) {
             request("GET", url, null, success, fail);
-        };
+        }
 
         function getJSON(url, success, fail) {
             request("GET", url, null, function (response) {
                 success(JSON.parse(response));
             }, fail);
-        };
+        }
 
         function post(url, data, success, fail, timeout, uploadProgress) {
             request("POST", url, data, success, fail, timeout, uploadProgress);
-        };
+        }
 
         function convertFormDataToJson(formData) {
             const object = {};
@@ -220,7 +220,7 @@
             unloadScripts();
             ["#menuStatus", "#menuConfig", "#menuFirmware"].forEach(item => { $(item).classList.remove("pure-menu-selected"); });
             $('#content').innerHTML = '';
-        };
+        }
 
         function handleMenuClick(menuId, headerText, loadFn) {
             const menuElement = $(menuId);
@@ -233,11 +233,11 @@
             });
         }
 
-        handleMenuClick("#menuStatus", "Status", () => load($('#content'), '/status.html'));
+        handleMenuClick("#menuStatus", "Status", () => load($('#content'), 'tpl-status'));
 
-        handleMenuClick("#menuConfig", "Config", () => load($('#content'), '/config.html'));
+        handleMenuClick("#menuConfig", "Config", () => load($('#content'), 'tpl-config'));
 
-        handleMenuClick("#menuFirmware", "Firmware", () => load($('#content'), '/fw.html'));
+        handleMenuClick("#menuFirmware", "Firmware", () => load($('#content'), 'tpl-fw'));
 
         triggerEvent($("#menuStatus"), 'click');
     </script>
