@@ -4,8 +4,7 @@ import glob
 import gzip
 import shutil
 
-#Convert one file to header
-#file is first GZipped then converted to header file (hex in PROGMEM)
+# Gzips a file then writes it as a C++ PROGMEM byte array header: const PROGMEM char <name>gz[] = {...};
 def convert_file_to_cppheader(filename):
     with open(filename,'rb') as webfile:
         with gzip.open(filename+'.gz','wb',9) as intogzipfile:
@@ -19,10 +18,7 @@ def convert_file_to_cppheader(filename):
             while len(byte):
                 if not first:
                     hfile.write(',')
-                if sys.version_info.major == 2:
-                    hfile.write(hex(ord(byte)))
-                else:
-                    hfile.write(hex(byte[0]))
+                hfile.write(hex(byte[0]))
                 first=False
                 byte=gzfile.read(1)
             hfile.write('};')
