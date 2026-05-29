@@ -56,6 +56,14 @@ void Core::appInitWebServer(WebServer &server)
               server.send_P(200, PSTR("text/html"), indexhtmlgz, sizeof(indexhtmlgz));
             });
 
+  // HEAD / is used to poll device availability
+  server.on("/", HTTP_HEAD,
+            [&server]()
+            {
+              SERVER_KEEPALIVE_FALSE()
+              server.send(200);
+            });
+
   // Ressources URLs
   server.on(F("/pure-min.css"), HTTP_GET,
             [&server]()
