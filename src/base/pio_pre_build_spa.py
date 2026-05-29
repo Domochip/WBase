@@ -61,7 +61,7 @@ def build_spa(template_file, pages, output_file, placeholders=None):
     for template_id, content in pages:
         templates_html += f'    <template id="{template_id}">\n{content}\n    </template>\n'
 
-    html = html.replace('    <!-- TEMPLATES -->', templates_html)
+    html = html.replace('<!-- TEMPLATES -->', templates_html)
 
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(html)
