@@ -40,10 +40,16 @@ def merge_fragments(sources):
             merged += preprocess_fragment(f.read(), fragment_index)
     return merged
 
+def read_file(path):
+    with open(path, 'r', encoding='utf-8') as f:
+        return f.read()
+
 # Reads index_template.html and embeds each page as a <template> element,
 # producing a single self-contained index.html with no runtime HTML fetches.
-def build_spa(template_file, pages, output_file, placeholders={}):
+def build_spa(template_file, pages, output_file, placeholders=None):
     print(f'Building SPA -> {os.path.basename(output_file)}')
+    if placeholders is None:
+        placeholders = {}
 
     with open(template_file, 'r', encoding='utf-8') as f:
         html = f.read()
@@ -61,10 +67,6 @@ def build_spa(template_file, pages, output_file, placeholders={}):
         f.write(html)
 
 print('--- pio_pre_build_spa.py start ---')
-
-def read_file(path):
-    with open(path, 'r', encoding='utf-8') as f:
-        return f.read()
 
 build_spa(
     'src/base/data/index_template.html',
