@@ -28,8 +28,8 @@ def convert_file_to_cppheader(filename):
             hfile.write('};')
     os.remove(filename+'.gz')
 
-#Check if file needs to be converted
-#header is converted back to gz file and file inside is compared to web file
+# Returns True if the .gz.h header is missing or its decompressed content differs from the source file
+# The header is decoded from hex back to bytes and decompressed in memory
 def is_convert_needed(filename):
     # check if gz.h file exists
     hfilename=filename+'.gz.h'
@@ -37,29 +37,16 @@ def is_convert_needed(filename):
         return True
     # convert h file to gz file
     with open(hfilename) as hfile:
-        with open(filename+'.gz','wb') as gzfile:
-            # read the one line header file
-            line=hfile.readline()
-            # keep content between '{' and '}'
-            hexvalues=line[line.find('{')+1:line.find('}')]
-            # split hex values by ','
-            hexvalues=hexvalues.split(',')
-            # convert hex values to bytes
-            bytes=bytearray()
-            for hexvalue in hexvalues:
-                bytes.append(int(hexvalue,16))
-            # write bytes to gzip file
-            gzfile.write(bytes)
-    # read file inside gz
-    with gzip.open(filename+'.gz','rb') as intogzipfile:
-        intogzipfilecontent=intogzipfile.read()
-    # remove gz file
-    os.remove(filename+'.gz')
+        # read the one line header file
+        line=hfile.readline()
+        # keep content between '{' and '}' and split hex values by ','
+        hexvalues=line[line.find('{')+1:line.find('}')].split(',')
+    # read file inside gz in memory
+    decompressed=gzip.decompress(bytes(int(h,16) for h in hexvalues))
     # read web file
     with open(filename,'rb') as webfile:
-        webfilecontent=webfile.read()
-    # return True if gz file and web file are different
-    return (intogzipfilecontent != webfilecontent)
+        # return True if gz file content and web file are different
+        return decompressed != webfile.read()
 
 #Convert all Web Files in a folder
 def convert_webfiles(pattern):
