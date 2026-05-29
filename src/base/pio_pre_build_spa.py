@@ -11,11 +11,10 @@ def extract_macro_value(file_path, macro_name):
         else:
             raise ValueError(f"{macro_name} not found in {file_path}")
 
-# Each HTML fragment uses 'qsp' as a CSS selector prefix to scope its DOM queries
-# (e.g. qsp + '#someId' resolves to '#contentN #someId').
-# qsp[8] extracts the app index digit from that string (character at index 8 of '#contentN ')
-# and is used to build API endpoint URLs like '/gsN', '/gcN', '/scN'.
-# Both substitutions are done at build time so the merged file needs no runtime patching.
+# HTML fragments use 'qsp' as a scoped CSS selector prefix, substituted at build time:
+# - Numbered index N : qsp -> '#contentN ', qsp[8] -> 'N' (used in API endpoints like '/gsN')
+#                      content is wrapped in <div id="contentN"> to isolate element IDs
+# - Empty index ''   : qsp -> '#content ', no wrapper (fragment loads directly into #content)
 def preprocess_fragment(html, fragment_index):
     wrapper_id = f'content{fragment_index}'
     qsp_replacement = f"'#{wrapper_id} '"
@@ -28,7 +27,8 @@ def preprocess_fragment(html, fragment_index):
         return f'<script>{content}</script>'
 
     html = re.sub(r'<script>(.*?)</script>', replace_qsp, html, flags=re.DOTALL)
-    # Wrap in a scoped div so element IDs don't collide across fragments
+    if fragment_index == '':
+        return html
     return f'<div id="{wrapper_id}">\n{html}\n</div>\n'
 
 def merge_fragments(sources):
@@ -71,7 +71,7 @@ build_spa(
     [
         ('tpl-status', merge_fragments(['src/base/data/status0.html', 'src/base/data/status1.html', 'src/data/status2.html'])),
         ('tpl-config', merge_fragments(['src/base/data/config0.html', 'src/base/data/config1.html', 'src/data/config2.html'])),
-        ('tpl-fw',     read_file('src/base/data/fw.html')),
+        ('tpl-fw',     preprocess_fragment(read_file('src/base/data/fw.html'), '')),
     ],
     'src/base/data/index.html',
     placeholders={
