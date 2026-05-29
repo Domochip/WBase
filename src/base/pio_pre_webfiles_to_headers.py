@@ -1,28 +1,16 @@
-import sys
 import os
 import glob
 import gzip
-import shutil
 
-# Gzips a file then writes it as a C++ PROGMEM byte array header: const PROGMEM char <name>gz[] = {...};
+# Gzips a file in memory then writes it as a C++ PROGMEM byte array header: const PROGMEM char <name>gz[] = {...};
 def convert_file_to_cppheader(filename):
     with open(filename,'rb') as webfile:
-        with gzip.open(filename+'.gz','wb',9) as intogzipfile:
-            shutil.copyfileobj(webfile,intogzipfile)
-    with open(filename+'.gz','rb') as gzfile:
-        with open(filename+'.gz.h','w') as hfile:
-            varname = os.path.basename(filename).replace(' ','').replace('.','').replace('-','')
-            hfile.write('const PROGMEM char '+varname+'gz[] = {')
-            byte=gzfile.read(1)
-            first=True
-            while len(byte):
-                if not first:
-                    hfile.write(',')
-                hfile.write(hex(byte[0]))
-                first=False
-                byte=gzfile.read(1)
-            hfile.write('};')
-    os.remove(filename+'.gz')
+        gz_bytes=gzip.compress(webfile.read(),compresslevel=9)
+    varname=os.path.basename(filename).replace(' ','').replace('.','').replace('-','')
+    with open(filename+'.gz.h','w') as hfile:
+        hfile.write('const PROGMEM char '+varname+'gz[] = {')
+        hfile.write(','.join(hex(b) for b in gz_bytes))
+        hfile.write('};')
 
 # Returns True if the .gz.h header is missing or its decompressed content differs from the source file
 # The header is decoded from hex back to bytes and decompressed in memory
