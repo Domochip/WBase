@@ -16,8 +16,7 @@ void MQTTMan::prepareTopic(const char *topicTemplate, char *result, size_t resul
     char *end = result + resultSize - 1; // reserve 1 byte: '\0'
     bool overflow = false;
 
-    char sn[9];
-    Core::getSerialNumber(sn, sizeof(sn));
+    const char *sn = Core::getSerialNumber();
 
     const char *mac = WifiMan::getMacAddress();
 
@@ -93,12 +92,9 @@ const char *MQTTMan::getBaseTopic() const
 
 bool MQTTMan::connect(bool firstConnection)
 {
-    char sn[9];
-    Core::getSerialNumber(sn, sizeof(sn));
-
     // generate clientID
     char clientID[sizeof(CUSTOM_APP_MODEL) + 9];
-    snprintf_P(clientID, sizeof(clientID), PSTR(CUSTOM_APP_MODEL "%s"), sn);
+    snprintf_P(clientID, sizeof(clientID), PSTR(CUSTOM_APP_MODEL "%s"), Core::getSerialNumber());
 
     // Connect
     char *username = (_username[0] ? _username : nullptr);

@@ -8,16 +8,21 @@
 #include "data/side-menu.css.gz.h"
 #include "data/side-menu.js.gz.h"
 
-void Core::getSerialNumber(char *sn, size_t size)
+const char *Core::getSerialNumber()
 {
-  if (!sn || size < 9)
-    return;
+  static char sn[9] = {0};
 
+  // Calculate serial number only on first call
+  if (sn[0] == '\0')
+  {
 #ifdef ESP8266
-  sprintf_P(sn, PSTR("%08x"), ESP.getChipId());
+    sprintf_P(sn, PSTR("%08x"), ESP.getChipId());
 #else
-  sprintf_P(sn, PSTR("%08x"), (uint32_t)(ESP.getEfuseMac() << 40 >> 40));
+    sprintf_P(sn, PSTR("%08x"), (uint32_t)(ESP.getEfuseMac() << 40 >> 40));
 #endif
+  }
+
+  return sn;
 }
 
 void Core::setConfigDefaultValues() {};
@@ -25,13 +30,11 @@ bool Core::parseConfigJSON(JsonVariant json, bool fromWebPage /* = false */) { r
 void Core::fillConfigJSON(JsonVariant json, bool forSaveFile /* = false */) {};
 void Core::fillStatusJSON(JsonVariant json)
 {
-  char sn[9];
-  getSerialNumber(sn, sizeof(sn));
   unsigned long minutes = millis() / 60000;
 
   json[F("manufacturer")] = CUSTOM_APP_MANUFACTURER;
   json[F("model")] = CUSTOM_APP_MODEL;
-  json[F("sn")] = sn;
+  json[F("sn")] = getSerialNumber();
   json[F("baseversion")] = BASE_VERSION;
   json[F("version")] = VERSION;
   char uptime[12];
