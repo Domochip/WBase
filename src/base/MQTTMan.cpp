@@ -139,13 +139,13 @@ MQTTMan &MQTTMan::setConnectedAndWillTopic(const char *topic)
     return *this;
 }
 
-MQTTMan &MQTTMan::setConnectedCallback(CONNECTED_CALLBACK_SIGNATURE connectedCallback)
+MQTTMan &MQTTMan::setConnectedCallback(ConnectedCallback connectedCallback)
 {
     _connectedCallBack = connectedCallback;
     return *this;
 }
 
-MQTTMan &MQTTMan::setDisconnectedCallback(DISCONNECTED_CALLBACK_SIGNATURE disconnectedCallback)
+MQTTMan &MQTTMan::setDisconnectedCallback(DisconnectedCallback disconnectedCallback)
 {
     _disconnectedCallBack = disconnectedCallback;
     return *this;
