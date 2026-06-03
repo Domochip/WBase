@@ -8,17 +8,25 @@
 #include "data/side-menu.css.gz.h"
 #include "data/side-menu.js.gz.h"
 
+void Core::getSerialNumber(char *sn, size_t size)
+{
+  if (!sn || size < 9)
+    return;
+
+#ifdef ESP8266
+  sprintf_P(sn, PSTR("%08x"), ESP.getChipId());
+#else
+  sprintf_P(sn, PSTR("%08x"), (uint32_t)(ESP.getEfuseMac() << 40 >> 40));
+#endif
+}
+
 void Core::setConfigDefaultValues() {};
 bool Core::parseConfigJSON(JsonVariant json, bool fromWebPage /* = false */) { return true; };
 void Core::fillConfigJSON(JsonVariant json, bool forSaveFile /* = false */) {};
 void Core::fillStatusJSON(JsonVariant json)
 {
   char sn[9];
-#ifdef ESP8266
-  sprintf_P(sn, PSTR("%08x"), ESP.getChipId());
-#else
-  sprintf_P(sn, PSTR("%08x"), (uint32_t)(ESP.getEfuseMac() << 40 >> 40));
-#endif
+  getSerialNumber(sn, sizeof(sn));
   unsigned long minutes = millis() / 60000;
 
   json[F("manufacturer")] = CUSTOM_APP_MANUFACTURER;

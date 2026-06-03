@@ -1,5 +1,6 @@
 #include "MQTTMan.h"
 #include "WifiMan.h"
+#include "Core.h"
 
 void MQTTMan::prepareTopic(const char *topicTemplate, char *result, size_t resultSize)
 {
@@ -16,11 +17,7 @@ void MQTTMan::prepareTopic(const char *topicTemplate, char *result, size_t resul
     bool overflow = false;
 
     char sn[9];
-#ifdef ESP8266
-    sprintf_P(sn, PSTR("%08x"), ESP.getChipId());
-#else
-    sprintf_P(sn, PSTR("%08x"), (uint32_t)(ESP.getEfuseMac() << 40 >> 40));
-#endif
+    Core::getSerialNumber(sn, sizeof(sn));
 
     char mac[18];
     WifiMan::formatMacAddress(mac, sizeof(mac));
@@ -98,11 +95,7 @@ const char *MQTTMan::getBaseTopic() const
 bool MQTTMan::connect(bool firstConnection)
 {
     char sn[9];
-#ifdef ESP8266
-    sprintf_P(sn, PSTR("%08x"), ESP.getChipId());
-#else
-    sprintf_P(sn, PSTR("%08x"), (uint32_t)(ESP.getEfuseMac() << 40 >> 40));
-#endif
+    Core::getSerialNumber(sn, sizeof(sn));
 
     // generate clientID
     char clientID[sizeof(CUSTOM_APP_MODEL) + 9];
