@@ -295,6 +295,18 @@ bool Application::updateFirmware(const char *version, String &retMsg, std::funct
     return false;
   }
 
+  char latestVersion[10];
+  if (strcmp(version, "latest") == 0)
+  {
+    if (!getLatestUpdateInfo(latestVersion, nullptr, nullptr, nullptr))
+    {
+      retMsg = F("Failed to get latest version");
+      return false;
+    }
+
+    version = latestVersion;
+  }
+
   WiFiClientSecure clientSecure;
   clientSecure.setInsecure();
 
