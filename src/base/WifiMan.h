@@ -55,6 +55,8 @@ public:
   WifiMan() : Application(WifiManApp) {};
   // helper to convert IPAddress to const char*
   static const char *ipToCString(IPAddress ip);
+  // helper to format MAC address
+  static void formatMacAddress(char *mac, size_t size);
 };
 
 #endif

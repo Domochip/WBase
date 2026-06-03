@@ -1,4 +1,5 @@
 #include "MQTTMan.h"
+#include "WifiMan.h"
 
 void MQTTMan::prepareTopic(const char *topicTemplate, char *result, size_t resultSize)
 {
@@ -21,10 +22,8 @@ void MQTTMan::prepareTopic(const char *topicTemplate, char *result, size_t resul
     sprintf_P(sn, PSTR("%08x"), (uint32_t)(ESP.getEfuseMac() << 40 >> 40));
 #endif
 
-    uint8_t macBuf[6];
     char mac[18];
-    WiFi.macAddress(macBuf);
-    snprintf_P(mac, sizeof(mac), PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), macBuf[0], macBuf[1], macBuf[2], macBuf[3], macBuf[4], macBuf[5]);
+    WifiMan::formatMacAddress(mac, sizeof(mac));
 
     const char *model = CUSTOM_APP_MODEL;
 
