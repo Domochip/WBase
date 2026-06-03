@@ -6,8 +6,6 @@
 #include "base/EventSourceMan.h"
 #include "base/Application.h"
 
-const char appDataPredefPassword[] PROGMEM = "ewcXoCt4HHjZUvY1";
-
 // TODO : Rename WBase
 class WBase : public Application
 {
