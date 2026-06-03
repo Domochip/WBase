@@ -19,8 +19,7 @@ void MQTTMan::prepareTopic(const char *topicTemplate, char *result, size_t resul
     char sn[9];
     Core::getSerialNumber(sn, sizeof(sn));
 
-    char mac[18];
-    WifiMan::formatMacAddress(mac, sizeof(mac));
+    const char *mac = WifiMan::getMacAddress();
 
     const char *model = CUSTOM_APP_MODEL;
 
