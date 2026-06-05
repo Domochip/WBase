@@ -88,8 +88,8 @@ void WifiMan::refreshWiFi()
         _refreshTicker.once(_refreshPeriod, [this]()
                             { _needRefreshWifi = true; });
 #else
-        _refreshTicker.once<typeof this>(_refreshPeriod, [](typeof this wifiMan)
-                                         { wifiMan->_needRefreshWifi = true; }, this);
+        _refreshTicker.once<WifiMan *>(_refreshPeriod, [](WifiMan *wifiMan)
+                                       { wifiMan->_needRefreshWifi = true; }, this);
 #endif
       }
     }

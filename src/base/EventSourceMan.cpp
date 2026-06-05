@@ -36,7 +36,7 @@ void EventSourceMan::eventSourceHandler(WebServer &server)
 #endif
 }
 
-void EventSourceMan::forEachConnectedClient(std::function<void(WiFiClient&, uint8_t)> action)
+void EventSourceMan::forEachConnectedClient(std::function<void(WiFiClient &, uint8_t)> action)
 {
     for (uint8_t i = 0; i < EVTSRC_MAX_CLIENTS; i++)
     {
@@ -55,14 +55,14 @@ void EventSourceMan::forEachConnectedClient(std::function<void(WiFiClient&, uint
 #if EVTSRC_KEEPALIVE_ENABLED
 void EventSourceMan::eventSourceKeepAlive()
 {
-    forEachConnectedClient([](WiFiClient& client, uint8_t i)
-    {
-        client.println(F(":keepalive\n\n"));
+    forEachConnectedClient([](WiFiClient &client, uint8_t i)
+                           {
+                               client.println(F(":keepalive\n\n"));
 
 #if DEVELOPPER_MODE
-        LOG_SERIAL_PRINTF_P(PSTR("statusEventSourceKeepAlive - keep-alive sent to client #%d (%s:%d)\n"), i, client.remoteIP().toString().c_str(), client.remotePort());
+                               LOG_SERIAL_PRINTF_P(PSTR("statusEventSourceKeepAlive - keep-alive sent to client #%d (%s:%d)\n"), i, client.remoteIP().toString().c_str(), client.remotePort());
 #endif
-    });
+                           });
 }
 #endif
 
@@ -79,36 +79,36 @@ void EventSourceMan::initEventSourceServer(char appIdChar, WebServer &server)
     _eventSourceKeepAliveTicker.attach(60, [this]()
                                        { _needEventSourceKeepAlive = true; });
 #else
-    _eventSourceKeepAliveTicker.attach<typeof this>(60, [](typeof this eventSourceMan)
-                                                    { eventSourceMan->_needEventSourceKeepAlive = true; }, this);
+    _eventSourceKeepAliveTicker.attach<EventSourceMan *>(60, [](EventSourceMan *eventSourceMan)
+                                                         { eventSourceMan->_needEventSourceKeepAlive = true; }, this);
 #endif
 #endif
 }
 
 void EventSourceMan::eventSourceBroadcast(const char *message, const char *eventType /* = "message" */)
 {
-    forEachConnectedClient([message, eventType](WiFiClient& client, uint8_t i)
-    {
-        client.printf_P(PSTR("event: %s\ndata: %s\n\n"), eventType, message);
+    forEachConnectedClient([message, eventType](WiFiClient &client, uint8_t i)
+                           {
+                               client.printf_P(PSTR("event: %s\ndata: %s\n\n"), eventType, message);
 
 #if DEVELOPPER_MODE
-        LOG_SERIAL_PRINTF_P(PSTR("statusEventSourceBroadcast - event sent to client #%d\n"), i);
+                               LOG_SERIAL_PRINTF_P(PSTR("statusEventSourceBroadcast - event sent to client #%d\n"), i);
 #endif
-    });
+                           });
 }
 
 void EventSourceMan::eventSourceBroadcast(JsonVariantConst message, const char *eventType /* = "message" */)
 {
-    forEachConnectedClient([message, eventType](WiFiClient& client, uint8_t i)
-    {
-        client.printf_P(PSTR("event: %s\ndata: "), eventType);
-        serializeJson(message, client);
-        client.print(F("\n\n"));
+    forEachConnectedClient([message, eventType](WiFiClient &client, uint8_t i)
+                           {
+                               client.printf_P(PSTR("event: %s\ndata: "), eventType);
+                               serializeJson(message, client);
+                               client.print(F("\n\n"));
 
 #if DEVELOPPER_MODE
-        LOG_SERIAL_PRINTF_P(PSTR("statusEventSourceBroadcast - event sent to client #%d\n"), i);
+                               LOG_SERIAL_PRINTF_P(PSTR("statusEventSourceBroadcast - event sent to client #%d\n"), i);
 #endif
-    });
+                           });
 }
 
 #if EVTSRC_KEEPALIVE_ENABLED
