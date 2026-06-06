@@ -358,7 +358,7 @@ void WifiMan::appInitWebServer(WebServer &server)
                 JsonDocument json;
                 json["r"] = n;
                 JsonArray wnl = json[F("wnl")].to<JsonArray>();
-                for (byte i = 0; i < n; i++)
+                for (uint8_t i = 0; i < n; i++)
                 {
                   JsonObject wnl0 = wnl.add<JsonObject>();
                   wnl0["SSID"] = WiFi.SSID(i);
