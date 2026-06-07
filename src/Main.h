@@ -18,9 +18,9 @@
 #define DEFAULT_AP_PSK "password"                      // Default Access Point Password
 
 // Control SSEServer code (To be used by Application if Server-sent events are needed)
-#define EVTSRC_ENABLED 1
-#define EVTSRC_MAX_CLIENTS 2
-#define EVTSRC_KEEPALIVE_ENABLED 1
+#define SSE_SERVER_ENABLED 1
+#define SSE_SERVER_MAX_CLIENTS 2
+#define SSE_SERVER_KEEPALIVE 1
 
 // Enable developper mode
 #define DEVELOPPER_MODE 0

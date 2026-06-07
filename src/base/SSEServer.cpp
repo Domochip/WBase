@@ -1,28 +1,28 @@
 #include "SSEServer.h"
 
-#if EVTSRC_ENABLED
+#if SSE_SERVER_ENABLED
 
 void SSEServer::handleSubscription(WebServer &server)
 {
     uint8_t subPos = 0;
 
     // Find the subscription for this client
-    while (subPos < EVTSRC_MAX_CLIENTS &&
+    while (subPos < SSE_SERVER_MAX_CLIENTS &&
            (!_clients[subPos] ||
             _clients[subPos].remoteIP() != server.client().remoteIP() ||
             _clients[subPos].remotePort() != server.client().remotePort()))
         subPos++;
 
     // If no subscription found
-    if (subPos == EVTSRC_MAX_CLIENTS)
+    if (subPos == SSE_SERVER_MAX_CLIENTS)
     {
         subPos = 0;
         // Find a free slot
-        while (subPos < EVTSRC_MAX_CLIENTS && _clients[subPos])
+        while (subPos < SSE_SERVER_MAX_CLIENTS && _clients[subPos])
             subPos++;
 
         // If there is no more slot available
-        if (subPos == EVTSRC_MAX_CLIENTS)
+        if (subPos == SSE_SERVER_MAX_CLIENTS)
             return server.send(500);
     }
 
@@ -32,13 +32,13 @@ void SSEServer::handleSubscription(WebServer &server)
     server.sendContent_P(PSTR("HTTP/1.1 200 OK\nContent-Type: text/event-stream;\nConnection: keep-alive\nCache-Control: no-cache\nAccess-Control-Allow-Origin: *\n\n"));
 
 #if DEVELOPPER_MODE
-    LOG_SERIAL_PRINTF_P(PSTR("statusEventSourceHandler - client #%d (%s:%d) registered\n"), subPos, server.client().remoteIP().toString().c_str(), server.client().remotePort());
+    LOG_SERIAL_PRINTF_P(PSTR("statusSSEHandler - client #%d (%s:%d) registered\n"), subPos, server.client().remoteIP().toString().c_str(), server.client().remotePort());
 #endif
 }
 
 void SSEServer::forEach(std::function<void(WiFiClient &, uint8_t)> action)
 {
-    for (uint8_t i = 0; i < EVTSRC_MAX_CLIENTS; i++)
+    for (uint8_t i = 0; i < SSE_SERVER_MAX_CLIENTS; i++)
     {
         if (_clients[i].connected())
             action(_clients[i], i);
@@ -47,17 +47,17 @@ void SSEServer::forEach(std::function<void(WiFiClient &, uint8_t)> action)
     }
 }
 
-#if EVTSRC_KEEPALIVE_ENABLED
+#if SSE_SERVER_KEEPALIVE
 void SSEServer::sendKeepAlive()
 {
     forEach([](WiFiClient &client, uint8_t i)
-                           {
-                               client.println(F(":keepalive\n\n"));
+            {
+                client.println(F(":keepalive\n\n"));
 
 #if DEVELOPPER_MODE
-                               LOG_SERIAL_PRINTF_P(PSTR("statusEventSourceKeepAlive - keep-alive sent to client #%d (%s:%d)\n"), i, client.remoteIP().toString().c_str(), client.remotePort());
+                LOG_SERIAL_PRINTF_P(PSTR("statusSSEKeepAlive - keep-alive sent to client #%d (%s:%d)\n"), i, client.remoteIP().toString().c_str(), client.remotePort());
 #endif
-                           });
+            });
 }
 #endif
 
@@ -65,17 +65,17 @@ void SSEServer::init(char appIdChar, WebServer &server)
 {
     String url(F("/statusEvt"));
     url += appIdChar;
-    // register EventSource Uri
+    // register SSE Uri
     server.on(url, HTTP_GET, [this, &server]()
               { handleSubscription(server); });
-#if EVTSRC_KEEPALIVE_ENABLED
+#if SSE_SERVER_KEEPALIVE
     // send keep alive event every 60 seconds
 #ifdef ESP8266
     _keepAliveTicker.attach(60, [this]()
                             { _needKeepAlive = true; });
 #else
-    _keepAliveTicker.attach<SSEServer *>(60, [](SSEServer *eventSourceMan)
-                                              { eventSourceMan->_needKeepAlive = true; }, this);
+    _keepAliveTicker.attach<SSEServer *>(60, [](SSEServer *sse)
+                                         { sse->_needKeepAlive = true; }, this);
 #endif
 #endif
 }
@@ -83,30 +83,30 @@ void SSEServer::init(char appIdChar, WebServer &server)
 void SSEServer::broadcast(const char *message, const char *eventType /* = "message" */)
 {
     forEach([message, eventType](WiFiClient &client, uint8_t i)
-                           {
-                               client.printf_P(PSTR("event: %s\ndata: %s\n\n"), eventType, message);
+            {
+                client.printf_P(PSTR("event: %s\ndata: %s\n\n"), eventType, message);
 
 #if DEVELOPPER_MODE
-                               LOG_SERIAL_PRINTF_P(PSTR("statusEventSourceBroadcast - event sent to client #%d\n"), i);
+                LOG_SERIAL_PRINTF_P(PSTR("statusSSEBroadcast - event sent to client #%d\n"), i);
 #endif
-                           });
+            });
 }
 
 void SSEServer::broadcast(JsonVariantConst message, const char *eventType /* = "message" */)
 {
     forEach([message, eventType](WiFiClient &client, uint8_t i)
-                           {
-                               client.printf_P(PSTR("event: %s\ndata: "), eventType);
-                               serializeJson(message, client);
-                               client.print(F("\n\n"));
+            {
+                client.printf_P(PSTR("event: %s\ndata: "), eventType);
+                serializeJson(message, client);
+                client.print(F("\n\n"));
 
 #if DEVELOPPER_MODE
-                               LOG_SERIAL_PRINTF_P(PSTR("statusEventSourceBroadcast - event sent to client #%d\n"), i);
+                LOG_SERIAL_PRINTF_P(PSTR("statusSSEBroadcast - event sent to client #%d\n"), i);
 #endif
-                           });
+            });
 }
 
-#if EVTSRC_KEEPALIVE_ENABLED
+#if SSE_SERVER_KEEPALIVE
 void SSEServer::run()
 {
     if (_needKeepAlive)
@@ -115,6 +115,6 @@ void SSEServer::run()
         sendKeepAlive();
     }
 }
-#endif // EVTSRC_KEEPALIVE_ENABLED
+#endif // SSE_SERVER_KEEPALIVE
 
-#endif // EVTSRC_ENABLED
+#endif // SSE_SERVER_ENABLED

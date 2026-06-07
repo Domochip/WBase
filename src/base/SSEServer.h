@@ -17,13 +17,13 @@ using WebServer = ESP8266WebServer;
 class SSEServer
 {
 private:
-#if EVTSRC_ENABLED
-    WiFiClient _clients[EVTSRC_MAX_CLIENTS];
+#if SSE_SERVER_ENABLED
+    WiFiClient _clients[SSE_SERVER_MAX_CLIENTS];
 
     void handleSubscription(WebServer &server);
     void forEach(std::function<void(WiFiClient &, uint8_t)> action);
 
-#if EVTSRC_KEEPALIVE_ENABLED
+#if SSE_SERVER_KEEPALIVE
     bool _needKeepAlive = false;
     Ticker _keepAliveTicker;
 
@@ -32,12 +32,12 @@ private:
 #endif
 
 public:
-#if EVTSRC_ENABLED
+#if SSE_SERVER_ENABLED
     void init(char appIdChar, WebServer &server);
     void broadcast(const char *message, const char *eventType = "message");
     void broadcast(JsonVariantConst message, const char *eventType = "message");
 
-#if EVTSRC_KEEPALIVE_ENABLED
+#if SSE_SERVER_KEEPALIVE
 
     void run();
 #endif
