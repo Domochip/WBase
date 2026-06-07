@@ -1,4 +1,4 @@
-#include "EventSourceMan.h"
+#include "SSEServer.h"
 
 #if EVTSRC_ENABLED
 

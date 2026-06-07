@@ -3,7 +3,7 @@
 
 #include "Main.h"
 #include "base/MQTTMan.h"
-#include "base/EventSourceMan.h"
+#include "base/SSEServer.h"
 #include "base/Application.h"
 
 // TODO : Rename WBase

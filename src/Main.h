@@ -17,7 +17,7 @@
 #define DEFAULT_AP_SSID CUSTOM_APP_MODEL               // Default Access Point SSID "{CUSTOM_APP_MODEL}"
 #define DEFAULT_AP_PSK "password"                      // Default Access Point Password
 
-// Control EventSourceMan code (To be used by Application if EventSource server is needed)
+// Control SSEServer code (To be used by Application if Server-sent events are needed)
 #define EVTSRC_ENABLED 1
 #define EVTSRC_MAX_CLIENTS 2
 #define EVTSRC_KEEPALIVE_ENABLED 1
