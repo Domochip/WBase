@@ -69,8 +69,8 @@ void WBase::appInitWebServer(WebServer &server)
   // TODO
   // server.on(F("/getColor"), HTTP_GET, [this, &server]() {server.send(200, F("text/html"), GetColor());});
 
-  // register EventSource
-  _eventSourceMan.init(getAppIdChar(_appId), server);
+  // register SSEServer
+  _sse.init(getAppIdChar(_appId), server);
 }
 
 //------------------------------------------
@@ -83,12 +83,12 @@ void WBase::appRun()
   unsigned long currentMillis = millis();
 
   if (currentMillis - lastEvtSrcSentMillis >= 10000)
-  {                                                                // Check if it's time to send a new event
-    _eventSourceMan.broadcast("{\"Hello\":\"World\"}"); // Send a message to all connected clients
+  {                                          // Check if it's time to send a new event
+    _sse.broadcast("{\"Hello\":\"World\"}"); // Send a message to all connected clients
     lastEvtSrcSentMillis = currentMillis;
   }
 
-  _eventSourceMan.run();
+  _sse.run();
 
   // TODO : implement run tasks (receive from serial, run timer, etc.)
 }
