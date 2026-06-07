@@ -1,5 +1,5 @@
-#ifndef EventSourceMan_h
-#define EventSourceMan_h
+#ifndef SSEServer_h
+#define SSEServer_h
 
 #include "../Main.h"
 #ifdef ESP8266
