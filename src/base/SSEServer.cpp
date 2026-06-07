@@ -2,7 +2,7 @@
 
 #if EVTSRC_ENABLED
 
-void EventSourceMan::handleSubscription(WebServer &server)
+void SSEServer::handleSubscription(WebServer &server)
 {
     uint8_t subPos = 0;
 
@@ -36,7 +36,7 @@ void EventSourceMan::handleSubscription(WebServer &server)
 #endif
 }
 
-void EventSourceMan::forEach(std::function<void(WiFiClient &, uint8_t)> action)
+void SSEServer::forEach(std::function<void(WiFiClient &, uint8_t)> action)
 {
     for (uint8_t i = 0; i < EVTSRC_MAX_CLIENTS; i++)
     {
@@ -48,7 +48,7 @@ void EventSourceMan::forEach(std::function<void(WiFiClient &, uint8_t)> action)
 }
 
 #if EVTSRC_KEEPALIVE_ENABLED
-void EventSourceMan::sendKeepAlive()
+void SSEServer::sendKeepAlive()
 {
     forEach([](WiFiClient &client, uint8_t i)
                            {
@@ -61,7 +61,7 @@ void EventSourceMan::sendKeepAlive()
 }
 #endif
 
-void EventSourceMan::init(char appIdChar, WebServer &server)
+void SSEServer::init(char appIdChar, WebServer &server)
 {
     String url(F("/statusEvt"));
     url += appIdChar;
@@ -74,13 +74,13 @@ void EventSourceMan::init(char appIdChar, WebServer &server)
     _keepAliveTicker.attach(60, [this]()
                             { _needKeepAlive = true; });
 #else
-    _keepAliveTicker.attach<EventSourceMan *>(60, [](EventSourceMan *eventSourceMan)
+    _keepAliveTicker.attach<SSEServer *>(60, [](SSEServer *eventSourceMan)
                                               { eventSourceMan->_needKeepAlive = true; }, this);
 #endif
 #endif
 }
 
-void EventSourceMan::broadcast(const char *message, const char *eventType /* = "message" */)
+void SSEServer::broadcast(const char *message, const char *eventType /* = "message" */)
 {
     forEach([message, eventType](WiFiClient &client, uint8_t i)
                            {
@@ -92,7 +92,7 @@ void EventSourceMan::broadcast(const char *message, const char *eventType /* = "
                            });
 }
 
-void EventSourceMan::broadcast(JsonVariantConst message, const char *eventType /* = "message" */)
+void SSEServer::broadcast(JsonVariantConst message, const char *eventType /* = "message" */)
 {
     forEach([message, eventType](WiFiClient &client, uint8_t i)
                            {
@@ -107,7 +107,7 @@ void EventSourceMan::broadcast(JsonVariantConst message, const char *eventType /
 }
 
 #if EVTSRC_KEEPALIVE_ENABLED
-void EventSourceMan::run()
+void SSEServer::run()
 {
     if (_needKeepAlive)
     {

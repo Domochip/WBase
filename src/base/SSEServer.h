@@ -14,7 +14,7 @@ using WebServer = ESP8266WebServer;
 #include <Ticker.h>
 #include <ArduinoJson.h>
 
-class EventSourceMan
+class SSEServer
 {
 private:
 #if EVTSRC_ENABLED

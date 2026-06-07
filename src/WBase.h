@@ -13,7 +13,7 @@ private:
   // TODO : Declare configuration properies
 
   // TODO : Declare run/status properties
-  EventSourceMan _eventSourceMan;
+  SSEServer _eventSourceMan;
 
   // TODO : Declare required private methods
 
