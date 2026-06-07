@@ -70,7 +70,7 @@ void WBase::appInitWebServer(WebServer &server)
   // server.on(F("/getColor"), HTTP_GET, [this, &server]() {server.send(200, F("text/html"), GetColor());});
 
   // register EventSource
-  _eventSourceMan.initEventSourceServer(getAppIdChar(_appId), server);
+  _eventSourceMan.init(getAppIdChar(_appId), server);
 }
 
 //------------------------------------------
@@ -84,7 +84,7 @@ void WBase::appRun()
 
   if (currentMillis - lastEvtSrcSentMillis >= 10000)
   {                                                                // Check if it's time to send a new event
-    _eventSourceMan.eventSourceBroadcast("{\"Hello\":\"World\"}"); // Send a message to all connected clients
+    _eventSourceMan.broadcast("{\"Hello\":\"World\"}"); // Send a message to all connected clients
     lastEvtSrcSentMillis = currentMillis;
   }
 

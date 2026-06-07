@@ -18,24 +18,24 @@ class EventSourceMan
 {
 private:
 #if EVTSRC_ENABLED
-    WiFiClient _EventSourceClientList[EVTSRC_MAX_CLIENTS];
+    WiFiClient _clients[EVTSRC_MAX_CLIENTS];
 
-    void eventSourceHandler(WebServer &server);
-    void forEachConnectedClient(std::function<void(WiFiClient&, uint8_t)> action);
-    
+    void handleSubscription(WebServer &server);
+    void forEach(std::function<void(WiFiClient &, uint8_t)> action);
+
 #if EVTSRC_KEEPALIVE_ENABLED
-    bool _needEventSourceKeepAlive = false;
-    Ticker _eventSourceKeepAliveTicker;
+    bool _needKeepAlive = false;
+    Ticker _keepAliveTicker;
 
-    void eventSourceKeepAlive();
+    void sendKeepAlive();
 #endif
 #endif
 
 public:
 #if EVTSRC_ENABLED
-    void initEventSourceServer(char appIdChar, WebServer &server);
-    void eventSourceBroadcast(const char *message, const char *eventType = "message");
-    void eventSourceBroadcast(JsonVariantConst message, const char *eventType = "message");
+    void init(char appIdChar, WebServer &server);
+    void broadcast(const char *message, const char *eventType = "message");
+    void broadcast(JsonVariantConst message, const char *eventType = "message");
 
 #if EVTSRC_KEEPALIVE_ENABLED
 

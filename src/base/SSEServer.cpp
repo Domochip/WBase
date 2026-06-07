@@ -2,15 +2,15 @@
 
 #if EVTSRC_ENABLED
 
-void EventSourceMan::eventSourceHandler(WebServer &server)
+void EventSourceMan::handleSubscription(WebServer &server)
 {
     uint8_t subPos = 0;
 
     // Find the subscription for this client
     while (subPos < EVTSRC_MAX_CLIENTS &&
-           (!_EventSourceClientList[subPos] ||
-            _EventSourceClientList[subPos].remoteIP() != server.client().remoteIP() ||
-            _EventSourceClientList[subPos].remotePort() != server.client().remotePort()))
+           (!_clients[subPos] ||
+            _clients[subPos].remoteIP() != server.client().remoteIP() ||
+            _clients[subPos].remotePort() != server.client().remotePort()))
         subPos++;
 
     // If no subscription found
@@ -18,7 +18,7 @@ void EventSourceMan::eventSourceHandler(WebServer &server)
     {
         subPos = 0;
         // Find a free slot
-        while (subPos < EVTSRC_MAX_CLIENTS && _EventSourceClientList[subPos])
+        while (subPos < EVTSRC_MAX_CLIENTS && _clients[subPos])
             subPos++;
 
         // If there is no more slot available
@@ -27,7 +27,7 @@ void EventSourceMan::eventSourceHandler(WebServer &server)
     }
 
     // create/update subscription
-    _EventSourceClientList[subPos] = server.client();
+    _clients[subPos] = server.client();
     server.setContentLength(CONTENT_LENGTH_UNKNOWN); // the payload can go on forever
     server.sendContent_P(PSTR("HTTP/1.1 200 OK\nContent-Type: text/event-stream;\nConnection: keep-alive\nCache-Control: no-cache\nAccess-Control-Allow-Origin: *\n\n"));
 
@@ -36,26 +36,21 @@ void EventSourceMan::eventSourceHandler(WebServer &server)
 #endif
 }
 
-void EventSourceMan::forEachConnectedClient(std::function<void(WiFiClient &, uint8_t)> action)
+void EventSourceMan::forEach(std::function<void(WiFiClient &, uint8_t)> action)
 {
     for (uint8_t i = 0; i < EVTSRC_MAX_CLIENTS; i++)
     {
-        if (_EventSourceClientList[i].connected())
-        {
-            action(_EventSourceClientList[i], i);
-        }
-        else if (_EventSourceClientList[i])
-        {
-            // Client disconnected — release slot so it can be reused
-            _EventSourceClientList[i].stop();
-        }
+        if (_clients[i].connected())
+            action(_clients[i], i);
+        else if (_clients[i])
+            _clients[i].stop(); // Client disconnected — release slot so it can be reused
     }
 }
 
 #if EVTSRC_KEEPALIVE_ENABLED
-void EventSourceMan::eventSourceKeepAlive()
+void EventSourceMan::sendKeepAlive()
 {
-    forEachConnectedClient([](WiFiClient &client, uint8_t i)
+    forEach([](WiFiClient &client, uint8_t i)
                            {
                                client.println(F(":keepalive\n\n"));
 
@@ -66,28 +61,28 @@ void EventSourceMan::eventSourceKeepAlive()
 }
 #endif
 
-void EventSourceMan::initEventSourceServer(char appIdChar, WebServer &server)
+void EventSourceMan::init(char appIdChar, WebServer &server)
 {
     String url(F("/statusEvt"));
     url += appIdChar;
     // register EventSource Uri
     server.on(url, HTTP_GET, [this, &server]()
-              { eventSourceHandler(server); });
+              { handleSubscription(server); });
 #if EVTSRC_KEEPALIVE_ENABLED
     // send keep alive event every 60 seconds
 #ifdef ESP8266
-    _eventSourceKeepAliveTicker.attach(60, [this]()
-                                       { _needEventSourceKeepAlive = true; });
+    _keepAliveTicker.attach(60, [this]()
+                            { _needKeepAlive = true; });
 #else
-    _eventSourceKeepAliveTicker.attach<EventSourceMan *>(60, [](EventSourceMan *eventSourceMan)
-                                                         { eventSourceMan->_needEventSourceKeepAlive = true; }, this);
+    _keepAliveTicker.attach<EventSourceMan *>(60, [](EventSourceMan *eventSourceMan)
+                                              { eventSourceMan->_needKeepAlive = true; }, this);
 #endif
 #endif
 }
 
-void EventSourceMan::eventSourceBroadcast(const char *message, const char *eventType /* = "message" */)
+void EventSourceMan::broadcast(const char *message, const char *eventType /* = "message" */)
 {
-    forEachConnectedClient([message, eventType](WiFiClient &client, uint8_t i)
+    forEach([message, eventType](WiFiClient &client, uint8_t i)
                            {
                                client.printf_P(PSTR("event: %s\ndata: %s\n\n"), eventType, message);
 
@@ -97,9 +92,9 @@ void EventSourceMan::eventSourceBroadcast(const char *message, const char *event
                            });
 }
 
-void EventSourceMan::eventSourceBroadcast(JsonVariantConst message, const char *eventType /* = "message" */)
+void EventSourceMan::broadcast(JsonVariantConst message, const char *eventType /* = "message" */)
 {
-    forEachConnectedClient([message, eventType](WiFiClient &client, uint8_t i)
+    forEach([message, eventType](WiFiClient &client, uint8_t i)
                            {
                                client.printf_P(PSTR("event: %s\ndata: "), eventType);
                                serializeJson(message, client);
@@ -114,10 +109,10 @@ void EventSourceMan::eventSourceBroadcast(JsonVariantConst message, const char *
 #if EVTSRC_KEEPALIVE_ENABLED
 void EventSourceMan::run()
 {
-    if (_needEventSourceKeepAlive)
+    if (_needKeepAlive)
     {
-        _needEventSourceKeepAlive = false;
-        eventSourceKeepAlive();
+        _needKeepAlive = false;
+        sendKeepAlive();
     }
 }
 #endif // EVTSRC_KEEPALIVE_ENABLED
