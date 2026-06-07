@@ -88,7 +88,7 @@ void WBase::appRun()
     lastEvtSrcSentMillis = currentMillis;
   }
 
-  _sse.run();
+  _sse.loop();
 
   // TODO : implement run tasks (receive from serial, run timer, etc.)
 }

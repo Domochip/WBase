@@ -107,7 +107,7 @@ void SSEServer::broadcast(JsonVariantConst message, const char *eventType /* = "
 }
 
 #if SSE_SERVER_KEEPALIVE
-void SSEServer::run()
+void SSEServer::loop()
 {
     if (_needKeepAlive)
     {

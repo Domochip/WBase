@@ -14,6 +14,8 @@ using WebServer = ESP8266WebServer;
 #include <Ticker.h>
 #include <ArduinoJson.h>
 
+// Server-Sent Events manager — keeps a fixed pool of open HTTP connections and
+// broadcasts JSON or text events to every connected browser tab in real time.
 class SSEServer
 {
 private:
@@ -39,7 +41,7 @@ public:
 
 #if SSE_SERVER_KEEPALIVE
 
-    void run();
+    void loop();
 #endif
 #endif
 };
