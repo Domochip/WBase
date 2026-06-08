@@ -3,7 +3,10 @@
 const char *WifiMan::ipToCString(IPAddress ip)
 {
   static char buf[16];
-  snprintf_P(buf, sizeof(buf), PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
+  if (!ip)
+    buf[0] = '\0';
+  else
+    snprintf_P(buf, sizeof(buf), PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
   return buf;
 }
 
