@@ -186,8 +186,6 @@ void WifiMan::fillConfigJSON(JsonVariant json, bool forSaveFile /* = false */)
 
   json["h"] = hostname;
 
-  json[F("staticip")] = (ip ? 1 : 0);
-
   json["ip"] = ipToCString(ip);
   json["gw"] = ipToCString(gw);
   json[F("mask")] = ipToCString(mask);
