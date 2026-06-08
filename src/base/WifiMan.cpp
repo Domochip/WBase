@@ -185,20 +185,11 @@ void WifiMan::fillConfigJSON(JsonVariant json, bool forSaveFile /* = false */)
 
   json[F("staticip")] = (ip ? 1 : 0);
 
-  if (ip)
-    json["ip"] = ipToCString(ip);
-  if (gw)
-    json["gw"] = ipToCString(gw);
-  else
-    json["gw"] = F("0.0.0.0");
-  if (mask)
-    json[F("mask")] = ipToCString(mask);
-  else
-    json[F("mask")] = F("0.0.0.0");
-  if (dns1)
-    json[F("dns1")] = ipToCString(dns1);
-  if (dns2)
-    json[F("dns2")] = ipToCString(dns2);
+  json["ip"] = ipToCString(ip);
+  json["gw"] = ipToCString(gw);
+  json[F("mask")] = ipToCString(mask);
+  json[F("dns1")] = ipToCString(dns1);
+  json[F("dns2")] = ipToCString(dns2);
 }
 
 void WifiMan::fillStatusJSON(JsonVariant json)
