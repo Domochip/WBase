@@ -137,11 +137,13 @@
                 }
             }
 
+            if ($(qsp + "#ip").value) {
+                $(qsp + "#staticip").checked = true;
+                triggerEvent($(qsp + "#staticip"), 'change');
+            }
+
             $(qsp + "#f input[type=submit]").disabled = false;
             fadeOut($(qsp + "#l"));
-
-            if ($(qsp + "#ip").value) 
-                $(qsp + "#staticip").checked = true;
 
             getNetworkList();
         }, function () {
