@@ -54,8 +54,8 @@ void WifiMan::refreshWiFi()
 
       LOG_SERIAL_PRINT(F("Connect"));
 
-      WiFi.begin(ssid, password);
       WiFi.config(ip, gw, mask, dns1, dns2);
+      WiFi.begin(ssid, password);
 
       // Wait _reconnectDuration for connection
       for (int i = 0; i < (((uint16_t)_reconnectDuration) * 10) && !WiFi.isConnected(); i++)
