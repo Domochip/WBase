@@ -84,6 +84,7 @@ void WifiMan::refreshWiFi()
 #ifdef STATUS_LED_GOOD
         STATUS_LED_GOOD
 #endif
+        _connectionCount++;
 
         LOG_SERIAL_PRINTF_P(PSTR("Connected (%s) "), ipToCString(WiFi.localIP()));
       }
@@ -221,6 +222,7 @@ void WifiMan::fillStatusJSON(JsonVariant json)
     json[F("stationmode")] = F("off");
 
   json[F("mac")] = getMacAddress();
+  json[F("connectcount")] = _connectionCount;
 }
 
 bool WifiMan::appInit(bool reInit /* = false */)
