@@ -36,6 +36,7 @@ void WifiMan::enableAP(bool force /* = false */)
     {
       _dnsServer->stop();
       delete _dnsServer;
+      _dnsServer = nullptr;
     }
     _dnsServer = new DNSServer();
     _dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
@@ -72,9 +73,12 @@ void WifiMan::refreshWiFi()
       if (WiFi.isConnected())
       {
         // stop DNS server
-        _dnsServer->stop();
-        delete _dnsServer;
-        _dnsServer = nullptr;
+        if (_dnsServer)
+        {
+          _dnsServer->stop();
+          delete _dnsServer;
+          _dnsServer = nullptr;
+        }
         // disable AP
         WiFi.enableAP(false);
 #ifdef STATUS_LED_GOOD
