@@ -70,7 +70,7 @@ void WBase::appInitWebServer(WebServer &server)
   // server.on(F("/getColor"), HTTP_GET, [this, &server]() {server.send(200, F("text/html"), GetColor());});
 
   // register SSEServer
-  _sse.init(getAppIdChar(_appId), server);
+  _sse.init(getAppIdChar(), server);
 }
 
 //------------------------------------------
