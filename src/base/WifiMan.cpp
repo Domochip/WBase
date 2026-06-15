@@ -223,6 +223,7 @@ void WifiMan::fillStatusJSON(JsonVariant json)
 
   json[F("mac")] = getMacAddress();
   json[F("connectcount")] = _connectionCount;
+  json[F("discoreason")] = _lastDiscoReason;
 }
 
 bool WifiMan::appInit(bool reInit /* = false */)
@@ -272,7 +273,14 @@ bool WifiMan::appInit(bool reInit /* = false */)
                                                           {
                                                             // stop reconnection
                                                             WiFi.disconnect();
-                                                            LOG_SERIAL_PRINTLN(F("Wifi disconnected"));
+                                                            LOG_SERIAL_PRINT(F("Wifi disconnected (reason: "));
+#ifdef ESP8266
+                                                            _lastDiscoReason = evt.reason;
+#else
+                     _lastDiscoReason = info.wifi_sta_disconnected.reason;
+#endif
+                                                            LOG_SERIAL_PRINT(_lastDiscoReason);
+                                                            LOG_SERIAL_PRINTLN(')');
                                                             // call RefreshWifi shortly
                                                             _needRefreshWifi = true;
                                                           }
