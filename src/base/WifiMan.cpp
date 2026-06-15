@@ -415,4 +415,22 @@ void WifiMan::mqttPublishHassDiscovery(HassDiscoveryCtx &ctx)
                           "\"value_template\":\"{{ value_json.connectcount }}\""
                           "}"));
   ctx.publishEntity(json, F("sensor"), F("WifiConnectCount"));
+
+  //
+  // Wifi last disconnection reason entity
+  //
+
+  // prepare payload for wifi last disconnection reason sensor
+  deserializeJson(json, F("{"
+                          "\"default_entity_id\":\"sensor." CUSTOM_APP_MODEL "_wifi_disco_reason\","
+                          "\"entity_category\":\"diagnostic\","
+                          "\"icon\":\"mdi:wifi-remove\","
+                          "\"name\":\"WiFi Last Disconnection Reason\","
+                          "\"object_id\":\"" CUSTOM_APP_MODEL "_wifi_disco_reason\","
+                          "\"state_topic\":\"~/WiFi\","
+                          "\"value_template\":\""
+                          "{% set r={0:'No disconnection',1:'Unspecified',2:'Auth expired',3:'Auth leave',4:'Assoc expired',8:'Station left',15:'4-way handshake timeout',16:'Group key update timeout',200:'Beacon timeout',201:'No AP found',202:'Auth failed',203:'Assoc failed',204:'Handshake timeout',205:'Connection failed'} %}"
+                          "{{ r.get(value_json.discoreason|int,'Unknown') }}\""
+                          "}"));
+  ctx.publishEntity(json, F("sensor"), F("WifiDiscoReason"));
 }
