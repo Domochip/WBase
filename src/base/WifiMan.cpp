@@ -216,6 +216,7 @@ void WifiMan::fillStatusJSON(JsonVariant json)
     {
       json[F("stationip")] = ipToCString(WiFi.localIP());
       json[F("stationipsource")] = ip ? F("Static IP") : F("DHCP");
+      json[F("bssid")] = WiFi.BSSIDstr();
       json[F("rssi")] = WiFi.RSSI();
     }
   }
