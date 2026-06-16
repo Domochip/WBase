@@ -453,4 +453,20 @@ void WifiMan::mqttPublishHassDiscovery(HassDiscoveryCtx &ctx)
                           "\"value_template\":\"{{ value_json.rssi }}\""
                           "}"));
   ctx.publishEntity(json, F("sensor"), F("WifiRssi"));
+
+  //
+  // WiFi BSSID entity
+  //
+
+  deserializeJson(json, F("{"
+                          "\"default_entity_id\":\"sensor." CUSTOM_APP_MODEL "_wifi_bssid\","
+                          "\"enabled_by_default\":false,"
+                          "\"entity_category\":\"diagnostic\","
+                          "\"icon\":\"mdi:wifi-marker\","
+                          "\"name\":\"WiFi BSSID\","
+                          "\"object_id\":\"" CUSTOM_APP_MODEL "_wifi_bssid\","
+                          "\"state_topic\":\"~/WiFi\","
+                          "\"value_template\":\"{{ value_json.bssid | default('') }}\""
+                          "}"));
+  ctx.publishEntity(json, F("sensor"), F("WifiBssid"));
 }
