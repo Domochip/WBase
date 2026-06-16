@@ -434,4 +434,21 @@ void WifiMan::mqttPublishHassDiscovery(HassDiscoveryCtx &ctx)
                           "{{ r.get(value_json.discoreason|int,'Unknown') }}\""
                           "}"));
   ctx.publishEntity(json, F("sensor"), F("WifiDiscoReason"));
+
+  //
+  // WiFi RSSI entity
+  //
+
+  deserializeJson(json, F("{"
+                          "\"default_entity_id\":\"sensor." CUSTOM_APP_MODEL "_wifi_rssi\","
+                          "\"device_class\":\"signal_strength\","
+                          "\"entity_category\":\"diagnostic\","
+                          "\"name\":\"WiFi RSSI\","
+                          "\"object_id\":\"" CUSTOM_APP_MODEL "_wifi_rssi\","
+                          "\"state_class\":\"measurement\","
+                          "\"state_topic\":\"~/WiFi\","
+                          "\"unit_of_measurement\":\"dBm\","
+                          "\"value_template\":\"{{ value_json.rssi }}\""
+                          "}"));
+  ctx.publishEntity(json, F("sensor"), F("WifiRssi"));
 }
