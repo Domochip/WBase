@@ -442,6 +442,7 @@ void WifiMan::mqttPublishHassDiscovery(HassDiscoveryCtx &ctx)
   deserializeJson(json, F("{"
                           "\"default_entity_id\":\"sensor." CUSTOM_APP_MODEL "_wifi_rssi\","
                           "\"device_class\":\"signal_strength\","
+                          "\"enabled_by_default\":false,"
                           "\"entity_category\":\"diagnostic\","
                           "\"name\":\"WiFi RSSI\","
                           "\"object_id\":\"" CUSTOM_APP_MODEL "_wifi_rssi\","
