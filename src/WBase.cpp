@@ -18,18 +18,12 @@ bool WBase::parseConfigJSON(JsonVariant json, bool fromWebPage /* = false */)
   // when Json is coming from savefile, property types are defined by the generateConfigJSON
 
   // TODO
-  // JsonVariant jv;
 
-  // example for numeric value
-  // if ((jv = json[F("prop1")]).is<JsonVariant>()) // check if property is present
-  //   property1 = jv; // if the property is a string, it will be automatically converted to a number (be carefull default value if conversion fail is 0)
+  // example for numeric/string/bool value value
+  // parseField(json[F("prop1")], property1);
 
-  // example for string value
-  // if ((jv = json[F("prop2")]).is<const char *>()) // do a more precise check about the type otherwise strlcpy will crash
-  //   strlcpy(property2, jv, sizeof(property2));
-
-  // example for boolean value
-  // property3 = jv; // html checkbox will send "on" string or no json property so direct conversion fit the need
+  // example for a secret
+  // parseSecret(json[F("prop2")], property2, sizeof(property2), fromWebPage);
 
   return true;
 }
@@ -40,7 +34,7 @@ void WBase::fillConfigJSON(JsonVariant json, bool forSaveFile /* = false */)
 {
   // TODO
   // json["p1"] = property1;
-  // json["p2"] = property2;
+  // fillSecret(json, F("prop2"), property2, forSaveFile);
 }
 
 //------------------------------------------
