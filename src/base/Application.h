@@ -47,6 +47,8 @@ protected:
 
   static void fillSecret(JsonVariant json, const __FlashStringHelper *key, const char *value, bool forSaveFile);
   static void parseSecret(JsonVariant jv, char *dest, size_t size, bool fromWebPage);
+  static void parseStringField(JsonVariant jv, char *dest, size_t size);
+  static void parseIPField(JsonVariant jv, uint32_t &dest);
 
   static bool getLatestUpdateInfo(char *version, char *title = nullptr, char *releaseDate = nullptr, char *summary = nullptr);
   static void fillLatestUpdateInfoJson(JsonVariant json, bool forWebPage = false);
