@@ -49,6 +49,21 @@ protected:
   static void parseSecret(JsonVariant jv, char *dest, size_t size, bool fromWebPage);
   static void parseStringField(JsonVariant jv, char *dest, size_t size);
   static void parseIPField(JsonVariant jv, uint32_t &dest);
+  static void parseBoolField(JsonVariant jv, bool &dest);
+
+  template <typename T>
+  static void parseField(JsonVariant jv, T &dest)
+  {
+    if (!jv.isNull())
+      dest = jv.as<T>();
+  }
+
+  template <typename T>
+  static void parseEnumField(JsonVariant jv, T &dest)
+  {
+    if (!jv.isNull())
+      dest = static_cast<T>(jv.as<uint8_t>());
+  }
 
   static bool getLatestUpdateInfo(char *version, char *title = nullptr, char *releaseDate = nullptr, char *summary = nullptr);
   static void fillLatestUpdateInfoJson(JsonVariant json, bool forWebPage = false);

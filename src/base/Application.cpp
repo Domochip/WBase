@@ -147,6 +147,11 @@ void Application::parseIPField(JsonVariant jv, uint32_t &dest)
   }
 }
 
+void Application::parseBoolField(JsonVariant jv, bool &dest)
+{
+  dest = jv;
+}
+
 bool Application::getLatestUpdateInfo(char *version, char *title /* = nullptr */, char *releaseDate /* = nullptr */, char *summary /* = nullptr */)
 {
   if (version)
