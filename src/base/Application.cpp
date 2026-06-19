@@ -151,10 +151,14 @@ bool Application::getLatestUpdateInfo(char *version, char *title /* = nullptr */
   clientSecure.setInsecure();
   http.begin(clientSecure, String(F("https://api.github.com/repos/" CUSTOM_APP_MANUFACTURER "/" CUSTOM_APP_MODEL "/releases/latest")));
 
+#ifdef ESP8266
   ESP.wdtFeed(); // fresh 6 s window before TLS handshake
+#endif
   int httpCode = http.GET();
 
+#ifdef ESP8266
   ESP.wdtFeed(); // reset before parse phase
+#endif
 
   // check for http error
   if (httpCode != 200)
