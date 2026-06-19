@@ -23,7 +23,7 @@ bool WBase::parseConfigJSON(JsonVariant json, bool fromWebPage /* = false */)
   // parseField(json[F("prop1")], property1);
 
   // example for a secret
-  // parseSecret(json[F("prop2")], property2, sizeof(property2), fromWebPage);
+  // parseSecret(json[F("prop2")], property2, fromWebPage);
 
   return true;
 }

@@ -122,13 +122,6 @@ void Application::fillSecret(JsonVariant json, const __FlashStringHelper *key, c
     json[key] = (const __FlashStringHelper *)predefPassword;
 }
 
-// Parses a secret field: skips update if the value is the predefined placeholder sent by web page
-void Application::parseSecret(JsonVariant jv, char *dest, size_t size, bool fromWebPage)
-{
-  if (jv.is<const char *>() && (!fromWebPage || strcmp_P(jv, predefPassword)))
-    strlcpy(dest, jv, size);
-}
-
 void Application::parseIPField(JsonVariant jv, uint32_t &dest)
 {
   if (jv.is<const char *>())
