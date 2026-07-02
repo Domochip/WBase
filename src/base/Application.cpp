@@ -384,7 +384,15 @@ bool Application::updateFirmware(const char *version, String &retMsg, std::funct
   HTTPClient https;
   https.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
   https.begin(clientSecure, fwUrl);
+
+#ifdef ESP8266
+  ESP.wdtFeed(); // fresh 6 s window before TLS handshake
+#endif
   int httpCode = https.GET();
+
+#ifdef ESP8266
+  ESP.wdtFeed(); // fresh 6 s window before stream readiness wait
+#endif
 
   if (httpCode != 200)
   {
