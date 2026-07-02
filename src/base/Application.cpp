@@ -179,15 +179,18 @@ bool Application::getLatestUpdateInfo(char *version, char *title /* = nullptr */
   bool inOuterString = false;      // true while the outer loop is inside a JSON string value
   bool prevWasBackslash = false;   // used to detect escaped quotes inside strings
 
-  // readNextChar waits briefly for the next byte, allowing the WiFi stack to
+  // readNextChar waits (up to 500ms) briefly for the next byte, allowing the WiFi stack to
   // process incoming TCP segments that haven't arrived yet (fixes premature exit
   // when the receive buffer empties between two TCP segments)
   auto readNextChar = [&](char &c) -> bool
   {
-    for (uint8_t i = 0; i < 200 && !stream->available(); i++) // available includes an optimistic_yield of 100us
-      ;
-    if (!stream->available())
-      return false;
+    uint32_t start = millis();
+    while (!stream->available())
+    {
+      if (millis() - start >= 500)
+        return false;
+      delay(1); // lets the WiFi/lwIP stack process incoming segments
+    }
     c = stream->read();
     return true;
   };
