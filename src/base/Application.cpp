@@ -410,8 +410,10 @@ bool Application::updateFirmware(const char *version, String &retMsg, std::funct
 
   // sometime the stream is not yet ready (no data available yet)
   // and writeStream start by a peek which then fail
-  for (uint8_t i = 0; i < 200 && stream->available() == 0; i++) // available include an optimistic_yield of 100us
-    ;
+  // so wait up to 500ms for the first byte to be available
+  uint32_t streamWaitStart = millis();
+  while (stream->available() == 0 && millis() - streamWaitStart < 500)
+    delay(1); // cooperative yield, lets the WiFi/lwIP stack process incoming segments
   Update.writeStream(*stream);
 
   Update.end();
