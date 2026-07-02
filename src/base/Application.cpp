@@ -197,8 +197,14 @@ bool Application::getLatestUpdateInfo(char *version, char *title /* = nullptr */
 
   // while there is data to read
   char c;
+  uint16_t byteCount = 0;
   while (readNextChar(c))
   {
+#ifdef ESP8266
+    // a run of slow reads can now stall up to 500 ms each
+    if (++byteCount % 32 == 0)
+      ESP.wdtFeed();
+#endif
 
     // toggle string mode on unescaped quotes; only count braces/brackets outside strings
     if (c == '"' && !prevWasBackslash)
