@@ -99,8 +99,13 @@ body {
     border-top: 1px solid var(--menu-hover);
 }
 
+/* no lingering focus background after a mouse click */
+#menu .pure-menu-link:focus:not(:focus-visible) {
+    background: transparent;
+}
+
 #menu .pure-menu li a:hover,
-#menu .pure-menu li a:focus {
+#menu .pure-menu li a:focus-visible {
     background: var(--menu-hover);
 }
 
@@ -109,8 +114,10 @@ body {
     background: var(--accent);
 }
 
-#menu .pure-menu-selected a {
+/* selected item stays blue on hover/focus (same specificity as above, so must come after it) */
+#menu .pure-menu li.pure-menu-selected a {
     color: #fff;
+    background: transparent;
 }
 
 #menu .pure-menu-heading {
