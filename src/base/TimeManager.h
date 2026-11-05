@@ -22,6 +22,11 @@ public:
     // Check if NTP time has been synchronized
     static bool isNtpSynchronized() { return _ntpEpoch != 0; }
 
+    // Get current time formatted as local datetime string (buf must be at least 24 chars)
+    // Format: "YYYY-MM-DD HH:MM:SS TZ"
+    // Returns number of characters written (not including null terminator), or 0 if NTP not synchronized
+    static int getLocalTime(char *buf, size_t bufSize);
+
     // Get current time formatted as UTC datetime string (buf must be at least 24 chars)
     // Format: "YYYY-MM-DD HH:MM:SS UTC"
     // Returns number of characters written (not including null terminator), or 0 if NTP not synchronized

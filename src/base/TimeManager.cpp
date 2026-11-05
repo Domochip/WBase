@@ -47,3 +47,17 @@ int TimeManager::getUTCTime(char *buf, size_t bufSize)
                       tmInfo.tm_year + 1900, tmInfo.tm_mon + 1, tmInfo.tm_mday,
                       tmInfo.tm_hour, tmInfo.tm_min, tmInfo.tm_sec);
 }
+
+int TimeManager::getLocalTime(char *buf, size_t bufSize)
+{
+    if (_ntpEpoch == 0)
+        return 0;
+
+    uint32_t currentMillis = millis();
+    uint32_t elapsedSeconds = (currentMillis - _ntpMillis) / 1000;
+    uint32_t epoch = _ntpEpoch + elapsedSeconds;
+
+    time_t t = (time_t)epoch;
+    struct tm *timeinfo = localtime(&t);
+    return strftime(buf, bufSize, "%Y-%m-%d %H:%M:%S %Z", timeinfo);
+}
