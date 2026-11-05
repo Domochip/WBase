@@ -81,10 +81,6 @@ bool Application::saveConfig()
 
 bool Application::loadConfig()
 {
-  // special exception for Core, there is no Core.json file to Load
-  if (_appId == CoreApp)
-    return true;
-
   bool result = true; // missing file is not an error: default values are already set
   char configPath[32];
   snprintf_P(configPath, sizeof(configPath), PSTR("/%s.json"), (const char *)getAppIdName());
