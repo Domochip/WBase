@@ -22,6 +22,15 @@ void TimeManager::init(const char *ntpServer)
         } });
 }
 
+void TimeManager::setTimezone(const char *tzString)
+{
+    if (tzString && tzString[0])
+    {
+        setenv("TZ", tzString, 1);
+        tzset();
+    }
+}
+
 uint32_t TimeManager::getCurrentEpoch()
 {
     if (_ntpEpoch == 0)

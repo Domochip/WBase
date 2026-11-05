@@ -25,9 +25,21 @@ const char *Core::getSerialNumber()
   return sn;
 }
 
-void Core::setConfigDefaultValues() {};
-bool Core::parseConfigJSON(JsonVariant json, bool fromWebPage /* = false */) { return true; };
-void Core::fillConfigJSON(JsonVariant json, bool forSaveFile /* = false */) {};
+void Core::setConfigDefaultValues()
+{
+  strcpy_P(ntpTimezone, PSTR("UTC0"));
+};
+
+bool Core::parseConfigJSON(JsonVariant json, bool fromWebPage /* = false */)
+{
+  parseField(json["tz"], ntpTimezone);
+  return true;
+};
+
+void Core::fillConfigJSON(JsonVariant json, bool forSaveFile /* = false */)
+{
+  json["tz"] = ntpTimezone;
+};
 void Core::fillStatusJSON(JsonVariant json)
 {
   unsigned long minutes = millis() / 60000;
@@ -54,6 +66,7 @@ void Core::fillStatusJSON(JsonVariant json)
 }
 bool Core::appInit(bool reInit /* = false */)
 {
+  TimeManager::setTimezone(ntpTimezone);
   return true;
 };
 void Core::appInitWebServer(WebServer &server)

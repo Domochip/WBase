@@ -12,7 +12,12 @@ public:
     TimeManager() = delete;
 
     // Initialize time synchronization with NTP server
+    // Timezone should be set separately via setTimezone() before calling init()
     static void init(const char *ntpServer = "pool.ntp.org");
+
+    // Set timezone (POSIX TZ string, e.g., "UTC0", "EST5EDT,M3.2.0,M11.1.0")
+    // Can be called at any time, typically during system initialization
+    static void setTimezone(const char *tzString);
 
     // Get the current NTP epoch (seconds since Unix epoch)
     static uint32_t getNtpEpoch() { return _ntpEpoch; }
