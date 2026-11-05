@@ -27,7 +27,7 @@ const char *Core::getSerialNumber()
 
 void Core::setConfigDefaultValues()
 {
-  strcpy_P(ntpTimezone, PSTR("UTC0"));
+  strcpy_P(ntpTimezone, PSTR("Europe/Paris|CET-1CEST,M3.5.0,M10.5.0/3"));
 };
 
 bool Core::parseConfigJSON(JsonVariant json, bool fromWebPage /* = false */)
@@ -66,7 +66,17 @@ void Core::fillStatusJSON(JsonVariant json)
 }
 bool Core::appInit(bool reInit /* = false */)
 {
-  TimeManager::setTimezone(ntpTimezone);
+  // Extract POSIX TZ string from concatenated value (format: "DisplayName|POSIX_TZ_STRING")
+  const char *tzToUse = ntpTimezone;
+  char posixTz[64 + 1] = {0};
+  
+  const char *pipePos = strchr(ntpTimezone, '|');
+  if (pipePos != nullptr && pipePos[1] != '\0') {
+    strncpy(posixTz, pipePos + 1, sizeof(posixTz) - 1);
+    tzToUse = posixTz;
+  }
+  
+  TimeManager::setTimezone(tzToUse);
   return true;
 };
 void Core::appInitWebServer(WebServer &server)
