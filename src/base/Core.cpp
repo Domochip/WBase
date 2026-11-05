@@ -52,6 +52,14 @@ void Core::fillStatusJSON(JsonVariant json)
   char uptime[12];
   snprintf_P(uptime, sizeof(uptime), PSTR("%dd%dh%dm"), (uint8_t)(minutes / 1440), (uint8_t)(minutes / 60 % 24), (uint8_t)(minutes % 60));
   json[F("uptime")] = uptime;
+  
+  char localtimeBuf[24];
+  if (TimeManager::getLocalTime(localtimeBuf, sizeof(localtimeBuf)) > 0) {
+    json[F("localtime")] = localtimeBuf;
+  } else {
+    json[F("localtime")] = "NTP not synchronized";
+  }
+  
   json[F("freeheap")] = ESP.getFreeHeap();
 #ifdef ESP8266
   json[F("freestack")] = ESP.getFreeContStack();
