@@ -35,7 +35,8 @@
     // qsp is substituted at build time by pio_pre_build_spa.py — var qsp = '#content0 ';
 
     // Timezone data: display name | POSIX TZ string
-    const TIMEZONE_DATA = [
+    if (typeof TIMEZONE_DATA === 'undefined') {
+        var TIMEZONE_DATA = [
         'UTC|UTC0',
         'Europe/London|GMT0BST,M3.5.0/1,M10.5.0',
         'Europe/Paris|CET-1CEST,M3.5.0,M10.5.0/3',
@@ -77,7 +78,8 @@
         'Africa/Cairo|EET-2',
         'Africa/Lagos|WAT-1',
         'Africa/Nairobi|EAT-3',
-    ];
+        ];
+    }
 
     // Populate timezone dropdown
     function populateTimezones() {
