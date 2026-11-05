@@ -39,16 +39,14 @@ extern "C" void custom_crash_callback(struct rst_info *rst_info, uint32_t stack,
         logFile.write(tmpBuffer, writtenLen);
 
     // log crash time, reason and exception cause
-    if (TimeManager::isNtpSynchronized())
+    int offset = TimeManager::getUTCTime(tmpBuffer, sizeof(tmpBuffer));
+    if (offset > 0)
     {
-        uint32_t crashEpoch = TimeManager::getNtpEpoch() + (millis() - TimeManager::getNtpMillis()) / 1000;
-        int offset = TimeManager::formatEpochToUTC(crashEpoch, tmpBuffer, sizeof(tmpBuffer));
         snprintf_P(tmpBuffer + offset, sizeof(tmpBuffer) - offset,
                    PSTR("\nRestart reason: %d\nException cause: %d\n"), rst_info->reason, rst_info->exccause);
     }
     else
         sprintf_P(tmpBuffer, PSTR("Crashed at %lu ms (no NTP)\nRestart reason: %d\nException cause: %d\n"), millis(), rst_info->reason, rst_info->exccause);
-
     logFile.write(tmpBuffer, strlen(tmpBuffer));
 
     // log crash info (epc1, epc2, epc3, excvaddr, depc) and stack trace

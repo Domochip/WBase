@@ -19,22 +19,13 @@ public:
     // Can be called at any time, typically during system initialization
     static void setTimezone(const char *tzString);
 
-    // Get the current NTP epoch (seconds since Unix epoch)
-    static uint32_t getNtpEpoch() { return _ntpEpoch; }
-
-    // Get the milliseconds value when NTP time was synchronized
-    static uint32_t getNtpMillis() { return _ntpMillis; }
-
-    // Get the current time in seconds since Unix epoch
-    static uint32_t getCurrentEpoch();
-
     // Check if NTP time has been synchronized
     static bool isNtpSynchronized() { return _ntpEpoch != 0; }
 
-    // Format epoch time as UTC datetime string (buf must be at least 24 chars)
+    // Get current time formatted as UTC datetime string (buf must be at least 24 chars)
     // Format: "YYYY-MM-DD HH:MM:SS UTC"
-    // Returns number of characters written (not including null terminator)
-    static int formatEpochToUTC(uint32_t epoch, char *buf, size_t bufSize);
+    // Returns number of characters written (not including null terminator), or 0 if NTP not synchronized
+    static int getUTCTime(char *buf, size_t bufSize);
 
 private:
     static uint32_t _ntpEpoch;

@@ -31,21 +31,18 @@ void TimeManager::setTimezone(const char *tzString)
     }
 }
 
-uint32_t TimeManager::getCurrentEpoch()
+int TimeManager::getUTCTime(char *buf, size_t bufSize)
 {
     if (_ntpEpoch == 0)
         return 0;
 
     uint32_t currentMillis = millis();
     uint32_t elapsedSeconds = (currentMillis - _ntpMillis) / 1000;
-    return _ntpEpoch + elapsedSeconds;
-}
+    uint32_t epoch = _ntpEpoch + elapsedSeconds;
 
-int TimeManager::formatEpochToUTC(uint32_t epoch, char *buf, size_t bufSize)
-{
     time_t t = (time_t)epoch;
     struct tm tmInfo;
-    gmtime_r(&t, &tmInfo); // gmtime_r always returns UTC time
+    gmtime_r(&t, &tmInfo);
     return snprintf_P(buf, bufSize, PSTR("%04d-%02d-%02d %02d:%02d:%02d UTC"),
                       tmInfo.tm_year + 1900, tmInfo.tm_mon + 1, tmInfo.tm_mday,
                       tmInfo.tm_hour, tmInfo.tm_min, tmInfo.tm_sec);
