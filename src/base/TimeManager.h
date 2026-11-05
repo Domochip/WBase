@@ -5,6 +5,7 @@
 #include <Arduino.h>
 #include <time.h>
 #include <sys/time.h>
+#include <sntp.h>
 
 class TimeManager
 {

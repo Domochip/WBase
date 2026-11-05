@@ -11,7 +11,10 @@ uint32_t TimeManager::_ntpMillis = 0;
 
 void TimeManager::init(const char *ntpServer)
 {
-    configTime(0, 0, ntpServer);
+    sntp_stop();
+    sntp_setservername(0, ntpServer);
+    sntp_init();
+
     settimeofday_cb([]()
                     {
         time_t t = time(nullptr);
@@ -24,11 +27,8 @@ void TimeManager::init(const char *ntpServer)
 
 void TimeManager::setTimezone(const char *tzString)
 {
-    if (tzString && tzString[0])
-    {
-        setenv("TZ", tzString, 1);
-        tzset();
-    }
+    if (tzString)
+        setTZ(tzString);
 }
 
 int TimeManager::getUTCTime(char *buf, size_t bufSize)
