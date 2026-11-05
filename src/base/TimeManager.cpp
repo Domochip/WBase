@@ -31,3 +31,13 @@ uint32_t TimeManager::getCurrentEpoch()
     uint32_t elapsedSeconds = (currentMillis - _ntpMillis) / 1000;
     return _ntpEpoch + elapsedSeconds;
 }
+
+int TimeManager::formatEpochToUTC(uint32_t epoch, char *buf, size_t bufSize)
+{
+    time_t t = (time_t)epoch;
+    struct tm tmInfo;
+    gmtime_r(&t, &tmInfo); // gmtime_r always returns UTC time
+    return snprintf_P(buf, bufSize, PSTR("%04d-%02d-%02d %02d:%02d:%02d UTC"),
+                      tmInfo.tm_year + 1900, tmInfo.tm_mon + 1, tmInfo.tm_mday,
+                      tmInfo.tm_hour, tmInfo.tm_min, tmInfo.tm_sec);
+}

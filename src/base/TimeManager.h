@@ -26,6 +26,11 @@ public:
     // Check if NTP time has been synchronized
     static bool isNtpSynchronized() { return _ntpEpoch != 0; }
 
+    // Format epoch time as UTC datetime string (buf must be at least 24 chars)
+    // Format: "YYYY-MM-DD HH:MM:SS UTC"
+    // Returns number of characters written (not including null terminator)
+    static int formatEpochToUTC(uint32_t epoch, char *buf, size_t bufSize);
+
 private:
     static uint32_t _ntpEpoch;
     static uint32_t _ntpMillis;
