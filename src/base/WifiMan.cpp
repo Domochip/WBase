@@ -86,6 +86,9 @@ void WifiMan::refreshWiFi()
 #endif
         _connectionCount++;
 
+        // Init TimeManager for NTP synchronization when WiFi is connected
+        TimeManager::init("pool.ntp.org");
+
         LOG_SERIAL_PRINTF_P(PSTR("Connected (%s) "), ipToCString(WiFi.localIP()));
       }
       else // connection failed

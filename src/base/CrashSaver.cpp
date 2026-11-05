@@ -1,4 +1,5 @@
 #include "CrashSaver.h"
+#include "TimeManager.h"
 #include "../Main.h" // for VERSION_NUMBER and CUSTOM_APP_MODEL
 
 #ifdef ESP8266
@@ -40,9 +41,9 @@ extern "C" void custom_crash_callback(struct rst_info *rst_info, uint32_t stack,
         logFile.write(tmpBuffer, writtenLen);
 
     // log crash time, reason and exception cause
-    if (CrashSaver::_ntpEpoch != 0)
+    if (TimeManager::isNtpSynchronized())
     {
-        time_t crashEpoch = (time_t)(CrashSaver::_ntpEpoch + (crashTime - CrashSaver::_ntpMillis) / 1000);
+        time_t crashEpoch = (time_t)(TimeManager::getNtpEpoch() + (crashTime - TimeManager::getNtpMillis()) / 1000);
         struct tm tmInfo;
         gmtime_r(&crashEpoch, &tmInfo);
         sprintf_P(tmpBuffer, PSTR("Crashed at %04d-%02d-%02d %02d:%02d:%02d UTC\nRestart reason: %d\nException cause: %d\n"),
@@ -83,23 +84,12 @@ extern "C" void custom_crash_callback(struct rst_info *rst_info, uint32_t stack,
 }
 
 FS *CrashSaver::_fs = nullptr;
-uint32_t CrashSaver::_ntpEpoch = 0;
-uint32_t CrashSaver::_ntpMillis = 0;
 
 char CrashSaver::_nextLogFilePath[LOG_FILE_PATH_LEN] = {0};
 
-void CrashSaver::init(FS &fs, const char *ntpServer /* = "pool.ntp.org" */)
+void CrashSaver::init(FS &fs)
 {
     _fs = &fs;
-    configTime(0, 0, ntpServer);
-    settimeofday_cb([]()
-                    {
-        time_t t = time(nullptr);
-        if (t > 1000000000UL)
-        {
-            _ntpEpoch = (uint32_t)t;
-            _ntpMillis = millis();
-        } });
     calculateNextLogFilePath();
 }
 
