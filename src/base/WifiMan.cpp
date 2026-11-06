@@ -147,31 +147,28 @@ void WifiMan::refreshWiFi()
 {
   if (ssid[0]) // if STA configured
   {
-    if (!WiFi.isConnected() || WiFi.SSID() != ssid || WiFi.psk() != password)
+    LOG_SERIAL_PRINT(F("Connect"));
+
+    startConnect();
+
+    // Wait _reconnectDuration for connection
+    for (int i = 0; i < (((uint16_t)_reconnectDuration) * 10) && !WiFi.isConnected(); i++)
     {
-      LOG_SERIAL_PRINT(F("Connect"));
+      if ((i % 10) == 0)
+        LOG_SERIAL_PRINT(".");
+      delay(100);
+    }
 
-      startConnect();
-
-      // Wait _reconnectDuration for connection
-      for (int i = 0; i < (((uint16_t)_reconnectDuration) * 10) && !WiFi.isConnected(); i++)
-      {
-        if ((i % 10) == 0)
-          LOG_SERIAL_PRINT(".");
-        delay(100);
-      }
-
-      // if connection is successfull
-      if (WiFi.isConnected())
-      {
-        onConnected();
-        LOG_SERIAL_PRINTF_P(PSTR("Connected (%s) "), ipToCString(WiFi.localIP()));
-      }
-      else // connection failed
-      {
-        onConnectFailed();
-        LOG_SERIAL_PRINT(F("AP not found "));
-      }
+    // if connection is successfull
+    if (WiFi.isConnected())
+    {
+      onConnected();
+      LOG_SERIAL_PRINTF_P(PSTR("Connected (%s) "), ipToCString(WiFi.localIP()));
+    }
+    else // connection failed
+    {
+      onConnectFailed();
+      LOG_SERIAL_PRINT(F("AP not found "));
     }
   }
   else // else if AP is configured
