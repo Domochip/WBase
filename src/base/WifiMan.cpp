@@ -71,9 +71,9 @@ void WifiMan::enableAP()
     return;
 
   // AP is off: no client can be disturbed by a scan, so choose the channel now
-  _apChannel = scanForApChannel();
+  uint8_t apChannel = scanForApChannel();
 
-  if (!WiFi.softAP(F(DEFAULT_AP_SSID), F(DEFAULT_AP_PSK), _apChannel))
+  if (!WiFi.softAP(F(DEFAULT_AP_SSID), F(DEFAULT_AP_PSK), apChannel))
   {
     LOG_SERIAL_PRINTLN(F("/!\\ softAP failed (check SSID / PSK) /!\\"));
     return;
