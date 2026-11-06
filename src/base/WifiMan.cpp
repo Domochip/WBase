@@ -76,7 +76,7 @@ void WifiMan::enableAP()
   if (!WiFi.softAP(F(DEFAULT_AP_SSID), F(DEFAULT_AP_PSK), apChannel))
   {
     LOG_SERIAL_PRINTLN(F("/!\\ softAP failed (check SSID / PSK) /!\\"));
-    WiFi.enableAP(false); // disable AP mode for a later retry if softAP failed 
+    WiFi.enableAP(false); // disable AP mode for a later retry if softAP failed
     return;
   }
 
@@ -90,7 +90,7 @@ void WifiMan::enableAP()
   if (WiFi.softAPIP() == noIP)
   {
     LOG_SERIAL_PRINTLN(F("/!\\ softAP has no IP /!\\"));
-    WiFi.enableAP(false); // disable AP mode for a later retry if softAP failed 
+    WiFi.enableAP(false); // disable AP mode for a later retry if softAP failed
     return;
   }
 
@@ -393,8 +393,17 @@ void WifiMan::appRun()
   case StaState::WaitRetry:
     // retry only if no client is connected to the softAP
     // (the attempt would make the AP follow the router channel and kick the client)
-    if (elapsed >= _refreshPeriod * 1000UL && WiFi.softAPgetStationNum() == 0)
-      startConnect();
+    // but don't wait forever: retry anyway after _maxRetryDelay
+    if (elapsed >= _refreshPeriod * 1000UL)
+    {
+      if (WiFi.softAPgetStationNum() == 0)
+        startConnect();
+      else if (elapsed >= _maxRetryDelay * 1000UL)
+      {
+        LOG_SERIAL_PRINTLN(F("WiFi retry forced (client still connected to AP)"));
+        startConnect();
+      }
+    }
     break;
 
   default:

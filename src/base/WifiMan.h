@@ -43,6 +43,7 @@ private:
   StaState _staState = StaState::Off;
   uint32_t _staStateMillis = 0;          // millis() when _staState was last changed
   uint8_t _refreshPeriod = 60;           // try to reconnect as station mode every 60 seconds
+  uint16_t _maxRetryDelay = 300;         // retry even if a client is connected to the softAP after this delay, in seconds
   uint8_t _reconnectDuration = 20;       // duration to try to connect to Wifi in seconds
   uint8_t _autoReconnectGrace = 15;      // time left to SDK auto-reconnect after a drop before falling back to AP, in seconds
   uint16_t _connectionCount = 0;         // count of successful WiFi connections
