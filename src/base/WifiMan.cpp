@@ -29,21 +29,25 @@ void WifiMan::enableAP(bool force /* = false */)
 {
   if (!(WiFi.getMode() & WIFI_AP) || force)
   {
-    WiFi.enableAP(true);
-    WiFi.softAP(F(DEFAULT_AP_SSID), F(DEFAULT_AP_PSK), _apChannel);
-    // Free existing DNS server if any, and start a new one
+    // Free existing DNS server if any
     if (_dnsServer)
     {
       _dnsServer->stop();
       delete _dnsServer;
       _dnsServer = nullptr;
     }
-    _dnsServer = new DNSServer();
-    _dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
+
+    WiFi.enableAP(true);
+    WiFi.softAP(F(DEFAULT_AP_SSID), F(DEFAULT_AP_PSK), _apChannel);
+
     while (WiFi.softAPIP() == INADDR_NONE)
     {
       delay(10);
     }
+
+    // start captive portal DNS server
+    _dnsServer = new DNSServer();
+    _dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
     _dnsServer->start(53, F("*"), WiFi.softAPIP());
   }
 }
