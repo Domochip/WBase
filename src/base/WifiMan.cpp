@@ -134,10 +134,14 @@ void WifiMan::onConnected()
   TimeManager::init();
 
   setStaState(StaState::Connected);
+
+  LOG_SERIAL_PRINTF_P(PSTR("WiFi connected (%s)\n"), ipToCString(WiFi.localIP()));
 }
 
 void WifiMan::onConnectFailed()
 {
+  LOG_SERIAL_PRINTF_P(PSTR("WiFi connection failed (reason: %u), enabling AP, next attempt in %us\n"), _lastDiscoReason, _refreshPeriod);
+
   // stop STA activity first, so the AP channel scan runs with an idle radio
   WiFi.disconnect();
   // enable AP as fallback to let the user reach the device
@@ -164,15 +168,9 @@ void WifiMan::initialConnect()
 
     // if connection is successfull
     if (WiFi.isConnected())
-    {
       onConnected();
-      LOG_SERIAL_PRINTF_P(PSTR("Connected (%s) "), ipToCString(WiFi.localIP()));
-    }
     else // connection failed
-    {
       onConnectFailed();
-      LOG_SERIAL_PRINT(F("AP not found "));
-    }
   }
   else // else if AP is configured
   {
@@ -365,29 +363,16 @@ void WifiMan::appRun()
 
   case StaState::Lost:
     if (WiFi.isConnected())
-    {
       onConnected();
-      LOG_SERIAL_PRINTF_P(PSTR("WiFi reconnected (%s)\n"), ipToCString(WiFi.localIP()));
-    }
     else if (elapsed >= _autoReconnectGrace * 1000UL)
-    {
-      // drop is not short: handle it as a failed attempt (AP enabled, next attempt after _refreshPeriod)
-      LOG_SERIAL_PRINTF_P(PSTR("WiFi still lost, enabling AP, next attempt in %us\n"), _refreshPeriod);
-      onConnectFailed();
-    }
+      onConnectFailed(); // drop is not short: handle it as a failed attempt (AP enabled, next attempt after _refreshPeriod)
     break;
 
   case StaState::Connecting:
     if (WiFi.isConnected())
-    {
       onConnected();
-      LOG_SERIAL_PRINTF_P(PSTR("WiFi connected (%s)\n"), ipToCString(WiFi.localIP()));
-    }
     else if (elapsed >= _reconnectDuration * 1000UL)
-    {
       onConnectFailed();
-      LOG_SERIAL_PRINTF_P(PSTR("WiFi connection failed (reason: %u), next attempt in %us\n"), _lastDiscoReason, _refreshPeriod);
-    }
     break;
 
   case StaState::WaitRetry:
