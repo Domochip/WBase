@@ -69,6 +69,12 @@ void WifiMan::enableAP(bool force /* = false */)
   }
 }
 
+void WifiMan::setStaState(StaState state)
+{
+  _staState = state;
+  _staStateMillis = millis();
+}
+
 void WifiMan::refreshWiFi()
 {
   if (ssid[0]) // if STA configured
@@ -81,6 +87,7 @@ void WifiMan::refreshWiFi()
 
       WiFi.config(ip, gw, mask, dns1, dns2);
       WiFi.begin(ssid, password);
+      setStaState(StaState::Connecting);
 
       // Wait _reconnectDuration for connection
       for (int i = 0; i < (((uint16_t)_reconnectDuration) * 10) && !WiFi.isConnected(); i++)
@@ -110,11 +117,14 @@ void WifiMan::refreshWiFi()
         // Init TimeManager for NTP synchronization when WiFi is connected
         TimeManager::init();
 
+        setStaState(StaState::Connected);
+
         LOG_SERIAL_PRINTF_P(PSTR("Connected (%s) "), ipToCString(WiFi.localIP()));
       }
       else // connection failed
       {
         WiFi.disconnect();
+        setStaState(StaState::WaitRetry);
         LOG_SERIAL_PRINT(F("AP not found "));
 #ifdef ESP8266
         _refreshTicker.once(_refreshPeriod, [this]()
@@ -129,6 +139,7 @@ void WifiMan::refreshWiFi()
   else // else if AP is configured
   {
     _refreshTicker.detach();
+    setStaState(StaState::Off);
     enableAP();
     WiFi.disconnect();
 #ifdef STATUS_LED_GOOD

@@ -30,8 +30,19 @@ private:
 #ifdef ESP8266
   WiFiEventHandler _discoEventHandler;
 #endif
+  // Station connection state
+  enum class StaState : uint8_t
+  {
+    Off,        // no station configured (AP only)
+    Connecting, // WiFi.begin() called, waiting for connection (AP enabled)
+    Connected,  // connected (AP disabled)
+    WaitRetry   // connection attempt failed, waiting before next attempt (AP enabled)
+  };
+
   DNSServer *_dnsServer = nullptr;
   uint8_t _apChannel = 2;
+  volatile StaState _staState = StaState::Off;
+  uint32_t _staStateMillis = 0; // millis() when _staState was last changed
   bool _needRefreshWifi = false;
   Ticker _refreshTicker;
   uint8_t _refreshPeriod = 60;     // try to reconnect as station mode every 60 seconds
@@ -40,6 +51,7 @@ private:
   uint8_t _lastDiscoReason = 0;    // last WiFi disconnection reason code
 
   void enableAP(bool force = false);
+  void setStaState(StaState state);
   void refreshWiFi();
 
   void setConfigDefaultValues();
