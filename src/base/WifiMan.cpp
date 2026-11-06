@@ -1,5 +1,10 @@
 #include "WifiMan.h"
 
+// WPA2 requires 8 to 63 characters (empty = open AP); softAP() fails otherwise
+static_assert(sizeof(DEFAULT_AP_PSK) == 1 || (sizeof(DEFAULT_AP_PSK) - 1 >= 8 && sizeof(DEFAULT_AP_PSK) - 1 <= 63),
+              "DEFAULT_AP_PSK must be empty or 8 to 63 characters long");
+static_assert(sizeof(DEFAULT_AP_SSID) - 1 <= 32, "DEFAULT_AP_SSID must be at most 32 characters long");
+
 const char *WifiMan::ipToCString(IPAddress ip)
 {
   static char buf[16];
@@ -38,11 +43,23 @@ void WifiMan::enableAP(bool force /* = false */)
     }
 
     WiFi.enableAP(true);
-    WiFi.softAP(F(DEFAULT_AP_SSID), F(DEFAULT_AP_PSK), _apChannel);
-
-    while (WiFi.softAPIP() == INADDR_NONE)
+    if (!WiFi.softAP(F(DEFAULT_AP_SSID), F(DEFAULT_AP_PSK), _apChannel))
     {
+      LOG_SERIAL_PRINTLN(F("/!\\ softAP failed (check SSID / PSK) /!\\"));
+      return;
+    }
+
+    // wait (max 2s) for the AP to get its IP
+    // compare to 0.0.0.0 explicitly: INADDR_NONE is 255.255.255.255 on ESP8266 but 0.0.0.0 on ESP32 ...
+    const IPAddress noIP(0, 0, 0, 0);
+    uint32_t waitStart = millis();
+    while (WiFi.softAPIP() == noIP && millis() - waitStart < 2000)
       delay(10);
+
+    if (WiFi.softAPIP() == noIP)
+    {
+      LOG_SERIAL_PRINTLN(F("/!\\ softAP has no IP /!\\"));
+      return;
     }
 
     // start captive portal DNS server
