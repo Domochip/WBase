@@ -73,14 +73,6 @@ void WifiMan::enableAP()
   // AP is off: no client can be disturbed by a scan, so choose the channel now
   _apChannel = scanForApChannel();
 
-  // Free existing DNS server if any
-  if (_dnsServer)
-  {
-    _dnsServer->stop();
-    delete _dnsServer;
-    _dnsServer = nullptr;
-  }
-
   WiFi.enableAP(true);
   if (!WiFi.softAP(F(DEFAULT_AP_SSID), F(DEFAULT_AP_PSK), _apChannel))
   {
