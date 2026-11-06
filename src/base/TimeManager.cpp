@@ -43,9 +43,7 @@ int TimeManager::getUTCTime(char *buf, size_t bufSize)
     time_t t = (time_t)epoch;
     struct tm tmInfo;
     gmtime_r(&t, &tmInfo);
-    return snprintf_P(buf, bufSize, PSTR("%04d-%02d-%02d %02d:%02d:%02d UTC"),
-                      tmInfo.tm_year + 1900, tmInfo.tm_mon + 1, tmInfo.tm_mday,
-                      tmInfo.tm_hour, tmInfo.tm_min, tmInfo.tm_sec);
+    return strftime(buf, bufSize, "%Y-%m-%d %H:%M:%S UTC", &tmInfo);
 }
 
 int TimeManager::getLocalTime(char *buf, size_t bufSize)
@@ -58,6 +56,7 @@ int TimeManager::getLocalTime(char *buf, size_t bufSize)
     uint32_t epoch = _ntpEpoch + elapsedSeconds;
 
     time_t t = (time_t)epoch;
-    struct tm *timeinfo = localtime(&t);
-    return strftime(buf, bufSize, "%Y-%m-%d %H:%M:%S %Z", timeinfo);
+    struct tm tmInfo;
+    localtime_r(&t, &tmInfo);
+    return strftime(buf, bufSize, "%Y-%m-%d %H:%M:%S %Z", &tmInfo);
 }
