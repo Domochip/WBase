@@ -30,10 +30,51 @@ const char *WifiMan::getMacAddress()
   return mac;
 }
 
+// Scan networks and return the least crowded non-overlapping channel (1, 6 or 11)
+// each network overlapping a candidate (+/-4 channels) adds a weight based on its signal strength
+// returns 1 if no network is found or if the scan fails
+static uint8_t scanForApChannel()
+{
+  static const uint8_t candidates[] = {1, 6, 11};
+  uint8_t best = candidates[0];
+  uint32_t bestScore = UINT32_MAX;
+
+  int n = WiFi.scanNetworks();
+
+  if (n > 0)
+  {
+    for (uint8_t candidate : candidates)
+    {
+      uint32_t score = 0;
+      for (int i = 0; i < n; i++)
+      {
+        if (abs((int)WiFi.channel(i) - candidate) <= 4)
+          score += constrain((int)WiFi.RSSI(i) + 100, 1, 100); // -40dBm weighs more than -90dBm
+      }
+      if (score < bestScore)
+      {
+        bestScore = score;
+        best = candidate;
+      }
+    }
+  }
+  WiFi.scanDelete();
+
+  LOG_SERIAL_PRINTF_P(PSTR("%dN-CH%u "), n, best);
+  return best;
+}
+
 void WifiMan::enableAP(bool force /* = false */)
 {
-  if (!(WiFi.getMode() & WIFI_AP) || force)
+  bool apRunning = WiFi.getMode() & WIFI_AP;
+
+  if (!apRunning || force)
   {
+    // AP is off: no client can be disturbed by a scan, so choose the channel now
+    // (if AP is already running, keep its channel)
+    if (!apRunning)
+      _apChannel = scanForApChannel();
+
     // Free existing DNS server if any
     if (_dnsServer)
     {
@@ -241,27 +282,6 @@ bool WifiMan::appInit(bool reInit /* = false */)
 
   // let the SDK handle short drops by itself (see appRun, StaState::Lost)
   WiFi.setAutoReconnect(true);
-
-  // scan networks to search for best free channel
-  int n = WiFi.scanNetworks();
-
-  LOG_SERIAL_PRINTF_P(PSTR("%dN-CH"), n);
-
-  if (n)
-  {
-    while (_apChannel < 12)
-    {
-      int i = 0;
-      while (i < n && WiFi.channel(i) != _apChannel)
-        i++;
-      if (i == n)
-        break;
-      _apChannel++;
-    }
-  }
-
-  LOG_SERIAL_PRINT(_apChannel);
-  LOG_SERIAL_PRINT(' ');
 
   // Configure handlers
   if (!reInit)

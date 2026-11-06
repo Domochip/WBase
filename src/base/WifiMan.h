@@ -40,7 +40,7 @@ private:
   };
 
   DNSServer *_dnsServer = nullptr;
-  uint8_t _apChannel = 2;
+  uint8_t _apChannel = 1; // AP channel, chosen by scan each time the AP is switched on
   StaState _staState = StaState::Off;
   uint32_t _staStateMillis = 0;          // millis() when _staState was last changed
   uint8_t _refreshPeriod = 60;           // try to reconnect as station mode every 60 seconds
