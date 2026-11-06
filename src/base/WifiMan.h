@@ -41,7 +41,7 @@ private:
 
   DNSServer *_dnsServer = nullptr;
   uint8_t _apChannel = 2;
-  volatile StaState _staState = StaState::Off;
+  StaState _staState = StaState::Off;
   uint32_t _staStateMillis = 0;          // millis() when _staState was last changed
   uint8_t _refreshPeriod = 60;           // try to reconnect as station mode every 60 seconds
   uint8_t _reconnectDuration = 20;       // duration to try to connect to Wifi in seconds

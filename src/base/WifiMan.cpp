@@ -272,23 +272,12 @@ bool WifiMan::appInit(bool reInit /* = false */)
     WiFi.onEvent([this](WiFiEvent_t event, WiFiEventInfo_t info)
 #endif
                                                         {
-    // keep the reason (also for failed attempts: wrong password, AP not found, ...)
+                                                          // only keep the reason (also for failed attempts: wrong password, AP not found, ...)
+                                                          // detection, log and reconnection are handled by appRun
 #ifdef ESP8266
                                                           _lastDiscoReason = evt.reason;
 #else
-                   _lastDiscoReason = info.wifi_sta_disconnected.reason;
-#endif
-                                                          // log only the drop of an established connection
-                                                          // (SDK auto-reconnect retries would flood the log)
-                                                          // reconnection is handled by appRun (StaState::Connected/Lost)
-                                                          if (_staState == StaState::Connected)
-                                                          {
-                                                            LOG_SERIAL_PRINT(F("Wifi disconnected (reason: "));
-                                                            LOG_SERIAL_PRINT(_lastDiscoReason);
-                                                            LOG_SERIAL_PRINTLN(')');
-                                                          }
-#ifdef STATUS_LED_WARNING
-                                                          STATUS_LED_WARNING
+                                                          _lastDiscoReason = info.wifi_sta_disconnected.reason;
 #endif
                                                         }
 #ifndef ESP8266
@@ -364,7 +353,13 @@ void WifiMan::appRun()
   case StaState::Connected:
     // connection lost: let the SDK auto-reconnect for a while (AP stays off)
     if (!WiFi.isConnected())
+    {
+      LOG_SERIAL_PRINTF_P(PSTR("WiFi disconnected (reason: %u)\n"), _lastDiscoReason);
+#ifdef STATUS_LED_WARNING
+      STATUS_LED_WARNING
+#endif
       setStaState(StaState::Lost);
+    }
     break;
 
   case StaState::Lost:
