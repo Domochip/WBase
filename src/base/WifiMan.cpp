@@ -76,6 +76,7 @@ void WifiMan::enableAP()
   if (!WiFi.softAP(F(DEFAULT_AP_SSID), F(DEFAULT_AP_PSK), apChannel))
   {
     LOG_SERIAL_PRINTLN(F("/!\\ softAP failed (check SSID / PSK) /!\\"));
+    WiFi.enableAP(false); // disable AP mode for a later retry if softAP failed 
     return;
   }
 
@@ -89,6 +90,7 @@ void WifiMan::enableAP()
   if (WiFi.softAPIP() == noIP)
   {
     LOG_SERIAL_PRINTLN(F("/!\\ softAP has no IP /!\\"));
+    WiFi.enableAP(false); // disable AP mode for a later retry if softAP failed 
     return;
   }
 
@@ -340,6 +342,15 @@ void WifiMan::appRun()
 
   switch (_staState)
   {
+  case StaState::Off:
+    // AP-only mode: make sure the AP is running (retry if it failed to start)
+    if (!(WiFi.getMode() & WIFI_AP) && elapsed >= _refreshPeriod * 1000UL)
+    {
+      setStaState(StaState::Off); // restart the retry delay
+      enableAP();
+    }
+    break;
+
   case StaState::Connected:
     // connection lost: let the SDK auto-reconnect for a while (AP stays off)
     if (!WiFi.isConnected())
