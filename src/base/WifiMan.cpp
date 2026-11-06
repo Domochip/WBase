@@ -260,6 +260,32 @@ void WifiMan::fillStatusJSON(JsonVariant json)
   else
     json[F("stationmode")] = F("off");
 
+  // station connection state
+  switch (_staState)
+  {
+  case StaState::Connecting:
+    json[F("stastate")] = F("connecting");
+    break;
+  case StaState::Connected:
+    json[F("stastate")] = F("connected");
+    break;
+  case StaState::Lost:
+    json[F("stastate")] = F("lost");
+    break;
+  case StaState::WaitRetry:
+  {
+    json[F("stastate")] = F("waitretry");
+    // seconds until next attempt (forced attempt after _maxRetryDelay if a client is connected to the softAP)
+    uint32_t elapsed = millis() - _staStateMillis;
+    uint32_t target = (WiFi.softAPgetStationNum() == 0 ? _refreshPeriod : _maxRetryDelay) * 1000UL;
+    json[F("nextretry")] = (elapsed < target) ? (target - elapsed + 999) / 1000 : 0;
+    break;
+  }
+  default:
+    json[F("stastate")] = F("off");
+    break;
+  }
+
   json[F("mac")] = getMacAddress();
   json[F("connectcount")] = _connectionCount;
   json[F("discoreason")] = _lastDiscoReason;
