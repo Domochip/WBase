@@ -276,36 +276,6 @@ bool WifiMan::appInit(bool reInit /* = false */)
                                                         WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED
 #endif
     );
-
-    // if station connect to softAP
-#ifdef ESP8266
-    _staConnectedHandler = WiFi.onSoftAPModeStationConnected([this](const WiFiEventSoftAPModeStationConnected &evt)
-#else
-    WiFi.onEvent([this](WiFiEvent_t event, WiFiEventInfo_t info)
-#endif
-                                                             {
-      //flag it in _stationConnectedToSoftAP
-      _stationConnectedToSoftAP = true; }
-#ifndef ESP8266
-                                                             ,
-                                                             WiFiEvent_t::ARDUINO_EVENT_WIFI_AP_STACONNECTED
-#endif
-    );
-
-    // if station disconnect of the softAP
-#ifdef ESP8266
-    _staDisconnectedHandler = WiFi.onSoftAPModeStationDisconnected([this](const WiFiEventSoftAPModeStationDisconnected &evt)
-#else
-    WiFi.onEvent([this](WiFiEvent_t event, WiFiEventInfo_t info)
-#endif
-                                                                   {
-      //check if a station left
-      _stationConnectedToSoftAP = WiFi.softAPgetStationNum(); }
-#ifndef ESP8266
-                                                                   ,
-                                                                   WiFiEvent_t::ARDUINO_EVENT_WIFI_AP_STADISCONNECTED
-#endif
-    );
   }
 
   // Set hostname
@@ -367,7 +337,7 @@ void WifiMan::appInitWebServer(WebServer &server)
 void WifiMan::appRun()
 {
   // if refreshWifi is required and no client is connected to the softAP
-  if (_needRefreshWifi && !_stationConnectedToSoftAP)
+  if (_needRefreshWifi && WiFi.softAPgetStationNum() == 0)
   {
     _needRefreshWifi = false;
     refreshWiFi();

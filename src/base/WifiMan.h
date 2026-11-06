@@ -29,13 +29,10 @@ private:
 // Run properties
 #ifdef ESP8266
   WiFiEventHandler _discoEventHandler;
-  WiFiEventHandler _staConnectedHandler;
-  WiFiEventHandler _staDisconnectedHandler;
 #endif
   DNSServer *_dnsServer = nullptr;
   uint8_t _apChannel = 2;
   bool _needRefreshWifi = false;
-  bool _stationConnectedToSoftAP = false;
   Ticker _refreshTicker;
   uint8_t _refreshPeriod = 60;     // try to reconnect as station mode every 60 seconds
   uint8_t _reconnectDuration = 20; // duration to try to connect to Wifi in seconds
