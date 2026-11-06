@@ -173,9 +173,7 @@ void WifiMan::refreshWiFi()
   }
   else // else if AP is configured
   {
-    setStaState(StaState::Off);
     enableAP();
-    WiFi.disconnect();
 #ifdef STATUS_LED_GOOD
     STATUS_LED_GOOD
 #endif
