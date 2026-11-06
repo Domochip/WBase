@@ -269,9 +269,8 @@ void WifiMan::fillStatusJSON(JsonVariant json)
 
 bool WifiMan::appInit(bool reInit /* = false */)
 {
-
-  // make changes saved to flash
-  WiFi.persistent(true);
+  // do not store WiFi config in SDK flash/NVS
+  WiFi.persistent(false);
 
   // Enable AP at start
   enableAP(true);
@@ -303,9 +302,6 @@ bool WifiMan::appInit(bool reInit /* = false */)
 
   // Call RefreshWiFi to initiate configuration
   refreshWiFi();
-
-  // right config so no need to touch again flash
-  WiFi.persistent(false);
 
   // start MDNS
   if (reInit)
