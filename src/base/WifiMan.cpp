@@ -110,13 +110,6 @@ void WifiMan::onConnectFailed()
 {
   WiFi.disconnect();
   setStaState(StaState::WaitRetry);
-#ifdef ESP8266
-  _refreshTicker.once(_refreshPeriod, [this]()
-                      { _needRefreshWifi = true; });
-#else
-  _refreshTicker.once<WifiMan *>(_refreshPeriod, [](WifiMan *wifiMan)
-                                 { wifiMan->_needRefreshWifi = true; }, this);
-#endif
 }
 
 void WifiMan::refreshWiFi()
@@ -152,7 +145,6 @@ void WifiMan::refreshWiFi()
   }
   else // else if AP is configured
   {
-    _refreshTicker.detach();
     setStaState(StaState::Off);
     enableAP();
     WiFi.disconnect();
@@ -243,8 +235,8 @@ bool WifiMan::appInit(bool reInit /* = false */)
   // Enable AP at start
   enableAP(true);
 
-  // Stop RefreshWiFi and disconnect before WiFi operations -----
-  _refreshTicker.detach();
+  // Initialize connection state and disconnect before WiFi operations -----
+  setStaState(StaState::Off);
   WiFi.disconnect();
 
   // scan networks to search for best free channel
@@ -289,8 +281,7 @@ bool WifiMan::appInit(bool reInit /* = false */)
 #endif
                                                             LOG_SERIAL_PRINT(_lastDiscoReason);
                                                             LOG_SERIAL_PRINTLN(')');
-                                                            // call RefreshWifi shortly
-                                                            _needRefreshWifi = true;
+                                                            // reconnection is handled by appRun (StaState::Connected)
                                                           }
 #ifdef STATUS_LED_WARNING
                                                           STATUS_LED_WARNING
@@ -361,11 +352,42 @@ void WifiMan::appInitWebServer(WebServer &server)
 
 void WifiMan::appRun()
 {
-  // if refreshWifi is required and no client is connected to the softAP
-  if (_needRefreshWifi && WiFi.softAPgetStationNum() == 0)
+  // Non-blocking station connection management
+  uint32_t elapsed = millis() - _staStateMillis;
+
+  switch (_staState)
   {
-    _needRefreshWifi = false;
-    refreshWiFi();
+  case StaState::Connected:
+    // connection lost: start a new attempt right away
+    if (!WiFi.isConnected())
+    {
+      LOG_SERIAL_PRINTLN(F("WiFi lost, reconnecting"));
+      startConnect();
+    }
+    break;
+
+  case StaState::Connecting:
+    if (WiFi.isConnected())
+    {
+      onConnected();
+      LOG_SERIAL_PRINTF_P(PSTR("WiFi connected (%s)\n"), ipToCString(WiFi.localIP()));
+    }
+    else if (elapsed >= _reconnectDuration * 1000UL)
+    {
+      onConnectFailed();
+      LOG_SERIAL_PRINTF_P(PSTR("WiFi connection failed (reason: %u), next attempt in %us\n"), _lastDiscoReason, _refreshPeriod);
+    }
+    break;
+
+  case StaState::WaitRetry:
+    // retry only if no client is connected to the softAP
+    // (the attempt would make the AP follow the router channel and kick the client)
+    if (elapsed >= _refreshPeriod * 1000UL && WiFi.softAPgetStationNum() == 0)
+      startConnect();
+    break;
+
+  default:
+    break;
   }
 
   if (_dnsServer)

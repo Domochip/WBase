@@ -4,7 +4,6 @@
 #include "../Main.h"
 #include "Application.h"
 
-#include <Ticker.h>
 #ifdef ESP8266
 #include <ESP8266mDNS.h>
 #else
@@ -43,8 +42,6 @@ private:
   uint8_t _apChannel = 2;
   volatile StaState _staState = StaState::Off;
   uint32_t _staStateMillis = 0; // millis() when _staState was last changed
-  bool _needRefreshWifi = false;
-  Ticker _refreshTicker;
   uint8_t _refreshPeriod = 60;     // try to reconnect as station mode every 60 seconds
   uint8_t _reconnectDuration = 20; // duration to try to connect to Wifi in seconds
   uint16_t _connectionCount = 0;   // count of successful WiFi connections
