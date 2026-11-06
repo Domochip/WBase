@@ -239,6 +239,9 @@ bool WifiMan::appInit(bool reInit /* = false */)
   setStaState(StaState::Off);
   WiFi.disconnect();
 
+  // let the SDK handle short drops by itself (see appRun, StaState::Lost)
+  WiFi.setAutoReconnect(true);
+
   // scan networks to search for best free channel
   int n = WiFi.scanNetworks();
 
@@ -269,19 +272,20 @@ bool WifiMan::appInit(bool reInit /* = false */)
     WiFi.onEvent([this](WiFiEvent_t event, WiFiEventInfo_t info)
 #endif
                                                         {
-                                                          if (!(WiFi.getMode() & WIFI_AP) && ssid[0])
-                                                          {
-                                                            // stop reconnection
-                                                            WiFi.disconnect();
-                                                            LOG_SERIAL_PRINT(F("Wifi disconnected (reason: "));
+    // keep the reason (also for failed attempts: wrong password, AP not found, ...)
 #ifdef ESP8266
-                                                            _lastDiscoReason = evt.reason;
+                                                          _lastDiscoReason = evt.reason;
 #else
-                     _lastDiscoReason = info.wifi_sta_disconnected.reason;
+                   _lastDiscoReason = info.wifi_sta_disconnected.reason;
 #endif
+                                                          // log only the drop of an established connection
+                                                          // (SDK auto-reconnect retries would flood the log)
+                                                          // reconnection is handled by appRun (StaState::Connected/Lost)
+                                                          if (_staState == StaState::Connected)
+                                                          {
+                                                            LOG_SERIAL_PRINT(F("Wifi disconnected (reason: "));
                                                             LOG_SERIAL_PRINT(_lastDiscoReason);
                                                             LOG_SERIAL_PRINTLN(')');
-                                                            // reconnection is handled by appRun (StaState::Connected)
                                                           }
 #ifdef STATUS_LED_WARNING
                                                           STATUS_LED_WARNING
@@ -358,10 +362,21 @@ void WifiMan::appRun()
   switch (_staState)
   {
   case StaState::Connected:
-    // connection lost: start a new attempt right away
+    // connection lost: let the SDK auto-reconnect for a while (AP stays off)
     if (!WiFi.isConnected())
+      setStaState(StaState::Lost);
+    break;
+
+  case StaState::Lost:
+    if (WiFi.isConnected())
     {
-      LOG_SERIAL_PRINTLN(F("WiFi lost, reconnecting"));
+      onConnected();
+      LOG_SERIAL_PRINTF_P(PSTR("WiFi reconnected (%s)\n"), ipToCString(WiFi.localIP()));
+    }
+    else if (elapsed >= _autoReconnectGrace * 1000UL)
+    {
+      // drop is not short: fall back to a full attempt with AP enabled
+      LOG_SERIAL_PRINTLN(F("WiFi still lost, enabling AP and reconnecting"));
       startConnect();
     }
     break;
