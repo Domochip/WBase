@@ -52,6 +52,9 @@ private:
 
   void enableAP(bool force = false);
   void setStaState(StaState state);
+  void startConnect();
+  void onConnected();
+  void onConnectFailed();
   void refreshWiFi();
 
   void setConfigDefaultValues();

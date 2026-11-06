@@ -75,19 +75,59 @@ void WifiMan::setStaState(StaState state)
   _staStateMillis = millis();
 }
 
+// Start a connection attempt, with AP enabled as fallback
+void WifiMan::startConnect()
+{
+  enableAP();
+  WiFi.config(ip, gw, mask, dns1, dns2);
+  WiFi.begin(ssid, password);
+  setStaState(StaState::Connecting);
+}
+
+void WifiMan::onConnected()
+{
+  // stop DNS server
+  if (_dnsServer)
+  {
+    _dnsServer->stop();
+    delete _dnsServer;
+    _dnsServer = nullptr;
+  }
+  // disable AP
+  WiFi.enableAP(false);
+#ifdef STATUS_LED_GOOD
+  STATUS_LED_GOOD
+#endif
+  _connectionCount++;
+
+  // Init TimeManager for NTP synchronization when WiFi is connected
+  TimeManager::init();
+
+  setStaState(StaState::Connected);
+}
+
+void WifiMan::onConnectFailed()
+{
+  WiFi.disconnect();
+  setStaState(StaState::WaitRetry);
+#ifdef ESP8266
+  _refreshTicker.once(_refreshPeriod, [this]()
+                      { _needRefreshWifi = true; });
+#else
+  _refreshTicker.once<WifiMan *>(_refreshPeriod, [](WifiMan *wifiMan)
+                                 { wifiMan->_needRefreshWifi = true; }, this);
+#endif
+}
+
 void WifiMan::refreshWiFi()
 {
   if (ssid[0]) // if STA configured
   {
     if (!WiFi.isConnected() || WiFi.SSID() != ssid || WiFi.psk() != password)
     {
-      enableAP();
-
       LOG_SERIAL_PRINT(F("Connect"));
 
-      WiFi.config(ip, gw, mask, dns1, dns2);
-      WiFi.begin(ssid, password);
-      setStaState(StaState::Connecting);
+      startConnect();
 
       // Wait _reconnectDuration for connection
       for (int i = 0; i < (((uint16_t)_reconnectDuration) * 10) && !WiFi.isConnected(); i++)
@@ -100,39 +140,13 @@ void WifiMan::refreshWiFi()
       // if connection is successfull
       if (WiFi.isConnected())
       {
-        // stop DNS server
-        if (_dnsServer)
-        {
-          _dnsServer->stop();
-          delete _dnsServer;
-          _dnsServer = nullptr;
-        }
-        // disable AP
-        WiFi.enableAP(false);
-#ifdef STATUS_LED_GOOD
-        STATUS_LED_GOOD
-#endif
-        _connectionCount++;
-
-        // Init TimeManager for NTP synchronization when WiFi is connected
-        TimeManager::init();
-
-        setStaState(StaState::Connected);
-
+        onConnected();
         LOG_SERIAL_PRINTF_P(PSTR("Connected (%s) "), ipToCString(WiFi.localIP()));
       }
       else // connection failed
       {
-        WiFi.disconnect();
-        setStaState(StaState::WaitRetry);
+        onConnectFailed();
         LOG_SERIAL_PRINT(F("AP not found "));
-#ifdef ESP8266
-        _refreshTicker.once(_refreshPeriod, [this]()
-                            { _needRefreshWifi = true; });
-#else
-        _refreshTicker.once<WifiMan *>(_refreshPeriod, [](WifiMan *wifiMan)
-                                       { wifiMan->_needRefreshWifi = true; }, this);
-#endif
       }
     }
   }
