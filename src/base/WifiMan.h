@@ -54,7 +54,7 @@ private:
   void startConnect();
   void onConnected();
   void onConnectFailed();
-  void refreshWiFi();
+  void initialConnect();
 
   void setConfigDefaultValues();
   bool parseConfigJSON(JsonVariant json, bool fromWebPage = false);

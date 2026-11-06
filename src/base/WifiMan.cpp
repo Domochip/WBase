@@ -143,7 +143,8 @@ void WifiMan::onConnectFailed()
   setStaState(StaState::WaitRetry);
 }
 
-void WifiMan::refreshWiFi()
+// Initial connection, blocking (used by appInit only: state is Off and STA disconnected)
+void WifiMan::initialConnect()
 {
   if (ssid[0]) // if STA configured
   {
@@ -282,8 +283,8 @@ bool WifiMan::appInit(bool reInit /* = false */)
 #endif
   }
 
-  // Call RefreshWiFi to initiate configuration (enables AP when needed)
-  refreshWiFi();
+  // Initial connection (blocking, enables AP when needed)
+  initialConnect();
 
   // start MDNS
   if (reInit)
