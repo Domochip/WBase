@@ -49,7 +49,7 @@ private:
   uint16_t _connectionCount = 0;         // count of successful WiFi connections
   volatile uint8_t _lastDiscoReason = 0; // last WiFi disconnection reason code (written from WiFi event)
 
-  void enableAP(bool force = false);
+  void enableAP();
   void setStaState(StaState state);
   void startConnect();
   void onConnected();

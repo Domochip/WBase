@@ -64,50 +64,47 @@ static uint8_t scanForApChannel()
   return best;
 }
 
-void WifiMan::enableAP(bool force /* = false */)
+void WifiMan::enableAP()
 {
-  bool apRunning = WiFi.getMode() & WIFI_AP;
+  // AP already running: nothing to do (and keep its channel)
+  if (WiFi.getMode() & WIFI_AP)
+    return;
 
-  if (!apRunning || force)
+  // AP is off: no client can be disturbed by a scan, so choose the channel now
+  _apChannel = scanForApChannel();
+
+  // Free existing DNS server if any
+  if (_dnsServer)
   {
-    // AP is off: no client can be disturbed by a scan, so choose the channel now
-    // (if AP is already running, keep its channel)
-    if (!apRunning)
-      _apChannel = scanForApChannel();
-
-    // Free existing DNS server if any
-    if (_dnsServer)
-    {
-      _dnsServer->stop();
-      delete _dnsServer;
-      _dnsServer = nullptr;
-    }
-
-    WiFi.enableAP(true);
-    if (!WiFi.softAP(F(DEFAULT_AP_SSID), F(DEFAULT_AP_PSK), _apChannel))
-    {
-      LOG_SERIAL_PRINTLN(F("/!\\ softAP failed (check SSID / PSK) /!\\"));
-      return;
-    }
-
-    // wait (max 2s) for the AP to get its IP
-    // compare to 0.0.0.0 explicitly: INADDR_NONE is 255.255.255.255 on ESP8266 but 0.0.0.0 on ESP32 ...
-    const IPAddress noIP(0, 0, 0, 0);
-    uint32_t waitStart = millis();
-    while (WiFi.softAPIP() == noIP && millis() - waitStart < 2000)
-      delay(10);
-
-    if (WiFi.softAPIP() == noIP)
-    {
-      LOG_SERIAL_PRINTLN(F("/!\\ softAP has no IP /!\\"));
-      return;
-    }
-
-    // start captive portal DNS server
-    _dnsServer = new DNSServer();
-    _dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
-    _dnsServer->start(53, F("*"), WiFi.softAPIP());
+    _dnsServer->stop();
+    delete _dnsServer;
+    _dnsServer = nullptr;
   }
+
+  WiFi.enableAP(true);
+  if (!WiFi.softAP(F(DEFAULT_AP_SSID), F(DEFAULT_AP_PSK), _apChannel))
+  {
+    LOG_SERIAL_PRINTLN(F("/!\\ softAP failed (check SSID / PSK) /!\\"));
+    return;
+  }
+
+  // wait (max 2s) for the AP to get its IP
+  // compare to 0.0.0.0 explicitly: INADDR_NONE is 255.255.255.255 on ESP8266 but 0.0.0.0 on ESP32 ...
+  const IPAddress noIP(0, 0, 0, 0);
+  uint32_t waitStart = millis();
+  while (WiFi.softAPIP() == noIP && millis() - waitStart < 2000)
+    delay(10);
+
+  if (WiFi.softAPIP() == noIP)
+  {
+    LOG_SERIAL_PRINTLN(F("/!\\ softAP has no IP /!\\"));
+    return;
+  }
+
+  // start captive portal DNS server
+  _dnsServer = new DNSServer();
+  _dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
+  _dnsServer->start(53, F("*"), WiFi.softAPIP());
 }
 
 void WifiMan::setStaState(StaState state)
@@ -272,8 +269,8 @@ bool WifiMan::appInit(bool reInit /* = false */)
   // do not store WiFi config in SDK flash/NVS
   WiFi.persistent(false);
 
-  // Enable AP at start
-  enableAP(true);
+  // Set hostname before any WiFi start (ESP32 applies it to the STA interface only when the WiFi mode changes)
+  WiFi.hostname(hostname);
 
   // Initialize connection state and disconnect before WiFi operations -----
   setStaState(StaState::Off);
@@ -297,10 +294,7 @@ bool WifiMan::appInit(bool reInit /* = false */)
 #endif
   }
 
-  // Set hostname
-  WiFi.hostname(hostname);
-
-  // Call RefreshWiFi to initiate configuration
+  // Call RefreshWiFi to initiate configuration (enables AP when needed)
   refreshWiFi();
 
   // start MDNS
