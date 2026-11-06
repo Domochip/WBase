@@ -64,11 +64,13 @@ static uint8_t scanForApChannel()
   return best;
 }
 
-void WifiMan::enableAP()
+// Start the AP (with captive portal DNS) if not already running
+// returns true if the AP is running (already or just started)
+bool WifiMan::enableAP()
 {
   // AP already running: nothing to do (and keep its channel)
   if (WiFi.getMode() & WIFI_AP)
-    return;
+    return true;
 
   // AP is off: no client can be disturbed by a scan, so choose the channel now
   uint8_t apChannel = scanForApChannel();
@@ -77,7 +79,7 @@ void WifiMan::enableAP()
   {
     LOG_SERIAL_PRINTLN(F("/!\\ softAP failed (check SSID / PSK) /!\\"));
     WiFi.enableAP(false); // disable AP mode for a later retry if softAP failed
-    return;
+    return false;
   }
 
   // wait (max 2s) for the AP to get its IP
@@ -91,13 +93,16 @@ void WifiMan::enableAP()
   {
     LOG_SERIAL_PRINTLN(F("/!\\ softAP has no IP /!\\"));
     WiFi.enableAP(false); // disable AP mode for a later retry if softAP failed
-    return;
+    return false;
   }
 
   // start captive portal DNS server
   _dnsServer = new DNSServer();
   _dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
   _dnsServer->start(53, F("*"), WiFi.softAPIP());
+
+  LOG_SERIAL_PRINTF_P(PSTR("AP started (%s - ch %u - %s) "), F(DEFAULT_AP_SSID), apChannel, ipToCString(WiFi.softAPIP()));
+  return true;
 }
 
 void WifiMan::setStaState(StaState state)
@@ -174,12 +179,19 @@ void WifiMan::initialConnect()
   }
   else // else if AP is configured
   {
-    enableAP();
+    // AP is the normal mode here: LED good if it started (if not, appRun retries periodically)
+    if (enableAP())
+    {
 #ifdef STATUS_LED_GOOD
-    STATUS_LED_GOOD
+      STATUS_LED_GOOD
 #endif
-
-    LOG_SERIAL_PRINTF_P(PSTR(" AP mode(%s - %s) "), F(DEFAULT_AP_SSID), ipToCString(WiFi.softAPIP()));
+    }
+    else
+    {
+#ifdef STATUS_LED_WARNING
+      STATUS_LED_WARNING
+#endif
+    }
   }
 }
 
@@ -345,7 +357,12 @@ void WifiMan::appRun()
     if (!(WiFi.getMode() & WIFI_AP) && elapsed >= _refreshPeriod * 1000UL)
     {
       setStaState(StaState::Off); // restart the retry delay
-      enableAP();
+      if (enableAP())
+      {
+#ifdef STATUS_LED_GOOD
+        STATUS_LED_GOOD
+#endif
+      }
     }
     break;
 
