@@ -113,10 +113,9 @@ void WifiMan::setStaState(StaState state)
   _staStateMillis = millis();
 }
 
-// Start a connection attempt, with AP enabled as fallback
+// Start a connection attempt
 void WifiMan::startConnect()
 {
-  enableAP();
   WiFi.config(ip, gw, mask, dns1, dns2);
   WiFi.begin(ssid, password);
   setStaState(StaState::Connecting);
@@ -146,7 +145,10 @@ void WifiMan::onConnected()
 
 void WifiMan::onConnectFailed()
 {
+  // stop STA activity first, so the AP channel scan runs with an idle radio
   WiFi.disconnect();
+  // enable AP as fallback to let the user reach the device
+  enableAP();
   setStaState(StaState::WaitRetry);
 }
 
@@ -371,9 +373,9 @@ void WifiMan::appRun()
     }
     else if (elapsed >= _autoReconnectGrace * 1000UL)
     {
-      // drop is not short: fall back to a full attempt with AP enabled
-      LOG_SERIAL_PRINTLN(F("WiFi still lost, enabling AP and reconnecting"));
-      startConnect();
+      // drop is not short: handle it as a failed attempt (AP enabled, next attempt after _refreshPeriod)
+      LOG_SERIAL_PRINTF_P(PSTR("WiFi still lost, enabling AP, next attempt in %us\n"), _refreshPeriod);
+      onConnectFailed();
     }
     break;
 

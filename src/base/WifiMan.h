@@ -33,7 +33,7 @@ private:
   enum class StaState : uint8_t
   {
     Off,        // no station configured (AP only)
-    Connecting, // WiFi.begin() called, waiting for connection (AP enabled)
+    Connecting, // WiFi.begin() called, waiting for connection (AP kept as is: off on first attempt, on during retries)
     Connected,  // connected (AP disabled)
     Lost,       // connection lost, SDK auto-reconnect is trying (AP still disabled)
     WaitRetry   // connection attempt failed, waiting before next attempt (AP enabled)
