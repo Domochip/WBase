@@ -297,6 +297,8 @@ bool WifiMan::appInit(bool reInit /* = false */)
   WiFi.persistent(false);
 
   // start MDNS
+  if (reInit)
+    MDNS.end();
   MDNS.begin(CUSTOM_APP_MODEL);
 
   return (ssid[0] ? WiFi.isConnected() : true);
