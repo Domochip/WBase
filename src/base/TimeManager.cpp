@@ -31,32 +31,26 @@ void TimeManager::setTimezone(const char *tzString)
         setTZ(tzString);
 }
 
-int TimeManager::getUTCTime(char *buf, size_t bufSize)
+int TimeManager::formatTime(bool utc, char *buf, size_t bufSize)
 {
     if (_ntpEpoch == 0)
         return 0;
 
-    uint32_t currentMillis = millis();
-    uint32_t elapsedSeconds = (currentMillis - _ntpMillis) / 1000;
-    uint32_t epoch = _ntpEpoch + elapsedSeconds;
-
-    time_t t = (time_t)epoch;
+    time_t t = (time_t)(_ntpEpoch + (millis() - _ntpMillis) / 1000);
     struct tm tmInfo;
-    gmtime_r(&t, &tmInfo);
-    return strftime(buf, bufSize, "%Y-%m-%d %H:%M:%S UTC", &tmInfo);
+    if (utc)
+        gmtime_r(&t, &tmInfo);
+    else
+        localtime_r(&t, &tmInfo);
+    return strftime(buf, bufSize, utc ? "%Y-%m-%d %H:%M:%S UTC" : "%Y-%m-%d %H:%M:%S %Z", &tmInfo);
+}
+
+int TimeManager::getUTCTime(char *buf, size_t bufSize)
+{
+    return formatTime(true, buf, bufSize);
 }
 
 int TimeManager::getLocalTime(char *buf, size_t bufSize)
 {
-    if (_ntpEpoch == 0)
-        return 0;
-
-    uint32_t currentMillis = millis();
-    uint32_t elapsedSeconds = (currentMillis - _ntpMillis) / 1000;
-    uint32_t epoch = _ntpEpoch + elapsedSeconds;
-
-    time_t t = (time_t)epoch;
-    struct tm tmInfo;
-    localtime_r(&t, &tmInfo);
-    return strftime(buf, bufSize, "%Y-%m-%d %H:%M:%S %Z", &tmInfo);
+    return formatTime(false, buf, bufSize);
 }

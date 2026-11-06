@@ -34,6 +34,8 @@ public:
     static int getUTCTime(char *buf, size_t bufSize);
 
 private:
+    static int formatTime(bool utc, char *buf, size_t bufSize);
+
     static uint32_t _ntpEpoch;
     static uint32_t _ntpMillis;
 
