@@ -266,25 +266,16 @@ bool WifiMan::appInit(bool reInit /* = false */)
   // Configure handlers
   if (!reInit)
   {
+    // only keep the reason (also for failed attempts: wrong password, AP not found, ...)
+    // detection, log and reconnection are handled by appRun
 #ifdef ESP8266
     _discoEventHandler = WiFi.onStationModeDisconnected([this](const WiFiEventStationModeDisconnected &evt)
+                                                        { _lastDiscoReason = evt.reason; });
 #else
     WiFi.onEvent([this](WiFiEvent_t event, WiFiEventInfo_t info)
+                 { _lastDiscoReason = info.wifi_sta_disconnected.reason; },
+                 WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
 #endif
-                                                        {
-                                                          // only keep the reason (also for failed attempts: wrong password, AP not found, ...)
-                                                          // detection, log and reconnection are handled by appRun
-#ifdef ESP8266
-                                                          _lastDiscoReason = evt.reason;
-#else
-                                                          _lastDiscoReason = info.wifi_sta_disconnected.reason;
-#endif
-                                                        }
-#ifndef ESP8266
-                                                        ,
-                                                        WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED
-#endif
-    );
   }
 
   // Set hostname
