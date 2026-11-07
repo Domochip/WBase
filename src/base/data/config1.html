@@ -105,12 +105,21 @@
             else { //scan done
                 const wnl = $(qsp + "#wnl");
                 if (wnl) {
-                    if (WNL.r == 0) wnl.innerHTML = '<option>No Network Found</option>';
+                    // Network names (SSID) are chosen by whoever runs a nearby access point:
+                    // up to 32 bytes of anything, including HTML. They are added with
+                    // new Option(text, value), which never interprets them as markup.
+                    // (They used to be concatenated into innerHTML, so a neighbour could
+                    // inject markup into this configuration page.)
+                    wnl.textContent = '';
+                    if (WNL.r == 0) wnl.add(new Option('No Network Found'));
                     else {
-                        wnl.innerHTML = '<option>Choose Your Network</option>';
+                        wnl.add(new Option('Choose Your Network'));
                         for (k in WNL.wnl) {
-                            const color = rssiToColor(WNL.wnl[k].RSSI);
-                            wnl.innerHTML += `<option style="color:${color}" value="${WNL.wnl[k].SSID}"${$(qsp + "#s").value == WNL.wnl[k].SSID ? ' selected' : ''}>${WNL.wnl[k].SSID} (${rssiToQuality(WNL.wnl[k].RSSI)}%)</option>`;
+                            const ssid = String(WNL.wnl[k].SSID);
+                            const selected = $(qsp + "#s").value == ssid;
+                            const option = new Option(ssid + ' (' + rssiToQuality(WNL.wnl[k].RSSI) + '%)', ssid, selected, selected);
+                            option.style.color = rssiToColor(WNL.wnl[k].RSSI);
+                            wnl.add(option);
                         }
                         wnl.addEventListener('change', function () { $(qsp + "#s").value = wnl.value });
                     }
