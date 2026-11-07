@@ -19,7 +19,7 @@ public:
     using DisconnectedCallback = std::function<void()>;
 
 private:
-    char _username[64 + 1] = {0};
+    char _username[32 + 1] = {0};
     char _password[64 + 1] = {0};
     char _connectedAndWillTopic[96] = {0};
     char _baseTopic[64 + 4 + 12 - 7 + sizeof(CUSTOM_APP_MODEL) + 1] = {0};
