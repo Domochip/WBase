@@ -78,6 +78,8 @@ protected:
       strlcpy(dest, jv.as<const char *>(), N);
   }
 
+  // Reads the latest GitHub release. Buffers (each optional except version) must be at least:
+  // version[10], title[64], releaseDate[11], summary[256]. Returns true if a version was found.
   static bool getLatestUpdateInfo(char *version, char *title = nullptr, char *releaseDate = nullptr, char *summary = nullptr);
   static void fillLatestUpdateInfoJson(JsonVariant json, bool forWebPage = false);
   static bool isValidVersion(const char *version);

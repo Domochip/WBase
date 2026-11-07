@@ -1,4 +1,5 @@
 #include "Application.h"
+#include "ReleaseInfoParser.h"
 
 Application *Application::_applicationList[3] = {nullptr, nullptr, nullptr};
 
@@ -166,20 +167,23 @@ bool Application::getLatestUpdateInfo(char *version, char *title /* = nullptr */
   // httpCode is 200, we can continue
   WiFiClient *stream = http.getStreamPtr();
 
-  // We need to parse the JSON response without loading the whole response in memory
-
-  const uint8_t maxKeyLength = 16; // longest key is "\"published_at\":"" => 15 chars
-  char keyBuffer[17] = {0};        // Shifting buffer used to find keys
-  uint8_t keyLen = 0;              // current length of the key in the buffer (up to maxKeyLength)
-  uint8_t treeLevel = 0;           // used to skip unwanted data
-  bool inOuterString = false;      // true while the outer loop is inside a JSON string value
-  bool prevWasBackslash = false;   // used to detect escaped quotes inside strings
+  // Parse the JSON answer as a stream, without loading it in memory (several KB: assets, author, reactions...).
+  // The parsing itself is in ReleaseInfoParser (no Arduino dependency, testable on a PC);
+  // this function only provides the characters.
 
   // readNextChar waits (up to 500ms) briefly for the next byte, allowing the WiFi stack to
   // process incoming TCP segments that haven't arrived yet (fixes premature exit
   // when the receive buffer empties between two TCP segments)
+#ifdef ESP8266
+  uint16_t byteCount = 0;
+#endif
   auto readNextChar = [&](char &c) -> bool
   {
+#ifdef ESP8266
+    // a run of slow reads can stall up to 500 ms each
+    if (++byteCount % 32 == 0)
+      ESP.wdtFeed();
+#endif
     uint32_t start = millis();
     while (!stream->available())
     {
@@ -191,131 +195,19 @@ bool Application::getLatestUpdateInfo(char *version, char *title /* = nullptr */
     return true;
   };
 
-  // while there is data to read
-  char c;
-  uint16_t byteCount = 0;
-  while (readNextChar(c))
-  {
-#ifdef ESP8266
-    // a run of slow reads can now stall up to 500 ms each
-    if (++byteCount % 32 == 0)
-      ESP.wdtFeed();
-#endif
+  // buffer sizes expected from callers (fillLatestUpdateInfoJson(), updateFirmware()):
+  // version[10], title[64], releaseDate[11] ("YYYY-MM-DD"), summary[256]
+  ReleaseInfoParser::Targets targets;
+  targets.version = version;
+  targets.versionSize = 10;
+  targets.title = title;
+  targets.titleSize = 64;
+  targets.releaseDate = releaseDate;
+  targets.releaseDateSize = 11;
+  targets.summary = summary;
+  targets.summarySize = 256;
 
-    // toggle string mode on unescaped quotes; only count braces/brackets outside strings
-    if (c == '"' && !prevWasBackslash)
-      inOuterString = !inOuterString;
-    prevWasBackslash = !prevWasBackslash && (c == '\\');
-
-    if (!inOuterString)
-    {
-      if (c == '{' || c == '[')
-        treeLevel++;
-      else if (c == '}' || c == ']')
-        treeLevel--;
-    }
-
-    // if we are not at the first treeLevel, skip the character
-    // (there is some "name" key in assets that we don't want to parse)
-    if (treeLevel > 1)
-      continue;
-
-    // if keyBuffer is full, shift it to the left by one character
-    if (keyLen == maxKeyLength)
-    {
-      memmove(keyBuffer, keyBuffer + 1, maxKeyLength - 1);
-      keyLen = maxKeyLength - 1;
-    }
-    // and add the new character at the end
-    keyBuffer[keyLen++] = c;
-    keyBuffer[keyLen] = '\0';
-
-    if (c != ':')
-      continue;
-
-    char *targetPtr = nullptr;
-    size_t targetMaxLen = 0;
-
-    // if we found the key "tag_name"
-    if (version && keyLen >= 11 && memcmp(keyBuffer + keyLen - 11, "\"tag_name\":", 11) == 0)
-    {
-      targetPtr = version;
-      targetMaxLen = 9;
-    }
-    // if we found the key "name"
-    else if (title && keyLen >= 7 && memcmp(keyBuffer + keyLen - 7, "\"name\":", 7) == 0)
-    {
-      targetPtr = title;
-      targetMaxLen = 63;
-    }
-    // if we found the key "published_at"
-    else if (releaseDate && keyLen >= 15 && memcmp(keyBuffer + keyLen - 15, "\"published_at\":", 15) == 0)
-    {
-      targetPtr = releaseDate;
-      targetMaxLen = 10;
-    }
-    // if we found the key "body"
-    else if (summary && keyLen >= 7 && memcmp(keyBuffer + keyLen - 7, "\"body\":", 7) == 0)
-    {
-      targetPtr = summary;
-      targetMaxLen = 255;
-    }
-
-    // if this is not a key we are looking for, continue
-    if (!targetPtr)
-      continue;
-
-    // otherwise prepare target buffer
-    targetPtr[0] = '\0';
-    size_t curLen = 0;
-
-    // skip until opening doublequote
-    while (readNextChar(c) && c != '"')
-      ;
-
-    // for title, skip version prefix up to first space
-    if (targetPtr == title)
-      while (readNextChar(c) && c != ' ')
-        ;
-
-    // read the value
-    while (readNextChar(c))
-    {
-
-      // endsWithBackslash is used to handle escaped characters in JSON (e.g. \n, \r, \") and avoid stopping at an escaped double quote
-      bool endsWithBackslash = (curLen > 0 && targetPtr[curLen - 1] == '\\');
-
-      if (c == '"' && !endsWithBackslash)
-        break;
-
-      if (endsWithBackslash)
-      {
-        if (c == 'n')
-          targetPtr[curLen - 1] = '\n';
-        else if (c == 'r')
-          targetPtr[curLen - 1] = '\r';
-        else if (c == '"')
-          targetPtr[curLen - 1] = '"';
-        else if (c == '\\')
-          targetPtr[curLen - 1] = '\\';
-      }
-      else if (curLen < targetMaxLen)
-      {
-        targetPtr[curLen++] = c;
-        targetPtr[curLen] = '\0';
-      }
-
-      // for summary, stop at first section break "\r\n\r\n##"
-      if (targetPtr == summary && curLen >= 6 && memcmp(targetPtr + curLen - 6, "\r\n\r\n##", 6) == 0)
-      {
-        // remove the last 6 characters
-        curLen -= 6;
-        targetPtr[curLen] = '\0';
-        // avoid adding more text in summary
-        targetMaxLen = curLen;
-      }
-    }
-  }
+  ReleaseInfoParser::parse(readNextChar, targets);
 
   http.end();
 
