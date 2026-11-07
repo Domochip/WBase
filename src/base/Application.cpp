@@ -1,4 +1,5 @@
 #include "Application.h"
+#include "UpdateSecurity.h"
 
 Application *Application::_applicationList[3] = {nullptr, nullptr, nullptr};
 
@@ -129,6 +130,25 @@ void Application::parseIPField(JsonVariant jv, uint32_t &dest)
       dest = 0;
   }
 }
+
+// Heap measurements during online updates, printed on the log serial port: free heap and largest free block
+// at each step, and the lowest free heap seen while the firmware is downloaded, written and checked.
+// They show the memory cost of the signature check (BearSSL second stack and RSA verification).
+#if defined(ESP8266) && defined(LOG_SERIAL)
+static uint32_t updateMinFreeHeap = UINT32_MAX;
+static void logUpdateHeap(const __FlashStringHelper *step)
+{
+  uint32_t freeHeap = ESP.getFreeHeap();
+  if (freeHeap < updateMinFreeHeap)
+    updateMinFreeHeap = freeHeap;
+  LOG_SERIAL_PRINTF_P(PSTR("[heap] %-28s free=%u maxBlock=%u frag=%u%%\n"), String(step).c_str(), freeHeap, ESP.getMaxFreeBlockSize(), ESP.getHeapFragmentation());
+}
+#define LOG_UPDATE_HEAP(step) logUpdateHeap(F(step))
+#define TRACK_UPDATE_HEAP() do { uint32_t h = ESP.getFreeHeap(); if (h < updateMinFreeHeap) updateMinFreeHeap = h; } while (0)
+#else
+#define LOG_UPDATE_HEAP(step)
+#define TRACK_UPDATE_HEAP()
+#endif
 
 bool Application::getLatestUpdateInfo(char *version, char *title /* = nullptr */, char *releaseDate /* = nullptr */, char *summary /* = nullptr */)
 {
@@ -420,6 +440,12 @@ bool Application::updateFirmware(const char *version, String &retMsg, std::funct
     return false;
   }
 
+#if defined(ESP8266) && defined(LOG_SERIAL)
+  updateMinFreeHeap = UINT32_MAX;
+#endif
+  LOG_UPDATE_HEAP("update: start");
+  // The server certificate is not checked (setInsecure). With signing enabled, the downloaded image
+  // is checked instead, whatever server it came from (see UpdateSecurity.h).
   WiFiClientSecure clientSecure;
   clientSecure.setInsecure();
 
@@ -440,6 +466,7 @@ bool Application::updateFirmware(const char *version, String &retMsg, std::funct
   ESP.wdtFeed(); // fresh 6 s window before TLS handshake
 #endif
   int httpCode = https.GET();
+  LOG_UPDATE_HEAP("update: connected");
 
 #ifdef ESP8266
   ESP.wdtFeed(); // fresh 6 s window before stream readiness wait
@@ -480,8 +507,28 @@ bool Application::updateFirmware(const char *version, String &retMsg, std::funct
   // discard any leftover update (e.g. aborted upload) so begin() doesn't fail with "already running"
   resetUpdate();
 
+  // Refuse the firmware at Update.end() unless it carries a valid signature (when signing is enabled).
+  // Order matters: after resetUpdate() (which ends any previous update) and before Update.begin()
+  // (which chooses between MD5 and signature verification).
+  if (!UpdateSecurity::armSignatureCheck(retMsg))
+  {
+    // signing enabled but the public key is invalid: refuse before downloading anything
+    https.end();
+    LOG_SERIAL_PRINTLN(retMsg);
+    return false;
+  }
+
+#if defined(ESP8266) && defined(LOG_SERIAL)
+  // debug builds: the progress callback also samples the free heap during the download
+  Update.onProgress([progressCallback](size_t done, size_t total)
+                    {
+                      TRACK_UPDATE_HEAP();
+                      if (progressCallback)
+                        progressCallback(done, total); });
+#else
   if (progressCallback)
     Update.onProgress(progressCallback);
+#endif
 
   bool began = Update.begin(contentLength);
   if (began)
@@ -493,12 +540,23 @@ bool Application::updateFirmware(const char *version, String &retMsg, std::funct
     while (stream->available() == 0 && millis() - streamWaitStart < 500)
       delay(1); // cooperative yield, lets the WiFi/lwIP stack process incoming segments
     Update.writeStream(*stream);
+    LOG_UPDATE_HEAP("update: download done");
 
+    // With signing enabled, end() hashes the image, verifies the signature and fails with UPDATE_ERROR_SIGN
+    // ("Signature verification failed") if it doesn't match: the new firmware is then not activated
+    // and the current one keeps running.
     Update.end();
+    LOG_UPDATE_HEAP("update: image checked");
   }
+#if defined(ESP8266) && defined(LOG_SERIAL)
+  LOG_SERIAL_PRINTF_P(PSTR("[heap] lowest free heap during the update: %u\n"), updateMinFreeHeap);
+#endif
 
   // progress callback is global: don't leak it into a later /fw upload
   Update.onProgress(nullptr);
+
+  // release the verifier (and BearSSL's second stack) whatever the result
+  UpdateSecurity::disarmSignatureCheck();
 
   https.end();
 

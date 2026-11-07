@@ -3,6 +3,7 @@
 #include <EEPROM.h>
 #include "../Main.h" //for VERSION define
 #include "Version.h" //for BASE_VERSION define
+#include "UpdateSecurity.h"
 
 #include "data/index.html.gz.h"
 #include "data/pure-min.css.gz.h"
@@ -187,6 +188,8 @@ void Core::appInitWebServer(WebServer &server)
   // Firmware POST URL allows to push new firmware ----------------------------
   // true only if the upload reached its end and Update.end() succeeded
   static bool fwUploadOk = false;
+  // error raised before Update.begin() (e.g. invalid signing key)
+  static String fwUploadError;
 
   server.on(
       F("/fw"), HTTP_POST,
@@ -202,15 +205,23 @@ void Core::appInitWebServer(WebServer &server)
         else
         {
           msg = F("Update failed: ");
+          // fwUploadError is set when the upload was refused before Update.begin() (e.g. invalid signing key);
+          // otherwise the reason comes from Update (e.g. "Signature verification failed" for an unsigned firmware)
+          if (fwUploadError.length())
+            msg += fwUploadError;
+          else
 #ifdef ESP8266
-          msg += Update.getErrorString();
+            msg += Update.getErrorString();
 #else
-          msg += Update.errorString();
+            msg += Update.errorString();
 #endif
           Update.clearError();
           // Update failed so restart to Run custom Application in loop
           SystemState::pauseCustomApp = false;
         }
+
+        // end of the upload request: release the verifier (and BearSSL's second stack) whatever the result
+        UpdateSecurity::disarmSignatureCheck();
 
         LOG_SERIAL_PRINTLN(msg);
 
@@ -229,18 +240,29 @@ void Core::appInitWebServer(WebServer &server)
           LOG_SERIAL_PRINTF_P(PSTR("Update Start: %s\n"), upload.filename.c_str());
 
           fwUploadOk = false;
+          fwUploadError = "";
 
           // discard leftover of a previous aborted/failed upload
           // (otherwise begin() fails and write() appends to the old partial image)
           resetUpdate();
 
+          // Refuse the firmware at Update.end() unless it carries a valid signature (when signing is enabled).
+          // The web upload is the only update path that doesn't go through GitHub: without a signature check,
+          // anyone who can reach this page can install any firmware. Must be armed before Update.begin().
+          // If arming fails (invalid public key), nothing is begun: the following chunks are ignored
+          // and the final handler reports fwUploadError.
+          if (!UpdateSecurity::armSignatureCheck(fwUploadError))
+            LOG_SERIAL_PRINTLN(fwUploadError);
+          else
+          {
 #ifdef ESP8266
-          bool began = Update.begin((ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000);
+            bool began = Update.begin((ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000);
 #else
-          bool began = Update.begin();
+            bool began = Update.begin();
 #endif
-          if (!began)
-            LOG_SERIAL_PRINTLN(F("Update.begin failed"));
+            if (!began)
+              LOG_SERIAL_PRINTLN(F("Update.begin failed"));
+          }
         }
         else if (upload.status == UPLOAD_FILE_WRITE)
         {
@@ -249,12 +271,16 @@ void Core::appInitWebServer(WebServer &server)
         }
         else if (upload.status == UPLOAD_FILE_END)
         {
+          // With signing enabled, end() hashes the image, verifies the signature and fails with UPDATE_ERROR_SIGN
+          // if it doesn't match: fwUploadOk stays false, no reboot, the current firmware keeps running.
           fwUploadOk = Update.isRunning() && Update.end(true);
         }
         else if (upload.status == UPLOAD_FILE_ABORTED)
         {
           // client disconnected: the final handler won't be called, so clean up here
           resetUpdate();
+          // the final handler (which normally releases the verifier) won't run either
+          UpdateSecurity::disarmSignatureCheck();
           SystemState::pauseCustomApp = false;
           LOG_SERIAL_PRINTLN(F("Update aborted"));
         }
