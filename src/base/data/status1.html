@@ -34,7 +34,6 @@ Connection state: <span id="stastate"></span><br>
             $(qsp + "#stastate").textContent = stationStates[GS["stastate"]] || GS["stastate"];
             const showNextRetry = GS["stastate"] === 'waitretry' && GS["nextretry"] !== undefined;
             $(qsp + "#nextretrye").style.display = (showNextRetry ? '' : 'none');
-            $(qsp + "#discoreasone").style.display = (GS["stationmode"] === 'on' ? '' : 'none');
             const disconnectReasons = {
                 0: 'No disconnection',
                 1: 'Unspecified',
@@ -52,6 +51,8 @@ Connection state: <span id="stastate"></span><br>
                 205: 'Connection failed'
             };
             const disconnectReason = Number(GS["discoreason"]);
+            $(qsp + "#discoreasone").style.display =
+                (GS["stationmode"] === 'on' && disconnectReason !== 0 ? '' : 'none');
             $(qsp + "#discoreason").textContent =
                 (disconnectReasons[disconnectReason] || 'Unknown') + ' (' + disconnectReason + ')';
             const showRssi = GS["rssi"] !== undefined;
