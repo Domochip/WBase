@@ -19,7 +19,7 @@ Crash files :<span id="cbtns">
 
     getJSON("/gs" + qsp[8], function (GS) {
         for (k in GS) {
-            if ((e = $(qsp + '#' + k)) != undefined) e.innerHTML = GS[k];
+            if ((e = $(qsp + '#' + k)) != undefined) e.textContent = GS[k]; // values are data: text, not HTML
         }
         if (GS.crashcount > 0) {
             $(qsp + '#cdiv').style.display = '';

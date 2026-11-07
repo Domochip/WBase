@@ -142,22 +142,31 @@
 
         getJSON('/glui',
             (GUI) => {
+                // Release info comes from the Internet (GitHub API, relayed by the device): display it as text, never as HTML.
+                // With innerHTML, anyone able to alter it (or the connection) could run script in this page,
+                // and this page can upload a firmware through /fw.
                 for (k in GUI) {
-                    if ((e = $(qsp + '#' + k)) != undefined) e.innerHTML = GUI[k];
+                    if ((e = $(qsp + '#' + k)) != undefined) e.textContent = GUI[k];
                 }
-                // transform the release url into a clickable link
+                // transform the release url into a clickable link (GitHub URLs only: no javascript: or other scheme)
+                // rel="noopener noreferrer": the opened page gets no handle on this one
                 const releaseUrlSpan = $(qsp + '#release_url');
-                const url = releaseUrlSpan.innerHTML;
+                const url = releaseUrlSpan.textContent;
                 if (url) {
-                    releaseUrlSpan.innerHTML = `<a href="${url}" target="_blank">${url}</a>`;
+                    releaseUrlSpan.textContent = '';
+                    if (url.startsWith('https://github.com/')) {
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                        link.textContent = url;
+                        releaseUrlSpan.appendChild(link);
+                    }
                 }
 
-                // transform line breaks into <br> tags in the release summary
-                const releaseSummarySpan = $(qsp + '#release_summary');
-                const summary = releaseSummarySpan.innerHTML;
-                if (summary) {
-                    releaseSummarySpan.innerHTML = summary.replace(/\r\n/g, '<br>').replace(/\n/g, '<br>');
-                }
+                // keep line breaks of the release summary without interpreting it as HTML
+                // (previously done by inserting <br> tags with innerHTML)
+                $(qsp + '#release_summary').style.whiteSpace = 'pre-line';
 
                 // Update buttons
                 calculateAllButtonStates();
@@ -177,6 +186,14 @@
     }
     getLatestUpdateInfo();
     $(qsp + "#refreshButton").addEventListener('click', () => { getLatestUpdateInfo(); });
+
+    // Show "Failed (reason)". The reason is inserted as text, not HTML: it comes from
+    // the device or the network (update error messages can include data received
+    // from GitHub), so it must never be able to add markup or script to this page.
+    function showFailure(element, reason) {
+        element.innerHTML = '<span class="err">Failed</span>';
+        element.appendChild(document.createTextNode(' (' + reason + ')'));
+    }
 
     $(qsp + "#updateButton").addEventListener('click', (evt) => {
         evt.preventDefault();
@@ -203,7 +220,7 @@
                             $(qsp + '#rUpdate').innerHTML = '<h3>Waiting for device... <span id="cd">0</span>s</h3>';
                             redirectWhenReachable(location.origin, 60000);
                         } else {
-                            $(qsp + '#rUpdate').innerHTML = `<span class="err">Failed</span> (${message})`;
+                            showFailure($(qsp + '#rUpdate'), message);
                             calculateAllButtonStates();
                         }
                         return;
@@ -221,7 +238,7 @@
                 reader.read().then(processChunk); // Start reading chunks
             })
             .catch(error => {
-                $(qsp + '#rUpdate').innerHTML = `<span class="err">Failed</span> (${error.message})`;
+                showFailure($(qsp + '#rUpdate'), error.message);
                 calculateAllButtonStates();
             });
     });
@@ -242,7 +259,7 @@
                 redirectWhenReachable(location.origin, 60000);
             },
             (responseText) => {
-                $(qsp + '#rUpload').innerHTML = `<span class="err">Failed</span> (${responseText})`;
+                showFailure($(qsp + '#rUpload'), responseText);
                 $(qsp + '#f').reset();
                 calculateAllButtonStates();
             },

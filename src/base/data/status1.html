@@ -17,7 +17,7 @@ Connection state: <span id="stastate"></span><br>
     getJSON("/gs" + qsp[8],
         function (GS) {
             for (k in GS) {
-                if ((e = $(qsp + '#' + k)) != undefined) e.innerHTML = GS[k];
+                if ((e = $(qsp + '#' + k)) != undefined) e.textContent = GS[k]; // values are data: text, not HTML
             }
 
             $(qsp + "#apipe").style.display = (GS["apip"] ? '' : 'none');
@@ -58,7 +58,7 @@ Connection state: <span id="stastate"></span><br>
             $(qsp + "#rssie").style.display = (showRssi ? '' : 'none');
             if (showRssi) {
                 const rssiEl = $(qsp + "#rssi");
-                rssiEl.innerHTML = GS["rssi"] + ' dBm (' + rssiToQuality(GS["rssi"]) + '%)';
+                rssiEl.textContent = GS["rssi"] + ' dBm (' + rssiToQuality(GS["rssi"]) + '%)';
                 rssiEl.style.color = rssiToColor(GS["rssi"]);
             }
 
