@@ -83,16 +83,98 @@ char CrashSaver::_nextLogFilePath[LOG_FILE_PATH_LEN] = {0};
 void CrashSaver::init(FS &fs)
 {
     _fs = &fs;
+    pruneOldLogs();
     calculateNextLogFilePath();
+}
+
+uint16_t CrashSaver::parseLogFileNumber(const String &fileName)
+{
+    // only names made of 1 to 5 digits, with a value from 1 to 65535
+    if (fileName.length() == 0 || fileName.length() > 5)
+        return 0;
+
+    uint32_t number = 0;
+    for (size_t i = 0; i < fileName.length(); i++)
+    {
+        char c = fileName[i];
+        if (c < '0' || c > '9')
+            return 0;
+        number = number * 10 + (c - '0');
+    }
+
+    return (number <= UINT16_MAX) ? number : 0;
+}
+
+void CrashSaver::scanLogFiles(uint16_t &logCount, uint16_t &lowestNumber, uint16_t &highestNumber)
+{
+    logCount = 0;
+    lowestNumber = 0;
+    highestNumber = 0;
+
+    if (_fs == nullptr)
+        return;
+
+    Dir dir = _fs->openDir(DEFAULT_DIR);
+    while (dir.next())
+    {
+        uint16_t number = parseLogFileNumber(dir.fileName());
+        if (number == 0)
+            continue; // not a crash log: never counted, never removed
+
+        logCount++;
+        if (lowestNumber == 0 || number < lowestNumber)
+            lowestNumber = number;
+        if (number > highestNumber)
+            highestNumber = number;
+    }
+}
+
+size_t CrashSaver::getFreeBytes()
+{
+    FSInfo fsInfo;
+    if (_fs == nullptr || !_fs->info(fsInfo))
+        return SIZE_MAX; // unknown: don't remove logs because of free space
+    return (fsInfo.totalBytes > fsInfo.usedBytes) ? fsInfo.totalBytes - fsInfo.usedBytes : 0;
+}
+
+void CrashSaver::pruneOldLogs()
+{
+    uint16_t logCount, lowestNumber, highestNumber;
+
+    // remove the oldest log (lowest number) until both limits are respected
+    // (each pass removes one file, so this loop runs at most once per existing log)
+    while (true)
+    {
+        scanLogFiles(logCount, lowestNumber, highestNumber);
+        if (logCount == 0)
+            break;
+
+        bool tooManyLogs = (logCount >= MAX_LOG_FILES); // keep room for the next crash
+        bool lowFreeSpace = (getFreeBytes() < MIN_FREE_BYTES);
+        if (!tooManyLogs && !lowFreeSpace)
+            break;
+
+        char oldestPath[LOG_FILE_PATH_LEN];
+        snprintf(oldestPath, sizeof(oldestPath), "%s%u", DEFAULT_DIR, lowestNumber);
+        if (!_fs->remove(oldestPath))
+            break; // can't remove: stop rather than loop forever
+
+        yield();
+    }
 }
 
 void CrashSaver::calculateNextLogFilePath()
 {
-    uint16_t nextFileIndex = count();
-    if (nextFileIndex < UINT16_MAX)
-        nextFileIndex++;
+    // The next log is numbered after the HIGHEST existing number, not after the number of files:
+    // once old logs are removed, numbers have gaps (e.g. 3, 4, 5, 6 remain), and "count + 1" (5) would point
+    // to an existing log, which the crash handler would then append to.
+    // Numbers only grow, so the highest number is always the most recent crash.
+    uint16_t logCount, lowestNumber, highestNumber;
+    scanLogFiles(logCount, lowestNumber, highestNumber);
 
-    snprintf(_nextLogFilePath, sizeof(_nextLogFilePath), "%s%u", DEFAULT_DIR, nextFileIndex);
+    uint16_t nextNumber = (highestNumber < UINT16_MAX) ? highestNumber + 1 : UINT16_MAX;
+
+    snprintf(_nextLogFilePath, sizeof(_nextLogFilePath), "%s%u", DEFAULT_DIR, nextNumber);
 }
 
 uint16_t CrashSaver::count()
