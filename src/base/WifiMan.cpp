@@ -143,14 +143,30 @@ void WifiMan::onConnected()
   LOG_SERIAL_PRINTF_P(PSTR("WiFi connected (%s)\n"), ipToCString(WiFi.localIP()));
 }
 
+// true when the configured network has been unreachable for at least _apFallbackDelay
+bool WifiMan::apFallbackDue()
+{
+  return millis() - _outageStartMillis >= _apFallbackDelay * 1000UL;
+}
+
 void WifiMan::onConnectFailed()
 {
-  LOG_SERIAL_PRINTF_P(PSTR("WiFi connection failed (reason: %u), enabling AP, next attempt in %us\n"), _lastDiscoReason, _refreshPeriod);
-
   // stop STA activity first, so the AP channel scan runs with an idle radio
   WiFi.disconnect();
-  // enable AP as fallback to let the user reach the device
-  enableAP();
+
+  // The fallback AP is only enabled after a long outage.
+  // Short outages (router reboot, power cut where the device restarts faster than the router, WiFi
+  // deauthentication) must not open an access point: anyone in range could join it and reach the device.
+  // Until then, the configured network is simply retried (see appRun, StaState::WaitRetry).
+  if (apFallbackDue())
+  {
+    LOG_SERIAL_PRINTF_P(PSTR("WiFi connection failed (reason: %u), enabling AP, next attempt in %us\n"), _lastDiscoReason, _refreshPeriod);
+    enableAP();
+  }
+  else
+    LOG_SERIAL_PRINTF_P(PSTR("WiFi connection failed (reason: %u), next attempt in %us (AP in %lus)\n"), _lastDiscoReason, _retryDelayNoAP,
+                        (unsigned long)((_apFallbackDelay * 1000UL - (millis() - _outageStartMillis)) / 1000));
+
   setStaState(StaState::WaitRetry);
 }
 
@@ -161,6 +177,8 @@ void WifiMan::initialConnect()
   {
     LOG_SERIAL_PRINT(F("Connect"));
 
+    // the outage (if any) starts now: after a power cut, the device usually restarts before the router
+    _outageStartMillis = millis();
     startConnect();
 
     // Wait _reconnectDuration for connection
@@ -277,13 +295,25 @@ void WifiMan::fillStatusJSON(JsonVariant json)
     json[F("stastate")] = F("waitretry");
     // seconds until next attempt (forced attempt after _maxRetryDelay if a client is connected to the softAP)
     uint32_t elapsed = millis() - _staStateMillis;
-    uint32_t target = (WiFi.softAPgetStationNum() == 0 ? _refreshPeriod : _maxRetryDelay) * 1000UL;
+    uint32_t target;
+    if (!(WiFi.getMode() & WIFI_AP))
+      target = _retryDelayNoAP * 1000UL;
+    else
+      target = (WiFi.softAPgetStationNum() == 0 ? _refreshPeriod : _maxRetryDelay) * 1000UL;
     json[F("nextretry")] = (elapsed < target) ? (target - elapsed + 999) / 1000 : 0;
     break;
   }
   default:
     json[F("stastate")] = F("off");
     break;
+  }
+
+  // seconds until the fallback AP is enabled, while the configured network is unreachable
+  if (ssid[0] && _staState != StaState::Connected && !(WiFi.getMode() & WIFI_AP))
+  {
+    uint32_t outage = millis() - _outageStartMillis;
+    uint32_t fallbackDelay = _apFallbackDelay * 1000UL;
+    json[F("apfallbackin")] = (outage < fallbackDelay) ? (fallbackDelay - outage + 999) / 1000 : 0;
   }
 
   json[F("mac")] = getMacAddress();
@@ -400,6 +430,7 @@ void WifiMan::appRun()
 #ifdef STATUS_LED_WARNING
       STATUS_LED_WARNING
 #endif
+      _outageStartMillis = millis(); // start of the outage, for the fallback AP delay
       setStaState(StaState::Lost);
     }
     break;
@@ -408,7 +439,7 @@ void WifiMan::appRun()
     if (WiFi.isConnected())
       onConnected();
     else if (elapsed >= _autoReconnectGrace * 1000UL)
-      onConnectFailed(); // drop is not short: handle it as a failed attempt (AP enabled, next attempt after _refreshPeriod)
+      onConnectFailed(); // drop is not short: handle it as a failed attempt (AP enabled only after _apFallbackDelay)
     break;
 
   case StaState::Connecting:
@@ -419,10 +450,17 @@ void WifiMan::appRun()
     break;
 
   case StaState::WaitRetry:
-    // retry only if no client is connected to the softAP
+    // AP not enabled yet (outage shorter than _apFallbackDelay): nobody can be disturbed, retry quickly
+    // (the next failure enables the AP once the delay is reached)
+    if (!(WiFi.getMode() & WIFI_AP))
+    {
+      if (elapsed >= _retryDelayNoAP * 1000UL)
+        startConnect();
+    }
+    // AP enabled: retry only if no client is connected to the softAP
     // (the attempt would make the AP follow the router channel and kick the client)
     // but don't wait forever: retry anyway after _maxRetryDelay
-    if (elapsed >= _refreshPeriod * 1000UL)
+    else if (elapsed >= _refreshPeriod * 1000UL)
     {
       if (WiFi.softAPgetStationNum() == 0)
         startConnect();

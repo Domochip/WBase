@@ -5,6 +5,7 @@ Access Point: <span id="apmode"></span><br>
 Station: <span id="stationmode"></span><br>
 Connection state: <span id="stastate"></span><br>
 <span id="nextretrye" style='display:none'>&nbsp;&nbsp;&nbsp;&nbsp;Next retry: <span id="nextretry"></span> seconds<br></span>
+<span id="apfallbackine" style='display:none'>&nbsp;&nbsp;&nbsp;&nbsp;Fallback access point in: <span id="apfallbackin"></span> seconds<br></span>
 <span id="discoreasone" style='display:none'>Last disconnection reason: <span id="discoreason"></span><br></span>
 <span id="stationipe" style='display:none'>&nbsp;&nbsp;&nbsp;&nbsp;IP: <span id="stationip"></span><br></span>
 <span id="stationipsourcee" style='display:none'>&nbsp;&nbsp;&nbsp;&nbsp;IP Source: <span id="stationipsource"></span><br></span>
@@ -34,6 +35,8 @@ Connection state: <span id="stastate"></span><br>
             $(qsp + "#stastate").textContent = stationStates[GS["stastate"]] || GS["stastate"];
             const showNextRetry = GS["stastate"] === 'waitretry' && GS["nextretry"] !== undefined;
             $(qsp + "#nextretrye").style.display = (showNextRetry ? '' : 'none');
+            // countdown before the fallback access point opens (only while the configured network is unreachable)
+            $(qsp + "#apfallbackine").style.display = (GS["apfallbackin"] !== undefined ? '' : 'none');
             $(qsp + "#discoreasone").style.display = (GS["stationmode"] === 'on' ? '' : 'none');
             const disconnectReasons = {
                 0: 'No disconnection',

@@ -36,7 +36,8 @@ private:
     Connecting, // WiFi.begin() called, waiting for connection (AP kept as is: off on first attempt, on during retries)
     Connected,  // connected (AP disabled)
     Lost,       // connection lost, SDK auto-reconnect is trying (AP still disabled)
-    WaitRetry   // connection attempt failed, waiting before next attempt (AP enabled)
+    WaitRetry   // connection attempt failed, waiting before next attempt
+                // (AP disabled during the first _apFallbackDelay of an outage, enabled after)
   };
 
   DNSServer *_dnsServer = nullptr;
@@ -45,7 +46,14 @@ private:
   uint8_t _refreshPeriod = 60;           // try to reconnect as station mode every 60 seconds
   uint16_t _maxRetryDelay = 300;         // retry even if a client is connected to the softAP after this delay, in seconds
   uint8_t _reconnectDuration = 20;       // duration to try to connect to Wifi in seconds
-  uint8_t _autoReconnectGrace = 15;      // time left to SDK auto-reconnect after a drop before falling back to AP, in seconds
+  uint8_t _autoReconnectGrace = 15;      // time left to SDK auto-reconnect after a drop before handling it as a failed attempt, in seconds
+  // Fallback AP delay: when a station is configured, the AP is only enabled after the configured network
+  // has been unreachable for this long (power cut, router reboot, ...). Until then, the configured network
+  // is retried every _retryDelayNoAP seconds. 600 s covers a router reboot (typically 1 to 5 minutes)
+  // and avoids opening the AP every time the router restarts.
+  uint16_t _apFallbackDelay = 600;       // in seconds
+  uint8_t _retryDelayNoAP = 10;          // delay between attempts while the AP is disabled, in seconds
+  uint32_t _outageStartMillis = 0;       // millis() when the configured network became unreachable (or boot)
   uint16_t _connectionCount = 0;         // count of successful WiFi connections
   volatile uint8_t _lastDiscoReason = 0; // last WiFi disconnection reason code (written from WiFi event)
 
@@ -54,6 +62,7 @@ private:
   void startConnect();
   void onConnected();
   void onConnectFailed();
+  bool apFallbackDue();
   void initialConnect();
 
   void setConfigDefaultValues();
