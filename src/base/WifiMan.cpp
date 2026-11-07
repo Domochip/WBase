@@ -1,4 +1,5 @@
 #include "WifiMan.h"
+#include "RequestGuard.h"
 
 // WPA2 requires 8 to 63 characters (empty = open AP); softAP() fails otherwise
 static_assert(sizeof(DEFAULT_AP_PSK) == 1 || (sizeof(DEFAULT_AP_PSK) - 1 >= 8 && sizeof(DEFAULT_AP_PSK) - 1 <= 63),
@@ -337,6 +338,9 @@ void WifiMan::appInitWebServer(WebServer &server)
   server.on(F("/wnl"), HTTP_GET,
             [this, &server]()
             {
+              if (!RequestGuard::check(server))
+                return;
+
               // prepare response
               SERVER_KEEPALIVE_FALSE()
               server.sendHeader(F("Cache-Control"), F("no-cache"));

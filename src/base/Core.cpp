@@ -1,4 +1,5 @@
 #include "Core.h"
+#include "RequestGuard.h"
 #include "WifiMan.h"
 #include <EEPROM.h>
 #include "../Main.h" //for VERSION define
@@ -28,17 +29,20 @@ const char *Core::getSerialNumber()
 void Core::setConfigDefaultValues()
 {
   strcpy_P(ntpTimezone, PSTR("Europe/Paris|CET-1CEST,M3.5.0,M10.5.0/3"));
+  allowedHosts[0] = '\0';
 };
 
 bool Core::parseConfigJSON(JsonVariant json, bool fromWebPage /* = false */)
 {
   parseField(json["tz"], ntpTimezone);
+  parseField(json[F("ahosts")], allowedHosts);
   return true;
 };
 
 void Core::fillConfigJSON(JsonVariant json, bool forSaveFile /* = false */)
 {
   json["tz"] = ntpTimezone;
+  json[F("ahosts")] = allowedHosts;
 };
 void Core::fillStatusJSON(JsonVariant json)
 {
@@ -85,10 +89,20 @@ bool Core::appInit(bool reInit /* = false */)
   }
   
   TimeManager::setTimezone(tzToUse);
+
+  // additional names accepted by the Host check of the web server (see RequestGuard.h)
+  RequestGuard::setExtraHosts(allowedHosts);
   return true;
 };
 void Core::appInitWebServer(WebServer &server)
 {
+  // keep the Origin header of requests for RequestGuard (must be done before server.begin())
+  // Every API handler below starts with RequestGuard::check(): requests made by other web sites
+  // through the user's browser are refused (DNS rebinding and CSRF, see RequestGuard.h).
+  // Static resources ("/", CSS, favicon) and the captive portal redirect are not checked: they
+  // contain no data and must work under any name for the captive portal.
+  RequestGuard::setup(server);
+
   // root is index
   server.on("/", HTTP_GET,
             [&server]()
@@ -139,6 +153,8 @@ void Core::appInitWebServer(WebServer &server)
       F("/glui"), HTTP_GET,
       [this, &server]()
       {
+        if (!RequestGuard::check(server))
+          return;
         SERVER_KEEPALIVE_FALSE()
         JsonDocument json;
         fillLatestUpdateInfoJson(json, true);
@@ -153,6 +169,8 @@ void Core::appInitWebServer(WebServer &server)
       F("/update"), HTTP_POST,
       [this, &server]()
       {
+        if (!RequestGuard::check(server))
+          return;
         String msg;
 
         // start chunked response
@@ -192,6 +210,10 @@ void Core::appInitWebServer(WebServer &server)
       F("/fw"), HTTP_POST,
       [&server]()
       {
+        // refused upload: nothing was written (see UPLOAD_FILE_START below), just answer 403
+        if (!RequestGuard::check(server))
+          return;
+
         SystemState::shouldReboot = fwUploadOk && !Update.hasError();
         fwUploadOk = false;
 
@@ -220,6 +242,16 @@ void Core::appInitWebServer(WebServer &server)
       [&server]()
       {
         HTTPUpload &upload = server.upload();
+
+        // A firmware posted by another web site (CSRF) is refused before anything is written.
+        // Headers are already parsed when the upload callback runs, so the check works here.
+        // Nothing is started, so the WRITE/END steps below do nothing (Update is not running)
+        // and the final handler answers 403.
+        if (upload.status == UPLOAD_FILE_START && RequestGuard::rejectReason(server))
+        {
+          LOG_SERIAL_PRINTLN(F("Firmware upload refused (RequestGuard)"));
+          return;
+        }
 
         if (upload.status == UPLOAD_FILE_START)
         {
@@ -270,6 +302,8 @@ void Core::appInitWebServer(WebServer &server)
   server.on(F("/rbt"), HTTP_POST,
             [&server]()
             {
+              if (!RequestGuard::check(server))
+                return;
               if (server.hasArg(F("rescue")))
               {
                 // Set EEPROM for Rescue mode flag
@@ -287,6 +321,8 @@ void Core::appInitWebServer(WebServer &server)
   server.on(F("/crashdl"), HTTP_GET,
             [&server]()
             {
+              if (!RequestGuard::check(server))
+                return;
               SERVER_KEEPALIVE_FALSE()
               server.setContentLength(CONTENT_LENGTH_UNKNOWN);
               server.sendHeader(F("Content-Disposition"), F("attachment; filename=\"crashes.txt\""));
@@ -308,6 +344,8 @@ void Core::appInitWebServer(WebServer &server)
   server.on(F("/crashclr"), HTTP_POST,
             [&server]()
             {
+              if (!RequestGuard::check(server))
+                return;
               SERVER_KEEPALIVE_FALSE()
               CrashSaver::clearAllLogs();
               server.send_P(200, PSTR("text/plain"), PSTR("OK"));
@@ -318,6 +356,8 @@ void Core::appInitWebServer(WebServer &server)
   server.on(F("/dbz"), HTTP_GET,
             [&server]()
             {
+              if (!RequestGuard::check(server))
+                return;
               SERVER_KEEPALIVE_FALSE()
               volatile int a = 1;
               volatile int b = 0;

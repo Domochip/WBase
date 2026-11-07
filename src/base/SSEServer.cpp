@@ -1,4 +1,5 @@
 #include "SSEServer.h"
+#include "RequestGuard.h"
 
 #if SSE_SERVER_ENABLED
 
@@ -73,7 +74,11 @@ void SSEServer::init(char appIdChar, WebServer &server)
     url += appIdChar;
     // register SSE Uri
     server.on(url, HTTP_GET, [this, &server]()
-              { handleSubscription(server); });
+              {
+                  // the stream carries the live status: no subscription from another web site (DNS rebinding)
+                  if (!RequestGuard::check(server))
+                      return;
+                  handleSubscription(server); });
 #if SSE_SERVER_KEEPALIVE
     // send keep alive event every 60 seconds
 #ifdef ESP8266

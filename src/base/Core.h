@@ -13,6 +13,8 @@ class Core : public Application
 private:
   // Configuration Properties
   char ntpTimezone[64 + 1] = {0};
+  // additional host names accepted by the web server (router DNS name, reverse proxy...), see RequestGuard.h
+  char allowedHosts[128 + 1] = {0};
 
   void setConfigDefaultValues();
   bool parseConfigJSON(JsonVariant json, bool fromWebPage = false);

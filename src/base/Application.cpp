@@ -1,4 +1,5 @@
 #include "Application.h"
+#include "RequestGuard.h"
 
 Application *Application::_applicationList[3] = {nullptr, nullptr, nullptr};
 
@@ -576,6 +577,8 @@ void Application::initWebServer(WebServer &server)
   server.on(url, HTTP_GET,
             [this, &server]()
             {
+              if (!RequestGuard::check(server)) // refuses requests from other web sites (see RequestGuard.h)
+                return;
               SERVER_KEEPALIVE_FALSE()
               server.sendHeader(F("Cache-Control"), F("no-cache"));
               JsonDocument json;
@@ -591,6 +594,8 @@ void Application::initWebServer(WebServer &server)
   server.on(url, HTTP_GET,
             [this, &server]()
             {
+              if (!RequestGuard::check(server))
+                return;
               SERVER_KEEPALIVE_FALSE()
               server.sendHeader(F("Cache-Control"), F("no-cache"));
               JsonDocument json;
@@ -605,6 +610,10 @@ void Application::initWebServer(WebServer &server)
   server.on(url, HTTP_POST,
             [this, &server]()
             {
+              // refuse configuration changes posted by another web site (CSRF) or through DNS rebinding
+              if (!RequestGuard::check(server))
+                return;
+
               // All responses have keep-alive set to false
               SERVER_KEEPALIVE_FALSE()
 
