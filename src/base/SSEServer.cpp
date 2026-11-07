@@ -30,12 +30,6 @@ void SSEServer::handleSubscription(WebServer &server)
     _clients[subPos] = server.client();
     _clients[subPos].setTimeout(50);                 // Set the client timeout to 50ms (reduces the impact of unresponsive clients when payload is over 1072-128 bytes)
     server.setContentLength(CONTENT_LENGTH_UNKNOWN); // the payload can go on forever
-    // Response header of the event stream, written by hand because the connection stays open.
-    // - No "Access-Control-Allow-Origin: *": with it, any web page opened in a browser of the local network
-    //   (including a malicious one) could subscribe to this stream with EventSource and read the live data
-    //   (e.g. for WPalaControl: stove state and temperatures). The device's own pages are served from the same
-    //   origin and don't need it.
-    // - Lines end with \r\n as required by HTTP (browsers tolerated bare \n, other clients may not).
     server.sendContent_P(PSTR("HTTP/1.1 200 OK\r\n"
                               "Content-Type: text/event-stream\r\n"
                               "Connection: keep-alive\r\n"
