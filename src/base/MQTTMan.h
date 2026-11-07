@@ -19,8 +19,17 @@ public:
     using DisconnectedCallback = std::function<void()>;
 
 private:
-    char _username[64] = {0};
-    char _password[64] = {0};
+    // Credentials are copied here by connect(username, password) and reused for every reconnection.
+    // Size = 64 characters + terminating '\0': 64 is the longest value the configuration pages of the
+    // applications accept (e.g. WPalaControl: MQTT password field maxlength='64', stored in char[64 + 1]).
+    // With a 64-byte buffer, a 64-character password was accepted by the page and then silently rejected
+    // here, and MQTT never connected.
+    static constexpr size_t credentialMaxLength = 64;
+    char _username[credentialMaxLength + 1] = {0};
+    char _password[credentialMaxLength + 1] = {0};
+    // set by connect(username, password) when a credential doesn't fit: no connection is attempted,
+    // so the state stays MQTT_DISCONNECTED and getStateString() reports the real reason
+    bool _credentialsTooLong = false;
     char _connectedAndWillTopic[96] = {0};
     char _baseTopic[64 + 4 + 12 - 7 + sizeof(CUSTOM_APP_MODEL) + 1] = {0};
     bool _needMqttReconnect = false;

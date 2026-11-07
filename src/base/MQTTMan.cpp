@@ -142,11 +142,18 @@ MQTTMan &MQTTMan::setDisconnectedCallback(DisconnectedCallback disconnectedCallb
 
 bool MQTTMan::connect(const char *username, const char *password /* = nullptr */)
 {
-    // check logins
-    if (username && strlen(username) >= sizeof(_username))
+    // Check logins.
+    // A credential that doesn't fit is refused rather than truncated: a truncated password would only
+    // produce "Bad Credentials" from the broker, which is harder to understand.
+    // In that case no connection is attempted at all: the state stays MQTT_DISCONNECTED, loop() does nothing
+    // (no reconnection loop with wrong credentials), and getStateString() explains why.
+    _credentialsTooLong = (username && strlen(username) > credentialMaxLength) ||
+                          (password && strlen(password) > credentialMaxLength);
+    if (_credentialsTooLong)
+    {
+        LOG_SERIAL_PRINTLN(F("MQTT: username or password longer than 64 characters, connection not attempted"));
         return false;
-    if (password && strlen(password) >= sizeof(_password))
-        return false;
+    }
 
     if (username)
         strcpy(_username, username);
@@ -218,6 +225,9 @@ const __FlashStringHelper *MQTTMan::getStateString()
     case MQTT_CONNECT_FAILED:
         return F("Failed");
     case MQTT_DISCONNECTED:
+        // never connected because connect(username, password) refused the credentials (see connect())
+        if (_credentialsTooLong)
+            return F("Username or password too long (max 64 characters)");
         return F("Disconnected");
     case MQTT_CONNECTED:
         return F("Connected");
