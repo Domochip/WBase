@@ -98,7 +98,7 @@ void MQTTMan::setConnState(ConnState state)
 
 // Single (blocking) connection attempt
 // on success: Connected state + connected callback; on failure: WaitRetry state
-bool MQTTMan::tryConnect(bool firstConnection)
+bool MQTTMan::tryConnect()
 {
     // generate clientID
     char clientID[sizeof(CUSTOM_APP_MODEL) + 9];
@@ -126,6 +126,10 @@ bool MQTTMan::tryConnect(bool firstConnection)
         publish(_connectedAndWillTopic, "1", true);
 
     _connectionCount++;
+
+    // clear flag before the callback (it may call disconnect()/connect())
+    bool firstConnection = _firstConnection;
+    _firstConnection = false;
 
     // Subscribe to needed topic
     if (_connectedCallBack)
@@ -186,7 +190,9 @@ bool MQTTMan::connect(const char *username, const char *password /* = nullptr */
     else
         _password[0] = 0;
 
-    return tryConnect(true);
+    _firstConnection = true;
+
+    return tryConnect();
 }
 
 void MQTTMan::disconnect()
@@ -296,7 +302,7 @@ bool MQTTMan::loop()
 
     case ConnState::WaitRetry:
         if (millis() - _connStateMillis >= _waitRetryMs)
-            tryConnect(false);
+            tryConnect();
         break;
 
     default: // Stopped

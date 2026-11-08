@@ -33,6 +33,7 @@ private:
     ConnState _connState = ConnState::Stopped;
     uint32_t _connStateMillis = 0;          // millis() when _connState was last changed
     uint32_t _waitRetryMs = 0;              // delay before next attempt (WaitRetry state), in ms
+    bool _firstConnection = true;           // true until the first successful connection after connect(username, password)
     uint16_t _connectionCount = 0;
     int8_t _lastDiscoState = 0;   // last MQTT disconnection state code (0 = no disconnection yet)
 
@@ -40,7 +41,7 @@ private:
     DisconnectedCallback _disconnectedCallBack = nullptr;
 
     void setConnState(ConnState state);
-    bool tryConnect(bool firstConnection);
+    bool tryConnect();
     void scheduleRetry();
 
 public:
