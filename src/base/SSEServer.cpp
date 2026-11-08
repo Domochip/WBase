@@ -65,7 +65,7 @@ void SSEServer::sendKeepAlive()
 {
     forEach([](WiFiClient &client, uint8_t i)
             {
-                client.println(F(":keepalive\n\n"));
+                client.print(F(":keepalive\n\n"));
 
 #if DEVELOPPER_MODE
                 LOG_SERIAL_PRINTF_P(PSTR("statusSSEKeepAlive - keep-alive sent to client #%d (%s:%d)\n"), i, client.remoteIP().toString().c_str(), client.remotePort());
