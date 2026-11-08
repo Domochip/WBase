@@ -197,15 +197,16 @@ bool MQTTMan::connect(const char *username, const char *password /* = nullptr */
 
 void MQTTMan::disconnect()
 {
-    // publish disconnected just before disconnect...
-    if (_connectedAndWillTopic[0])
-        publish(_connectedAndWillTopic, "0", true);
-
     // Stop MQTT Reconnect
     setConnState(ConnState::Stopped);
+
     // Disconnect
     if (connected()) // Issue #598 : disconnect() crash if client not yet set
     {
+        // publish disconnected just before disconnect...
+        if (_connectedAndWillTopic[0])
+            publish(_connectedAndWillTopic, "0", true);
+
         PubSubClient::disconnect();
         // call disconnected callback if set
         if (_disconnectedCallBack)
