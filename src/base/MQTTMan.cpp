@@ -90,7 +90,15 @@ const char *MQTTMan::getBaseTopic() const
     return _baseTopic;
 }
 
-bool MQTTMan::connect(bool firstConnection)
+void MQTTMan::setConnState(ConnState state)
+{
+    _connState = state;
+    _connStateMillis = millis();
+}
+
+// Single (blocking) connection attempt
+// on success: Connected state + connected callback; on failure: WaitRetry state
+bool MQTTMan::tryConnect(bool firstConnection)
 {
     // generate clientID
     char clientID[sizeof(CUSTOM_APP_MODEL) + 9];
@@ -103,19 +111,39 @@ bool MQTTMan::connect(bool firstConnection)
     const char *willMessage = (_connectedAndWillTopic[0] ? "0" : nullptr);
     PubSubClient::connect(clientID, username, password, willTopic, 0, true, willMessage);
 
-    if (connected())
+    if (!connected())
     {
-        if (_connectedAndWillTopic[0])
-            publish(_connectedAndWillTopic, "1", true);
-
-        _connectionCount++;
-
-        // Subscribe to needed topic
-        if (_connectedCallBack)
-            _connectedCallBack(this, firstConnection);
+        _lastDiscoState = state();
+        scheduleRetry();
+        return false;
     }
 
+    LOG_SERIAL_PRINTLN(F("MQTT connected"));
+
+    setConnState(ConnState::Connected);
+
+    if (_connectedAndWillTopic[0])
+        publish(_connectedAndWillTopic, "1", true);
+
+    _connectionCount++;
+
+    // Subscribe to needed topic
+    if (_connectedCallBack)
+        _connectedCallBack(this, firstConnection);
+
     return connected();
+}
+
+// Enter WaitRetry: next attempt after 20 or 60 sec (WiFi connected or not)
+void MQTTMan::scheduleRetry()
+{
+    _waitRetryMs = (WiFi.isConnected() ? 20 : 60) * 1000UL;
+
+    LOG_SERIAL_PRINT(F("MQTT connection failed (reason: "));
+    LOG_SERIAL_PRINT(getStateString());
+    LOG_SERIAL_PRINTF_P(PSTR("), next attempt in %lus\n"), (unsigned long)(_waitRetryMs / 1000));
+
+    setConnState(ConnState::WaitRetry);
 }
 
 MQTTMan &MQTTMan::setConnectedAndWillTopic(const char *topic)
@@ -158,7 +186,7 @@ bool MQTTMan::connect(const char *username, const char *password /* = nullptr */
     else
         _password[0] = 0;
 
-    return connect(true);
+    return tryConnect(true);
 }
 
 void MQTTMan::disconnect()
@@ -168,7 +196,7 @@ void MQTTMan::disconnect()
         publish(_connectedAndWillTopic, "0", true);
 
     // Stop MQTT Reconnect
-    _mqttReconnectTicker.detach();
+    setConnState(ConnState::Stopped);
     // Disconnect
     if (connected()) // Issue #598 : disconnect() crash if client not yet set
     {
@@ -248,43 +276,32 @@ int8_t MQTTMan::getLastDiscoState() const
 
 bool MQTTMan::loop()
 {
-    if (state() != MQTT_DISCONNECTED)
+    switch (_connState)
     {
-        // evaluate connection status and call disconnected callback if needed
-        // if we are not connected, reconnect ticker not started nor _needMqttReconnect flag raised and disconnected callback set
-        if (!connected() && !(_mqttReconnectTicker.active() || _needMqttReconnect) && _disconnectedCallBack)
+    case ConnState::Connected:
+        if (connected())
+            return PubSubClient::loop();
+
+        // connection lost
+        _lastDiscoState = state();
+        LOG_SERIAL_PRINT(F("MQTT disconnected (reason: "));
+        LOG_SERIAL_PRINT(getStateString());
+        LOG_SERIAL_PRINTLN(')');
+
+        scheduleRetry();
+
+        if (_disconnectedCallBack)
             _disconnectedCallBack();
+        break;
 
-        if (_needMqttReconnect)
-        {
-            _needMqttReconnect = false;
+    case ConnState::WaitRetry:
+        if (millis() - _connStateMillis >= _waitRetryMs)
+            tryConnect(false);
+        break;
 
-            LOG_SERIAL_PRINT(F("MQTT Reconnection : "));
-
-            bool res = connect(false);
-
-            LOG_SERIAL_PRINTLN(res ? F("OK") : F("Failed"));
-        }
-
-        // if not connected and reconnect ticker not started
-        if (!connected() && !_mqttReconnectTicker.active())
-        {
-            _lastDiscoState = state();
-            LOG_SERIAL_PRINT(F("MQTT Disconnected (reason: "));
-            LOG_SERIAL_PRINT(getStateString());
-            LOG_SERIAL_PRINTLN(')');
-            // set Ticker to reconnect after 20 or 60 sec (Wifi connected or not)
-#ifdef ESP8266
-            _mqttReconnectTicker.once((WiFi.isConnected() ? 20 : 60), [this]()
-                                      { _needMqttReconnect = true; });
-
-#else
-            _mqttReconnectTicker.once<MQTTMan *>((WiFi.isConnected() ? 20 : 60), [](MQTTMan *mqttMan)
-                                                 { mqttMan->_needMqttReconnect = true; }, this);
-#endif
-        }
-
-        return PubSubClient::loop();
+    default: // Stopped
+        return true;
     }
-    return true;
+
+    return connected();
 }

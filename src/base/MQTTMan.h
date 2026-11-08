@@ -8,7 +8,6 @@
 #include <WiFi.h>
 #endif
 
-#include <Ticker.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
@@ -19,19 +18,30 @@ public:
     using DisconnectedCallback = std::function<void()>;
 
 private:
+    // Connection state
+    enum class ConnState : uint8_t
+    {
+        Stopped,   // not started or disconnect() called: nothing to do
+        WaitRetry, // last attempt failed (or connection lost), waiting before next attempt
+        Connected  // connected to the broker
+    };
+
     char _username[32 + 1] = {0};
     char _password[64 + 1] = {0};
     char _connectedAndWillTopic[96] = {0};
     char _baseTopic[64 + 4 + 12 - 7 + sizeof(CUSTOM_APP_MODEL) + 1] = {0};
-    bool _needMqttReconnect = false;
-    Ticker _mqttReconnectTicker;
+    ConnState _connState = ConnState::Stopped;
+    uint32_t _connStateMillis = 0;          // millis() when _connState was last changed
+    uint32_t _waitRetryMs = 0;              // delay before next attempt (WaitRetry state), in ms
     uint16_t _connectionCount = 0;
     int8_t _lastDiscoState = 0;   // last MQTT disconnection state code (0 = no disconnection yet)
 
     ConnectedCallback _connectedCallBack = nullptr;
     DisconnectedCallback _disconnectedCallBack = nullptr;
 
-    bool connect(bool firstConnection);
+    void setConnState(ConnState state);
+    bool tryConnect(bool firstConnection);
+    void scheduleRetry();
 
 public:
     static constexpr size_t baseTopicSize = 64 + 4 + 12 - 7 + sizeof(CUSTOM_APP_MODEL) + 1; // usual baseTopic length + one of each placeholder (+4 sn) (+12 mac) (+X model)
