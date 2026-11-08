@@ -45,6 +45,8 @@ private:
     void scheduleRetry();
 
 public:
+    MQTTMan() { setSocketTimeout(3); } // don't wait more than 3 seconds for a response from the broker
+
     static constexpr size_t baseTopicSize = 64 + 4 + 12 - 7 + sizeof(CUSTOM_APP_MODEL) + 1; // usual baseTopic length + one of each placeholder (+4 sn) (+12 mac) (+X model)
     static void prepareTopic(const char *topicTemplate, char *result, size_t resultSize);
     MQTTMan &setBaseTopic(const char *baseTopicTemplate);
