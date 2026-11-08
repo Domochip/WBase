@@ -114,6 +114,9 @@ bool MQTTMan::tryConnect()
     if (!connected())
     {
         _lastDiscoState = state();
+        LOG_SERIAL_PRINT(F("MQTT connection failed (reason: "));
+        LOG_SERIAL_PRINT(getStateString());
+        LOG_SERIAL_PRINT(')');
         scheduleRetry();
         return false;
     }
@@ -139,19 +142,17 @@ bool MQTTMan::tryConnect()
 }
 
 // Schedule next attempt: after 20 sec if WiFi is connected, otherwise as soon as WiFi is back
+// (completes the log line started by the caller with the failure/disconnection reason)
 void MQTTMan::scheduleRetry()
 {
-    LOG_SERIAL_PRINT(F("MQTT connection failed (reason: "));
-    LOG_SERIAL_PRINT(getStateString());
-
     if (WiFi.isConnected())
     {
-        LOG_SERIAL_PRINTLN(F("), next attempt in 20s"));
+        LOG_SERIAL_PRINTLN(F(", next attempt in 20s"));
         setConnState(ConnState::WaitRetry);
     }
     else
     {
-        LOG_SERIAL_PRINTLN(F("), waiting for WiFi"));
+        LOG_SERIAL_PRINTLN(F(", waiting for WiFi"));
         setConnState(ConnState::WaitWifi);
     }
 }
@@ -306,7 +307,7 @@ bool MQTTMan::loop()
         _lastDiscoState = state();
         LOG_SERIAL_PRINT(F("MQTT disconnected (reason: "));
         LOG_SERIAL_PRINT(getStateString());
-        LOG_SERIAL_PRINTLN(')');
+        LOG_SERIAL_PRINT(')');
 
         scheduleRetry();
 
