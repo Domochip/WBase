@@ -14,7 +14,7 @@
 class MQTTMan : private PubSubClient
 {
 public:
-    using ConnectedCallback = std::function<void(MQTTMan * mqttMan, bool firstConnection)>;
+    using ConnectedCallback = std::function<void(MQTTMan *mqttMan, bool firstConnection)>;
     using DisconnectedCallback = std::function<void()>;
 
 private:
@@ -32,10 +32,10 @@ private:
     char _connectedAndWillTopic[96] = {0};
     char _baseTopic[64 + 4 + 12 - 7 + sizeof(CUSTOM_APP_MODEL) + 1] = {0};
     ConnState _connState = ConnState::Stopped;
-    uint32_t _connStateMillis = 0;          // millis() when _connState was last changed
-    bool _firstConnection = true;           // true until the first successful connection after connect(username, password)
+    uint32_t _connStateMillis = 0; // millis() when _connState was last changed
+    bool _firstConnection = true;  // true until the first successful connection after connect(username, password)
     uint16_t _connectionCount = 0;
-    int8_t _lastDiscoState = 0;   // last MQTT disconnection state code (0 = no disconnection yet)
+    int8_t _lastDiscoState = 0; // last MQTT disconnection state code (0 = no disconnection yet)
 
     ConnectedCallback _connectedCallBack = nullptr;
     DisconnectedCallback _disconnectedCallBack = nullptr;
@@ -53,8 +53,8 @@ public:
     const char *getBaseTopic() const;
 
     using PubSubClient::setClient;
-    using PubSubClient::setServer;
     using PubSubClient::setKeepAlive;
+    using PubSubClient::setServer;
     MQTTMan &setConnectedAndWillTopic(const char *topic);
     MQTTMan &setConnectedCallback(ConnectedCallback connectedCallback);
     MQTTMan &setDisconnectedCallback(DisconnectedCallback disconnectedCallback);
