@@ -22,7 +22,8 @@ private:
     enum class ConnState : uint8_t
     {
         Stopped,   // not started or disconnect() called: nothing to do
-        WaitRetry, // last attempt failed (or connection lost), waiting before next attempt
+        WaitWifi,  // WiFi not connected: no attempt, connect as soon as WiFi is back
+        WaitRetry, // last attempt failed (or connection lost) with WiFi connected, waiting before next attempt
         Connected  // connected to the broker
     };
 
@@ -32,7 +33,6 @@ private:
     char _baseTopic[64 + 4 + 12 - 7 + sizeof(CUSTOM_APP_MODEL) + 1] = {0};
     ConnState _connState = ConnState::Stopped;
     uint32_t _connStateMillis = 0;          // millis() when _connState was last changed
-    uint32_t _waitRetryMs = 0;              // delay before next attempt (WaitRetry state), in ms
     bool _firstConnection = true;           // true until the first successful connection after connect(username, password)
     uint16_t _connectionCount = 0;
     int8_t _lastDiscoState = 0;   // last MQTT disconnection state code (0 = no disconnection yet)

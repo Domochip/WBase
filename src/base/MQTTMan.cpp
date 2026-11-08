@@ -138,16 +138,22 @@ bool MQTTMan::tryConnect()
     return connected();
 }
 
-// Enter WaitRetry: next attempt after 20 or 60 sec (WiFi connected or not)
+// Schedule next attempt: after 20 sec if WiFi is connected, otherwise as soon as WiFi is back
 void MQTTMan::scheduleRetry()
 {
-    _waitRetryMs = (WiFi.isConnected() ? 20 : 60) * 1000UL;
-
     LOG_SERIAL_PRINT(F("MQTT connection failed (reason: "));
     LOG_SERIAL_PRINT(getStateString());
-    LOG_SERIAL_PRINTF_P(PSTR("), next attempt in %lus\n"), (unsigned long)(_waitRetryMs / 1000));
 
-    setConnState(ConnState::WaitRetry);
+    if (WiFi.isConnected())
+    {
+        LOG_SERIAL_PRINTLN(F("), next attempt in 20s"));
+        setConnState(ConnState::WaitRetry);
+    }
+    else
+    {
+        LOG_SERIAL_PRINTLN(F("), waiting for WiFi"));
+        setConnState(ConnState::WaitWifi);
+    }
 }
 
 MQTTMan &MQTTMan::setConnectedAndWillTopic(const char *topic)
@@ -191,6 +197,13 @@ bool MQTTMan::connect(const char *username, const char *password /* = nullptr */
         _password[0] = 0;
 
     _firstConnection = true;
+
+    // no WiFi: don't try now, loop() will connect as soon as WiFi is back
+    if (!WiFi.isConnected())
+    {
+        setConnState(ConnState::WaitWifi);
+        return false;
+    }
 
     return tryConnect();
 }
@@ -301,8 +314,15 @@ bool MQTTMan::loop()
             _disconnectedCallBack();
         break;
 
+    case ConnState::WaitWifi:
+        if (WiFi.isConnected())
+            tryConnect();
+        break;
+
     case ConnState::WaitRetry:
-        if (millis() - _connStateMillis >= _waitRetryMs)
+        if (!WiFi.isConnected())
+            setConnState(ConnState::WaitWifi); // WiFi lost while waiting: no retry until it is back
+        else if (millis() - _connStateMillis >= 20000UL)
             tryConnect();
         break;
 
