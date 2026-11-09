@@ -15,14 +15,14 @@
 </form>
 <span id='r'></span>
 
-<form class="pure-form pure-form-aligned" id='f0'>
+<form class="pure-form pure-form-aligned" id='rebootForm'>
     <fieldset>
         <div class="pure-controls">
             <input type='submit' id='subRbt' value='Reboot' class="pure-button pure-button-primary btn-warn">
         </div>
     </fieldset>
 </form>
-<form class="pure-form pure-form-aligned" id='f0b'>
+<form class="pure-form pure-form-aligned" id='rescueForm'>
     <fieldset>
         <div class="pure-controls">
             <input type='submit' id='subRbtRsc' value='Reboot in Rescue Mode'
@@ -101,15 +101,15 @@
     populateTimezones();
     configForm(root, id);
 
-    function postFailed() {
+    function rebootFailed() {
         $('#r', root).innerHTML = '<span class="err">Failed</span>';
-        $('#f0', root).reset();
-        $('#f0b', root).reset();
+        $('#rebootForm', root).reset();
+        $('#rescueForm', root).reset();
         $('#subRbt', root).disabled = false;
         $('#subRbtRsc', root).disabled = false;
-    };
+    }
 
-    function handleSubmit(event, url, successMessage, targetUrl) {
+    function reboot(event, url, successMessage, targetUrl) {
         event.preventDefault();
         $('#subRbt', root).disabled = true;
         $('#subRbtRsc', root).disabled = true;
@@ -117,14 +117,14 @@
         post(url, null, function () {
             $('#r', root).innerHTML = `<h3><span class="ok">Done</span> ${successMessage} Waiting for device... <span id="cd">0</span>s</h3>`;
             redirectWhenReachable(targetUrl, 30000);
-        }, postFailed);
+        }, rebootFailed);
     }
 
-    $("#f0", root).addEventListener('submit', function (evt) {
-        handleSubmit(evt, '/rbt', 'System will reboot shortly.', location.origin);
+    $("#rebootForm", root).addEventListener('submit', function (evt) {
+        reboot(evt, '/rbt', 'System will reboot shortly.', location.origin);
     });
 
-    $("#f0b", root).addEventListener('submit', function (evt) {
-        handleSubmit(evt, '/rbt?rescue=true', 'System will reboot shortly in RESCUE MODE. You\'ll need to connect to module WiFi.', 'http://192.168.4.1');
+    $("#rescueForm", root).addEventListener('submit', function (evt) {
+        reboot(evt, '/rbt?rescue=true', 'System will reboot shortly in RESCUE MODE. You\'ll need to connect to module WiFi.', 'http://192.168.4.1');
     });
 </script>
