@@ -62,29 +62,27 @@
         $("#staticipgroup", root).style.display = this.checked ? '' : 'none';
     });
 
-    var getNetworkList = function () {
-
-        getJSON("/wnl", function (WNL) {
-            if (WNL.r == -2 || WNL.r == -1) { //if scan not started or is in progress
+    function loadNetworkList() {
+        getJSON("/wnl", function (scan) {
+            if (scan.r == -2 || scan.r == -1) { //if scan not started or is in progress
                 //try again in a couple of seconds
-                setTimeout(getNetworkList, 2000);
+                setTimeout(loadNetworkList, 2000);
+                return;
             }
-            else { //scan done
-                const wnl = $("#wnl", root);
-                if (wnl) {
-                    if (WNL.r == 0) wnl.replaceChildren(new Option('No Network Found'));
-                    else {
-                        wnl.replaceChildren(new Option('Choose Your Network'));
-                        for (const network of WNL.wnl) {
-                            const option = new Option(`${network.SSID} (${rssiToQuality(network.RSSI)}%)`, network.SSID);
-                            option.style.color = rssiToColor(network.RSSI);
-                            option.selected = $("#s", root).value == network.SSID;
-                            wnl.appendChild(option);
-                        }
-                        wnl.addEventListener('change', function () { $("#s", root).value = wnl.value });
-                    }
-                }
+            //scan done
+            const wnl = $("#wnl", root);
+            if (scan.r == 0) {
+                wnl.replaceChildren(new Option('No Network Found'));
+                return;
             }
+            wnl.replaceChildren(new Option('Choose Your Network'));
+            for (const network of scan.wnl) {
+                const option = new Option(`${network.SSID} (${rssiToQuality(network.RSSI)}%)`, network.SSID);
+                option.style.color = rssiToColor(network.RSSI);
+                option.selected = $("#s", root).value == network.SSID;
+                wnl.appendChild(option);
+            }
+            wnl.addEventListener('change', function () { $("#s", root).value = wnl.value });
         });
     }
 
@@ -96,7 +94,7 @@
                 form.staticip.checked = true;
                 triggerEvent(form.staticip, 'change');
             }
-            getNetworkList();
+            loadNetworkList();
         },
         beforeSubmit: function (form) {
             // static IP settings are only kept when static IP is checked
