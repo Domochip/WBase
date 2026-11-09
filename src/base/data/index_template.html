@@ -239,8 +239,6 @@
             const start = Date.now();
 
             function tick() {
-                if (!el) return; // Check if el is null or undefined
-
                 const elapsed = Date.now() - start;
                 el.style.opacity = Math.max(1 - elapsed / duration, 0);
 
