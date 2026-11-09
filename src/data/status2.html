@@ -9,11 +9,11 @@
     //   id   : this part's id ('2'), used in API endpoints like '/gs' + id
 
     function parseLiveData(liveData) {
-        for (k in liveData) {
-            kForId = (/[^a-zA-Z]/.test(k[0]) ? 'a' : '') + k; //k[0] is not in a-zA-Z then we need to add 'a'
+        for (const k in liveData) {
+            let kForId = (/[^a-zA-Z]/.test(k[0]) ? 'a' : '') + k; //k[0] is not in a-zA-Z then we need to add 'a'
             kForId = kForId.replace(/ /g, '_');
             if ($('#' + kForId, root) != undefined) {
-                var existingElement = $('#' + kForId + 'Value', root);
+                const existingElement = $('#' + kForId + 'Value', root);
                 if (existingElement.innerText != liveData[k]) {
                     existingElement.innerText = liveData[k];
                     existingElement.style.fontWeight = "bold";
@@ -23,9 +23,9 @@
                 }
             }
             else {
-                var newElement = document.createElement("dd");
+                const newElement = document.createElement("dd");
                 newElement.id = kForId;
-                var valueElement = document.createElement("span");
+                const valueElement = document.createElement("span");
                 valueElement.id = kForId + 'Value';
                 valueElement.textContent = liveData[k];
                 newElement.append(k + ' : ', valueElement);
@@ -36,27 +36,26 @@
     }
 
     loadStatus(root, id, {
-        afterLoad: function (GS) {
-            if (GS.liveData) parseLiveData(GS.liveData);
+        afterLoad: function (status) {
+            if (status.liveData) parseLiveData(status.liveData);
         },
     });
 
-    var statusEventSource;
+    let statusEventSource;
 
     function closeStatusEventSource() {
-        if (statusEventSource != undefined && statusEventSource.readyState !== 2) {
+        if (statusEventSource && statusEventSource.readyState !== EventSource.CLOSED) {
             statusEventSource.close();
         }
     }
 
     function connectStatusEventSource() {
         if (!window.EventSource || document.hidden) return;
-        if (statusEventSource != undefined && statusEventSource.readyState !== 2) return;
+        if (statusEventSource && statusEventSource.readyState !== EventSource.CLOSED) return;
 
         statusEventSource = new EventSource('/statusEvt' + id);
-        statusEventSource.addEventListener('message', function (e) {
-            console.log('statusEvt' + id + ' : ' + e.data);
-            parseLiveData(JSON.parse(e.data));
+        statusEventSource.addEventListener('message', function (event) {
+            parseLiveData(JSON.parse(event.data));
         });
     }
 
