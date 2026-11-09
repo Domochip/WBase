@@ -73,7 +73,7 @@
         getJSON("/wnl", function (WNL) {
             if (WNL.r == -2 || WNL.r == -1) { //if scan not started or is in progress
                 //try again in a couple of seconds
-                setTimeout(getNetworkList, 2000, 0);
+                setTimeout(getNetworkList, 2000);
             }
             else { //scan done
                 const wnl = $("#wnl", root);

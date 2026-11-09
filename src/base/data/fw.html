@@ -199,7 +199,7 @@
                     chunkAccumulator += value;
                     const chunks = chunkAccumulator.split('\n');
                     chunkAccumulator = chunks.pop();
-                    chunks.forEach((chunk, index) => {
+                    chunks.forEach(chunk => {
                         if (chunk.startsWith('p:')) $('#progress', root).innerHTML = `${parseInt(chunk.substring(2))}%`;
                         else if (chunk.startsWith('s:')) success = chunk.substring(2) === 'true';
                         else if (chunk.startsWith('m:')) message = chunk.substring(2);

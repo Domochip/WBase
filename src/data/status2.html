@@ -9,7 +9,6 @@
     //   id   : this part's id ('2'), used in API endpoints like '/gs' + id
 
     function parseLiveData(liveData) {
-        if ($('#liveData', root) == undefined) return;
         for (k in liveData) {
             kForId = (/[^a-zA-Z]/.test(k[0]) ? 'a' : '') + k; //k[0] is not in a-zA-Z then we need to add 'a'
             kForId = kForId.replace(/ /g, '_');
@@ -33,9 +32,7 @@
                 $('#liveData', root).appendChild(newElement);
             }
         }
-        if ($('#lastRefresh', root) != undefined) {
-            $('#lastRefresh', root).innerText = (new Date()).toLocaleString();
-        }
+        $('#lastRefresh', root).innerText = (new Date()).toLocaleString();
     }
 
     loadStatus(root, id, {
