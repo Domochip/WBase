@@ -292,11 +292,6 @@
 <!-- PAGES -->
 
     <script>
-        function clearMenuAndContent() {
-            unloadPage();
-            document.querySelectorAll('#menu .pure-menu-item').forEach(item => item.classList.remove('pure-menu-selected'));
-        }
-
         // Side menu toggle (small screens): hamburger opens/closes it, clicking the page closes it
         function toggleMenu(evt) {
             evt.preventDefault();
@@ -311,7 +306,8 @@
             const menuElement = $(menuId);
             menuElement.addEventListener("click", (evt) => {
                 evt.preventDefault();
-                clearMenuAndContent();
+                unloadPage();
+                document.querySelectorAll('#menu .pure-menu-item').forEach(item => item.classList.remove('pure-menu-selected'));
                 $('#layout').classList.remove('active');
                 menuElement.classList.add("pure-menu-selected");
                 $("#mainHeader").textContent = headerText;
