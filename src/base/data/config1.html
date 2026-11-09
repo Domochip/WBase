@@ -58,14 +58,8 @@
     //   id   : this part's id ('1'), used in API endpoints like '/gs' + id
 
     $("#staticip", root).addEventListener('change', function () {
-        if ($("#staticip", root).checked) {
-            $("#ip", root).required = true;
-            $("#staticipgroup", root).style.display = '';
-        }
-        else {
-            $("#ip", root).required = false;
-            $("#staticipgroup", root).style.display = 'none';
-        }
+        $("#ip", root).required = this.checked;
+        $("#staticipgroup", root).style.display = this.checked ? '' : 'none';
     });
 
     var getNetworkList = function () {
