@@ -26,7 +26,10 @@
             else {
                 var newElement = document.createElement("dd");
                 newElement.id = kForId;
-                newElement.innerHTML = k + ' : <span id="' + kForId + 'Value">' + liveData[k] + '</span>';
+                var valueElement = document.createElement("span");
+                valueElement.id = kForId + 'Value';
+                valueElement.textContent = liveData[k];
+                newElement.append(k + ' : ', valueElement);
                 $('#liveData', root).appendChild(newElement);
             }
         }
@@ -35,18 +38,11 @@
         }
     }
 
-    getJSON("/gs" + id,
-        function (GS) {
-            for (k in GS) {
-                if (k == 'liveData') parseLiveData(GS[k]);
-                else if ((e = $('#' + k, root)) != undefined) e.innerHTML = GS[k];
-            }
-            fadeOut($('#l', root));
+    loadStatus(root, id, {
+        afterLoad: function (GS) {
+            if (GS.liveData) parseLiveData(GS.liveData);
         },
-        function () {
-            $("#l", root).innerHTML = '<span class="err">Failed</span>';
-        }
-    );
+    });
 
     var statusEventSource;
 
