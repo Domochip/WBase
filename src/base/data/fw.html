@@ -1,4 +1,4 @@
-<h2>Current Firmware<span id="l1" class="ld">Loading...</span></h2>
+<h2>Current Firmware<span id="loadingCurrent" class="ld">Loading...</span></h2>
 <div class="pure-form pure-form-aligned strong-labels">
     <div class="pure-control-group">
         <label>Version</label>
@@ -6,7 +6,7 @@
     </div>
 </div>
 
-<h2>Online Update<span id="l2" class="ld">Loading...</span></h2>
+<h2>Online Update<span id="loadingOnline" class="ld">Loading...</span></h2>
 <div class="pure-form pure-form-aligned strong-labels">
     <div class="pure-control-group">
         <label>Latest Version</label>
@@ -33,20 +33,20 @@
         <button class="pure-button pure-button-primary btn-ok" id="refreshButton">Refresh</button>
         <button class="pure-button pure-button-primary btn-warn" id="updateButton"
             disabled>Update</button>
-        &nbsp;&nbsp;<span id='rUpdate'></span>
+        &nbsp;&nbsp;<span id='updateResult'></span>
     </div>
 </div>
 
 <h2>Manual Update</h2>
-<form class="pure-form pure-form-aligned strong-labels" id="f" method='POST' action='/fw' enctype='multipart/form-data'>
+<form class="pure-form pure-form-aligned strong-labels" id="f">
     <fieldset>
         <div class="pure-control-group">
-            <label for="name">Firmware File</label>
-            <input type='file' name='fi' id='fi' accept='.bin' required>
+            <label for="firmwareFile">Firmware File</label>
+            <input type='file' name='fi' id='firmwareFile' accept='.bin' required>
         </div>
         <div class="pure-controls">
             <button type='submit' id='uploadButton' class="pure-button pure-button-primary">Upload Firmware</button>
-            &nbsp;&nbsp;<span id='rUpload'></span>
+            &nbsp;&nbsp;<span id='uploadResult'></span>
         </div>
     </fieldset>
 </form>
@@ -56,14 +56,14 @@
     //   root : this part's <div data-part> element, query it with $('#x', root)
     //   id   : this part's id ('', single-part page, not used here)
 
-    function firmwareValidation() {
-        const fileInput = $('#fi', root);
+    function isValidFirmwareFile() {
+        const fileInput = $('#firmwareFile', root);
         const model = document.querySelector("meta[name='description']").content;
         if (!fileInput || !model) {
             return false;
         }
 
-        let fn = fileInput.value.split(/(\\|\/)/g).pop();
+        const fileName = fileInput.value.split(/(\\|\/)/g).pop();
 
         // Define the patterns for the filename
         const esp32Pattern = '(\\.esp32)?';
@@ -78,7 +78,7 @@
         }
 
         // Check if the filename matches either pattern
-        if (!filenamePattern1.test(fn) && (!filenamePattern2 || !filenamePattern2.test(fn))) {
+        if (!filenamePattern1.test(fileName) && (!filenamePattern2 || !filenamePattern2.test(fileName))) {
             alert(`You didn't select a valid Firmware file for ${model} (${model}.1.2.3.bin expected)`);
             return false;
         }
@@ -101,11 +101,11 @@
     function disableAllButtons() {
         $('#refreshButton', root).disabled = true;
         $('#updateButton', root).disabled = true;
-        $('#fi', root).readOnly = true;
+        $('#firmwareFile', root).readOnly = true;
         $('#uploadButton', root).disabled = true;
     }
 
-    function calculateAllButtonStates() {
+    function resetButtons() {
         const refreshButton = $('#refreshButton', root);
         refreshButton.innerHTML = 'Refresh';
         refreshButton.disabled = false;
@@ -124,7 +124,7 @@
         const uploadButton = $('#uploadButton', root);
         uploadButton.innerHTML = 'Upload Firmware';
         uploadButton.disabled = false;
-        $('#fi', root).readOnly = false;
+        $('#firmwareFile', root).readOnly = false;
     }
 
     function getLatestUpdateInfo() {
@@ -141,23 +141,23 @@
         $('[data-k="release_url"]', root).removeAttribute('href');
 
         getJSON('/glui',
-            (GUI) => {
+            (updateInfo) => {
                 // release summary line breaks are kept by its 'white-space: pre-line' style
-                fillStatus(root, GUI);
+                fillStatus(root, updateInfo);
                 // make the release url a working link
-                if (GUI.release_url) $('[data-k="release_url"]', root).href = GUI.release_url;
+                if (updateInfo.release_url) $('[data-k="release_url"]', root).href = updateInfo.release_url;
 
                 // Update buttons
-                calculateAllButtonStates();
+                resetButtons();
 
-                fadeOut($("#l1", root));
-                fadeOut($("#l2", root));
+                fadeOut($("#loadingCurrent", root));
+                fadeOut($("#loadingOnline", root));
 
             },
             () => {
 
-                calculateAllButtonStates();
-                ['#l1', '#l2'].forEach(sel => {
+                resetButtons();
+                ['#loadingCurrent', '#loadingOnline'].forEach(sel => {
                     $(sel, root).innerHTML = '<span class="err">Failed</span>';
                 });
             }
@@ -188,11 +188,11 @@
                     if (done) {
                         if (success) {
                             $('#progress', root).innerHTML = 'Rebooting...';
-                            $('#rUpdate', root).innerHTML = '<h3>Waiting for device... <span id="cd">0</span>s</h3>';
+                            $('#updateResult', root).innerHTML = '<h3>Waiting for device... <span id="cd">0</span>s</h3>';
                             redirectWhenReachable(location.origin, 60000);
                         } else {
-                            $('#rUpdate', root).innerHTML = `<span class="err">Failed</span> (${message})`;
-                            calculateAllButtonStates();
+                            $('#updateResult', root).innerHTML = `<span class="err">Failed</span> (${message})`;
+                            resetButtons();
                         }
                         return;
                     }
@@ -209,14 +209,14 @@
                 reader.read().then(processChunk); // Start reading chunks
             })
             .catch(error => {
-                $('#rUpdate', root).innerHTML = `<span class="err">Failed</span> (${error.message})`;
-                calculateAllButtonStates();
+                $('#updateResult', root).innerHTML = `<span class="err">Failed</span> (${error.message})`;
+                resetButtons();
             });
     });
 
     $("#f", root).addEventListener('submit', (evt) => {
         evt.preventDefault();
-        if (!firmwareValidation()) return;
+        if (!isValidFirmwareFile()) return;
         disableAllButtons();
 
         // Add loading animation to the submit button
@@ -226,13 +226,13 @@
             new FormData($('#f', root)),
             () => {
                 $('#progress', root).innerHTML = 'Rebooting...';
-                $('#rUpload', root).innerHTML = '<h3>Waiting for device... <span id="cd">0</span>s</h3>';
+                $('#uploadResult', root).innerHTML = '<h3>Waiting for device... <span id="cd">0</span>s</h3>';
                 redirectWhenReachable(location.origin, 60000);
             },
             (responseText) => {
-                $('#rUpload', root).innerHTML = `<span class="err">Failed</span> (${responseText})`;
+                $('#uploadResult', root).innerHTML = `<span class="err">Failed</span> (${responseText})`;
                 $('#f', root).reset();
-                calculateAllButtonStates();
+                resetButtons();
             },
             30000,
             function (evt) {
