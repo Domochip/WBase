@@ -95,10 +95,6 @@
             xhr.send(data);
         }
 
-        function get(url, success, fail) {
-            request("GET", url, null, success, fail);
-        }
-
         function getJSON(url, success, fail) {
             request("GET", url, null, function (response) {
                 success(JSON.parse(response));
