@@ -75,13 +75,23 @@
                 return;
             }
             //scan done
+            // one entry per SSID (mesh/repeaters share a name): keep the strongest, best signal first
+            // hidden networks (empty SSID) are skipped
+            const strongest = new Map();
+            for (const network of scan.wnl) {
+                if (!network.SSID) continue;
+                const known = strongest.get(network.SSID);
+                if (!known || network.RSSI > known.RSSI) strongest.set(network.SSID, network);
+            }
+            const networks = [...strongest.values()].sort((a, b) => b.RSSI - a.RSSI);
+
             const wnl = $("#wnl", root);
-            if (scan.r == 0) {
+            if (networks.length == 0) {
                 wnl.replaceChildren(new Option('No Network Found'));
                 return;
             }
             wnl.replaceChildren(new Option('Choose Your Network'));
-            for (const network of scan.wnl) {
+            for (const network of networks) {
                 const option = new Option(`${network.SSID} (${rssiToQuality(network.RSSI)}%)`, network.SSID);
                 option.style.color = rssiToColor(network.RSSI);
                 option.selected = $("#s", root).value == network.SSID;
