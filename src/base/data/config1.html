@@ -70,8 +70,8 @@
         getJSON("/wnl", function (scan) {
             if (stopped) return;
             if (scan.r == -2 || scan.r == -1) { //if scan not started or is in progress
-                //try again in a couple of seconds
-                scanTimer = setTimeout(loadNetworkList, 2000);
+                //try again in a second
+                scanTimer = setTimeout(loadNetworkList, 1000);
                 return;
             }
             //scan done
