@@ -108,10 +108,9 @@
             request("POST", url, data, success, fail, timeout, uploadProgress);
         }
 
-        function convertFormToJson(form) {
+        function formToJson(form) {
             const object = {};
             new FormData(form).forEach((value, key) => {
-                // Reflect.has in favor of: object.hasOwnProperty(key)
                 if (!Reflect.has(object, key)) {
                     object[key] = value;
                     return;
@@ -202,7 +201,7 @@
                 submit.disabled = true;
                 options.beforeSubmit?.(form);
                 result.innerHTML = 'Saving Configuration...';
-                post('/sc' + id, convertFormToJson(form),
+                post('/sc' + id, formToJson(form),
                     () => {
                         form.style.display = 'none';
                         const url = options.redirectUrl?.(form) || location.origin;
