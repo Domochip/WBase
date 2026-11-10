@@ -262,6 +262,7 @@
         // Waits 2s then polls HEAD / every 2s until the device responds, then redirects to url.
         // The initial 2s delay lets the device start rebooting before polling begins.
         // Uses no-cors to allow cross-origin probes. Updates id="cd" with elapsed seconds.
+        // Each probe is aborted after 1.5s, so probes to a device still down don't pile up.
         // Redirects after maxMs regardless.
         function redirectWhenReachable(url, maxMs) {
             const start = Date.now();
@@ -277,7 +278,7 @@
                         location.assign(url);
                         return;
                     }
-                    fetch(url, { method: 'HEAD', mode: 'no-cors', cache: 'no-store' })
+                    fetch(url, { method: 'HEAD', mode: 'no-cors', cache: 'no-store', signal: AbortSignal.timeout(1500) })
                         .then(() => { clearInterval(displayTimer); clearInterval(pollTimer); location.assign(url); })
                         .catch(() => {});
                 }, 2000);
