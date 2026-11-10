@@ -93,20 +93,7 @@
 
 
     configForm(root, id, {
-        afterLoad: function (form) {
-            // a configured IP means static IP is in use
-            if (form.ip.value) {
-                form.staticip.checked = true;
-                triggerEvent(form.staticip, 'change');
-            }
-            loadNetworkList();
-        },
-        beforeSubmit: function (form) {
-            // static IP settings are only kept when static IP is checked
-            if (!form.staticip.checked) {
-                ['ip', 'mask', 'gw', 'dns1', 'dns2'].forEach(name => form[name].value = '');
-            }
-        },
+        afterLoad: loadNetworkList,
         redirectUrl: function (form) {
             // no SSID: device restarts as an access point
             if (!form.s.value) return 'http://192.168.4.1';
