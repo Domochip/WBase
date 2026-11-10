@@ -102,7 +102,7 @@
     configForm(root, id);
 
     function rebootFailed() {
-        $('#r', root).innerHTML = '<span class="err">Failed</span>';
+        showError($('#r', root));
         $('#rebootForm', root).reset();
         $('#rescueForm', root).reset();
         $('#subRbt', root).disabled = false;
@@ -115,8 +115,7 @@
         $('#subRbtRsc', root).disabled = true;
 
         post(url, null, function () {
-            $('#r', root).innerHTML = `<h3><span class="ok">Done</span> ${successMessage} Waiting for device... <span id="cd">0</span>s</h3>`;
-            redirectWhenReachable(targetUrl, 30000);
+            waitForDevice($('#r', root), targetUrl, 30000, `<h3><span class="ok">Done</span> ${successMessage}</h3>`);
         }, rebootFailed);
     }
 

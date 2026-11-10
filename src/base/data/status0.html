@@ -30,7 +30,7 @@ Crash files :
         post('/crashclr', null, function () {
             $('#crashes', root).style.display = 'none';
         }, function () {
-            $('#clrResult', root).innerHTML = '<span class="err">Failed</span>';
+            showError($('#clrResult', root));
         });
     });
 </script>

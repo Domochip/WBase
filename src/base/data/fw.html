@@ -159,7 +159,7 @@
 
                 resetButtons();
                 ['#loadingCurrent', '#loadingOnline'].forEach(sel => {
-                    $(sel, root).innerHTML = '<span class="err">Failed</span>';
+                    showError($(sel, root));
                 });
             }
         );
@@ -189,10 +189,9 @@
                     if (done) {
                         if (success) {
                             $('#progress', root).innerHTML = 'Rebooting...';
-                            $('#updateResult', root).innerHTML = '<h3>Waiting for device... <span id="cd">0</span>s</h3>';
-                            redirectWhenReachable(location.origin, 60000);
+                            waitForDevice($('#updateResult', root), location.origin, 60000);
                         } else {
-                            $('#updateResult', root).innerHTML = `<span class="err">Failed</span> (${message})`;
+                            showError($('#updateResult', root), message);
                             resetButtons();
                         }
                         return;
@@ -210,7 +209,7 @@
                 reader.read().then(processChunk); // Start reading chunks
             })
             .catch(error => {
-                $('#updateResult', root).innerHTML = `<span class="err">Failed</span> (${error.message})`;
+                showError($('#updateResult', root), error.message);
                 resetButtons();
             });
     });
@@ -227,11 +226,10 @@
             new FormData($('#f', root)),
             () => {
                 $('#progress', root).innerHTML = 'Rebooting...';
-                $('#uploadResult', root).innerHTML = '<h3>Waiting for device... <span id="cd">0</span>s</h3>';
-                redirectWhenReachable(location.origin, 60000);
+                waitForDevice($('#uploadResult', root), location.origin, 60000);
             },
             (responseText) => {
-                $('#uploadResult', root).innerHTML = `<span class="err">Failed</span> (${responseText})`;
+                showError($('#uploadResult', root), responseText);
                 $('#f', root).reset();
                 resetButtons();
             },
