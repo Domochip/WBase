@@ -190,9 +190,13 @@
             const form = $('#f', root);
             const result = $('#r', root);
             const loading = $('#l', root);
+            const submit = $('input[type=submit]', form);
 
             form.addEventListener('submit', evt => {
                 evt.preventDefault();
+                // submit is disabled until the config is loaded and while saving: ignore extra submits
+                if (submit.disabled) return;
+                submit.disabled = true;
                 options.beforeSubmit?.(form);
                 result.innerHTML = 'Saving Configuration...';
                 post('/sc' + id, convertFormToJson(form),
@@ -205,6 +209,7 @@
                     },
                     () => {
                         result.innerHTML = '<h3><b>Configuration <span class="err">error</span>.</b></h3>';
+                        submit.disabled = false;
                     }
                 );
             });
@@ -214,7 +219,7 @@
                     data ??= {}; // an empty JsonDocument is sent as 'null'
                     fillForm(form, data);
                     options.afterLoad?.(form, data);
-                    $('input[type=submit]', form).disabled = false;
+                    submit.disabled = false;
                     fadeOut(loading);
                 },
                 () => {
