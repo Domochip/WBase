@@ -62,11 +62,16 @@
         $("#staticipgroup", root).style.display = this.checked ? '' : 'none';
     });
 
+    // scan polling stops when the page is left (see the cleanup function at the end)
+    let scanTimer;
+    let stopped = false;
+
     function loadNetworkList() {
         getJSON("/wnl", function (scan) {
+            if (stopped) return;
             if (scan.r == -2 || scan.r == -1) { //if scan not started or is in progress
                 //try again in a couple of seconds
-                setTimeout(loadNetworkList, 2000);
+                scanTimer = setTimeout(loadNetworkList, 2000);
                 return;
             }
             //scan done
@@ -111,4 +116,9 @@
         },
     });
 
+    // Called when leaving the page: stop polling the WiFi scan
+    return function () {
+        stopped = true;
+        clearTimeout(scanTimer);
+    };
 </script>
