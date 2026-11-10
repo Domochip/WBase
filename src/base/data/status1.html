@@ -4,7 +4,7 @@ Access Point: <span data-k="apmode"></span><br>
 <span data-show="apip">&nbsp;&nbsp;&nbsp;&nbsp;IP: <span data-k="apip"></span><br></span>
 Station: <span data-k="stationmode"></span><br>
 Connection state: <span data-k="stastate"></span><br>
-<span id="nextretrye" style='display:none'>&nbsp;&nbsp;&nbsp;&nbsp;Next retry: <span data-k="nextretry"></span> seconds<br></span>
+<span data-show="nextretry">&nbsp;&nbsp;&nbsp;&nbsp;Next retry: <span data-k="nextretry"></span> seconds<br></span>
 <span id="discoreasone" style='display:none'>Last disconnection reason: <span data-k="discoreason"></span><br></span>
 <span data-show="stationip">&nbsp;&nbsp;&nbsp;&nbsp;IP: <span data-k="stationip"></span><br></span>
 <span data-show="stationipsource">&nbsp;&nbsp;&nbsp;&nbsp;IP Source: <span data-k="stationipsource"></span><br></span>
@@ -48,9 +48,6 @@ Connection state: <span data-k="stastate"></span><br>
             rssi: v => v + ' dBm (' + rssiToQuality(v) + '%)',
         },
         afterLoad: function (status) {
-            // rows depending on several values
-            $("#nextretrye", root).style.display =
-                (status["stastate"] === 'waitretry' && status["nextretry"] !== undefined ? '' : 'none');
             $("#discoreasone", root).style.display =
                 (status["stationmode"] === 'on' && Number(status["discoreason"]) !== 0 ? '' : 'none');
 
