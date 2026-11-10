@@ -20,10 +20,10 @@
             <label for="staticip">Static IP</label>
             <input id='staticip' name='staticip' type="checkbox">
         </div>
-        <div id='staticipgroup' style='display:none'>
+        <fieldset id='staticipgroup' disabled style='display:none; padding:0'>
             <div class="pure-control-group">
                 <label for="ip">IP</label>
-                <input type='text' id='ip' name='ip' pattern='((^|\.)((25[0-5])|(2[0-4]\d)|(1\d\d)|([1-9]?\d))){4}$'>
+                <input type='text' id='ip' name='ip' required pattern='((^|\.)((25[0-5])|(2[0-4]\d)|(1\d\d)|([1-9]?\d))){4}$'>
                 <span class="pure-form-message-inline">*</span>
             </div>
             <div class="pure-control-group">
@@ -44,7 +44,7 @@
                 <input type='text' id='dns2' name='dns2'
                     pattern='((^|\.)((25[0-5])|(2[0-4]\d)|(1\d\d)|([1-9]?\d))){4}$'>
             </div>
-        </div>
+        </fieldset>
         <div class="pure-controls">
             <input type='submit' value='Save' class="pure-button pure-button-primary" disabled>
         </div>
@@ -58,7 +58,7 @@
     //   id   : this part's id ('1'), used in API endpoints like '/gs' + id
 
     $("#staticip", root).addEventListener('change', function () {
-        $("#ip", root).required = this.checked;
+        $("#staticipgroup", root).disabled = !this.checked;
         $("#staticipgroup", root).style.display = this.checked ? '' : 'none';
     });
 
