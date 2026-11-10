@@ -48,8 +48,7 @@
         function $(selector, el = document) {
             return el.querySelector(selector);
         }
-    </script>
-    <script>
+
         // Page parts: each HTML fragment's markup is wrapped in <div data-part="ID"> inside a <template>,
         // and its script is registered at build time (pio_pre_build_spa.py) as an init function:
         //   registerPart(templateId, id, function (root, id) { ... return optionalCleanup; });
