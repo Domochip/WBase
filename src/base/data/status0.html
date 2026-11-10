@@ -11,6 +11,7 @@ Crash logged : <span data-k="crashcount"></span><br>
 Crash files :
 &nbsp;<a href="/crashdl" class="pure-button pure-button-primary btn-sm">Download</a>
 &nbsp;<button class="pure-button pure-button-primary btn-sm btn-err" id="clrCrashes">Clear</button>
+&nbsp;<span id="clrResult"></span>
 </div>
 
 <script>
@@ -25,8 +26,11 @@ Crash files :
     });
 
     $('#clrCrashes', root).addEventListener('click', function () {
+        $('#clrResult', root).textContent = '';
         post('/crashclr', null, function () {
             $('#crashes', root).style.display = 'none';
-        }, function () { alert('Failed to clear crashes'); });
+        }, function () {
+            $('#clrResult', root).innerHTML = '<span class="err">Failed</span>';
+        });
     });
 </script>
