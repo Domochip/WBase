@@ -279,6 +279,16 @@ void Core::appInitWebServer(WebServer &server)
               SystemState::shouldReboot = true;
             });
 
+  // reset configuration POST -------------------------------------------------
+  server.on(F("/rstcfg"), HTTP_POST,
+            [&server]()
+            {
+              deleteAllConfig();
+              SERVER_KEEPALIVE_FALSE()
+              server.send_P(200, PSTR("text/html"), PSTR("Configuration reset"));
+              SystemState::shouldReboot = true;
+            });
+
 #ifdef ESP8266
   // Download all crash logs as text attachment -------------------------------
   server.on(F("/crashdl"), HTTP_GET,
