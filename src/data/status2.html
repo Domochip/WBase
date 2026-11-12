@@ -1,76 +1,34 @@
-<h2 class="content-subhead">WBase<span id="l" class="ld">Loading...</span></h2>
-<h3 class="content-subhead">Live Data (<span id="lastRefresh">Waiting</span>)</h3>
-<dl id="liveData"></dl>
-<span id="todo"></span>
+<div class="group">
+    <div class="gh">Live data<span id="l" class="ld">Loading...</span><span class="end pill" id="liveState"><span class="dot"></span><span>Waiting</span></span></div>
+    <div class="live-grid" id="liveData"></div>
+    <div class="gf" id="lastRefresh"></div>
+</div>
 
 <script>
     // Runs as this part's init function (see registerPart in index_template.html):
     //   root : this part's <div data-part> element, query it with $('#x', root)
     //   id   : this part's id ('2'), used in API endpoints like '/gs' + id
 
-    function parseLiveData(liveData) {
-        for (const k in liveData) {
-            let kForId = (/[^a-zA-Z]/.test(k[0]) ? 'a' : '') + k; //k[0] is not in a-zA-Z then we need to add 'a'
-            kForId = kForId.replace(/ /g, '_');
-            if ($('#' + kForId, root) != undefined) {
-                const existingElement = $('#' + kForId + 'Value', root);
-                if (existingElement.innerText != liveData[k]) {
-                    existingElement.innerText = liveData[k];
-                    existingElement.style.fontWeight = "bold";
-                }
-                else {
-                    existingElement.style.fontWeight = "normal";
-                }
-            }
-            else {
-                const newElement = document.createElement("dd");
-                newElement.id = kForId;
-                const valueElement = document.createElement("span");
-                valueElement.id = kForId + 'Value';
-                valueElement.textContent = liveData[k];
-                newElement.append(k + ' : ', valueElement);
-                $('#liveData', root).appendChild(newElement);
-            }
-        }
-        $('#lastRefresh', root).innerText = (new Date()).toLocaleString();
+    const age = ageLabel($('#lastRefresh', root));
+
+    // liveData values as rows (see the live data helpers in index_template.html)
+    function showLiveData(liveData) {
+        updateTiles($('#liveData', root), liveData);
+        age.touch();
     }
 
     loadStatus(root, id, {
         afterLoad: function (status) {
-            if (status.liveData) parseLiveData(status.liveData);
+            if (status.liveData) showLiveData(status.liveData);
         },
     });
 
-    let statusEventSource;
+    // live updates while the page is shown (server-sent events of this part)
+    const stopEvents = connectEvents(id, showLiveData, $('#liveState', root));
 
-    function closeStatusEventSource() {
-        if (statusEventSource && statusEventSource.readyState !== EventSource.CLOSED) {
-            statusEventSource.close();
-        }
-    }
-
-    function connectStatusEventSource() {
-        if (!window.EventSource || document.hidden) return;
-        if (statusEventSource && statusEventSource.readyState !== EventSource.CLOSED) return;
-
-        statusEventSource = new EventSource('/statusEvt' + id);
-        statusEventSource.addEventListener('message', function (event) {
-            parseLiveData(JSON.parse(event.data));
-        });
-    }
-
-    function onVisibilityChange() {
-        if (document.hidden) closeStatusEventSource();
-        else connectStatusEventSource();
-    }
-
-    document.addEventListener('visibilitychange', onVisibilityChange);
-
-    connectStatusEventSource();
-
-    // Called when leaving the page: stop live updates
+    // Called when leaving the page
     return function () {
-        document.removeEventListener('visibilitychange', onVisibilityChange);
-        closeStatusEventSource();
+        stopEvents();
+        age.stop();
     };
 </script>
