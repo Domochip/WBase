@@ -43,12 +43,6 @@
 #define LOG_SERIAL_PRINTF_P(...)
 #endif
 
-// Choose Pin used to boot in Rescue Mode
-#define RESCUE_BTN_PIN 2
-
-// Define time to wait for Rescue press (in s)
-// #define RESCUE_BUTTON_WAIT 3
-
 // Boot in Rescue Mode when reset is pressed COUNT times, each within WINDOW seconds (0 to disable)
 // #define MULTI_RESET_COUNT 3
 // #define MULTI_RESET_WINDOW 5

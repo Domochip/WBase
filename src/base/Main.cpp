@@ -48,10 +48,6 @@ void setup()
   LOG_SERIAL_PRINTLN(F(CUSTOM_APP_MANUFACTURER " " CUSTOM_APP_MODEL " " VERSION));
   LOG_SERIAL_PRINTLN(F("---Booting---"));
 
-#ifndef RESCUE_BUTTON_WAIT
-#define RESCUE_BUTTON_WAIT 3
-#endif
-
   bool skipExistingConfig = false;
 
   // look into EEPROM for Rescue mode flag
@@ -63,22 +59,6 @@ void setup()
 
   if (MultiReset::check())
     skipExistingConfig = true;
-
-#ifdef RESCUE_BTN_PIN
-  // if config already skipped, don't wait for rescue button
-  if (!skipExistingConfig)
-  {
-    LOG_SERIAL_PRINTF_P(PSTR("Wait Rescue button for %d seconds\n"), RESCUE_BUTTON_WAIT);
-
-    pinMode(RESCUE_BTN_PIN, (RESCUE_BTN_PIN != 16) ? INPUT_PULLUP : INPUT);
-    for (int i = 0; i < 100 && skipExistingConfig == false; i++)
-    {
-      if (digitalRead(RESCUE_BTN_PIN) == LOW)
-        skipExistingConfig = true;
-      delay(RESCUE_BUTTON_WAIT * 10);
-    }
-  }
-#endif
 
   if (skipExistingConfig)
   {
