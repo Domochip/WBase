@@ -16,6 +16,7 @@ using WebServer = ESP8266WebServer;
 #include "Application.h"
 #include "Core.h"
 #include "WifiMan.h"
+#include "MultiReset.h"
 
 // include Custom Application header file
 #include CUSTOM_APP_HEADER
@@ -44,13 +45,6 @@ void setup()
   LOG_SERIAL.flush();
 #endif
 
-#ifdef STATUS_LED_SETUP
-  STATUS_LED_SETUP
-#endif
-#ifdef STATUS_LED_ERROR
-  STATUS_LED_ERROR
-#endif
-
   LOG_SERIAL_PRINTLN(F(CUSTOM_APP_MANUFACTURER " " CUSTOM_APP_MODEL " " VERSION));
   LOG_SERIAL_PRINTLN(F("---Booting---"));
 
@@ -66,6 +60,9 @@ void setup()
   if (skipExistingConfig)
     EEPROM.write(0, 0);
   EEPROM.end();
+
+  if (MultiReset::check())
+    skipExistingConfig = true;
 
 #ifdef RESCUE_BTN_PIN
   // if config already skipped, don't wait for rescue button
@@ -134,6 +131,8 @@ void loop(void)
   server.handleClient();
 
   core.run();
+
+  MultiReset::run();
 
   if (!SystemState::pauseCustomApp && !SystemState::shouldReboot)
     custom.run();
