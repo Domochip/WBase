@@ -43,7 +43,7 @@
 #define LOG_SERIAL_PRINTF_P(...)
 #endif
 
-// Boot in Rescue Mode when reset is pressed COUNT times, each within WINDOW seconds (0 to disable)
+// Boot in Recovery Mode when reset is pressed COUNT times, each within WINDOW seconds (0 to disable)
 // #define MULTI_RESET_COUNT 3
 // #define MULTI_RESET_WINDOW 5
 

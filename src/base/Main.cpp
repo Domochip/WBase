@@ -51,7 +51,7 @@ void setup()
 
   if (skipExistingConfig)
   {
-    LOG_SERIAL_PRINTLN(F("-> RESCUE MODE : Stored configuration won't be loaded."));
+    LOG_SERIAL_PRINTLN(F("-> RECOVERY MODE : Stored configuration won't be loaded."));
   }
   
 #ifdef ESP8266
