@@ -45,8 +45,8 @@ static bool isResetPress()
 #include <EEPROM.h>
 #include <esp_system.h>
 
-// EN button acts as a power-on reset (RTC memory lost): use EEPROM byte 1 (byte 0 is the Rescue flag)
-#define MULTI_RESET_EEPROM_ADDR 1
+// EN button acts as a power-on reset (RTC memory lost): keep the counter in EEPROM
+#define MULTI_RESET_EEPROM_ADDR 0
 
 static uint8_t readCounter()
 {
