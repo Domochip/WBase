@@ -45,8 +45,8 @@ static bool isResetPress()
 #include <EEPROM.h>
 #include <esp_system.h>
 
-// EN button acts as a power-on reset (RTC memory lost): use EEPROM byte 1 (byte 0 is the Rescue flag)
-#define MULTI_RESET_EEPROM_ADDR 1
+// EN button acts as a power-on reset (RTC memory lost): keep the counter in EEPROM
+#define MULTI_RESET_EEPROM_ADDR 0
 
 static uint8_t readCounter()
 {
@@ -78,7 +78,7 @@ bool MultiReset::check()
   if (count >= MULTI_RESET_COUNT)
   {
     writeCounter(0);
-    LOG_SERIAL_PRINTF_P(PSTR("Reset pressed %d times -> Rescue Mode requested\n"), count);
+    LOG_SERIAL_PRINTF_P(PSTR("Reset pressed %d times -> Recovery Mode requested\n"), count);
     return true;
   }
 
@@ -86,7 +86,7 @@ bool MultiReset::check()
   if (count)
   {
     _pending = true;
-    LOG_SERIAL_PRINTF_P(PSTR("Reset pressed %d/%d times (press again within %ds for Rescue Mode)\n"), count, MULTI_RESET_COUNT, MULTI_RESET_WINDOW);
+    LOG_SERIAL_PRINTF_P(PSTR("Reset pressed %d/%d times (press again within %ds for Recovery Mode)\n"), count, MULTI_RESET_COUNT, MULTI_RESET_WINDOW);
   }
   return false;
 }

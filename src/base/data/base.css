@@ -888,7 +888,7 @@ main {
     color: var(--muted);
 }
 
-/* details under an action (e.g. Rescue mode) */
+/* details under an action (e.g. Recovery Mode) */
 .actions-list ul {
     margin: 8px 0 0;
     padding-left: 18px;
@@ -1352,4 +1352,10 @@ main {
     .savebar {
         bottom: 84px;
     }
+}
+
+/* notice(): message only, nothing to wait for */
+.overlay.notice .ring,
+.overlay.notice .secs {
+    display: none;
 }

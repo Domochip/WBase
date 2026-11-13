@@ -154,7 +154,7 @@ void WifiMan::onConnectFailed()
 // Initial connection, blocking (used by appInit only: state is Off and STA disconnected)
 void WifiMan::initialConnect()
 {
-  if (ssid[0]) // if STA configured
+  if (staEnabled())
   {
     LOG_SERIAL_PRINT(F("Connect"));
 
@@ -250,7 +250,7 @@ void WifiMan::fillStatusJSON(JsonVariant json)
   else
     json[F("apmode")] = F("off");
 
-  if (ssid[0])
+  if (staEnabled())
   {
     json[F("stationmode")] = F("on");
     json[F("ssid")] = ssid;
@@ -335,7 +335,7 @@ bool WifiMan::appInit(bool reInit /* = false */)
     MDNS.end();
   MDNS.begin(CUSTOM_APP_MODEL);
 
-  return (ssid[0] ? WiFi.isConnected() : true);
+  return (staEnabled() ? WiFi.isConnected() : true);
 }
 
 void WifiMan::appInitWebServer(WebServer &server)
