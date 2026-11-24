@@ -148,7 +148,7 @@
                 : 'The backup has no web password: these pages will no longer ask for one.');
         addItem(warn, 'The module restarts to apply the backup.');
 
-        if (!await confirmDialog({ title: 'Restore a backup', body, confirmLabel: 'Restore & restart' })) return;
+        if (!await confirmDialog({ title: 'Restore a backup', body, confirmLabel: 'Restore & restart', danger: true })) return;
 
         $('#rsBtn', root).disabled = true;
         $('#bkBtn', root).disabled = true;
